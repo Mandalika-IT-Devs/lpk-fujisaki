@@ -22,3 +22,13 @@ coverage/
 # OS and editor files
 .DS_Store
 *.swp
+
+# Bahan masukan berupa PDF tidak masuk repositori (berukuran besar dan bisa memuat foto orang)
+docs/input/*.pdf
+
+# Berkas kerja alat desain impeccable (bukan sumber kebenaran desain)
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/build/
+.impeccable/hook.cache.json
+.impeccable/config.local.json

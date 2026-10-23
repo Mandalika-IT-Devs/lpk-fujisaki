@@ -1,6 +1,6 @@
 # AGENTS.md: LPKS Fujisaki Gakuin Center
 
-Situs web LPKS Fujisaki Gakuin Center: calon peserta melihat program pelatihan dan mendaftar online, staf mengelola data pendaftar. Tidak mencakup pembayaran online dan kelas daring.
+Situs web dan sistem pendaftaran LPKS Fujisaki Gakuin Center: calon peserta membaca program dan mendaftar online lewat akunnya, lalu pegawai mengikuti setiap pendaftaran melalui enam tahap sampai berangkat ke Jepang. Tidak mencakup pembayaran, kelas daring, dan versi bahasa Jepang.
 
 ## Bahasa
 

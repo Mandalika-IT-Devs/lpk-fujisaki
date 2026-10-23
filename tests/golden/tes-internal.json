@@ -1,0 +1,15 @@
+{
+  "aturan": "Hasil percobaan tes internal",
+  "prd": "§8.3",
+  "catatan": "Nilai bilangan bulat 0-100. Lulus bila nilai >= ambang kelulusan. Nilai ambang di sini hanya input; nilai yang berlaku mengikuti OD-02.",
+  "kasus": [
+    { "nama": "satu di bawah ambang", "input": { "nilai": 59, "ambangKelulusan": 60 }, "output": { "sah": true, "lulus": false } },
+    { "nama": "tepat ambang", "input": { "nilai": 60, "ambangKelulusan": 60 }, "output": { "sah": true, "lulus": true } },
+    { "nama": "nilai sempurna", "input": { "nilai": 100, "ambangKelulusan": 60 }, "output": { "sah": true, "lulus": true } },
+    { "nama": "nilai nol", "input": { "nilai": 0, "ambangKelulusan": 60 }, "output": { "sah": true, "lulus": false } },
+    { "nama": "ambang lebih tinggi", "input": { "nilai": 75, "ambangKelulusan": 80 }, "output": { "sah": true, "lulus": false } },
+    { "nama": "nilai di atas 100", "input": { "nilai": 101, "ambangKelulusan": 60 }, "output": { "sah": false, "lulus": null } },
+    { "nama": "nilai negatif", "input": { "nilai": -1, "ambangKelulusan": 60 }, "output": { "sah": false, "lulus": null } },
+    { "nama": "nilai pecahan", "input": { "nilai": 60.5, "ambangKelulusan": 60 }, "output": { "sah": false, "lulus": null } }
+  ]
+}

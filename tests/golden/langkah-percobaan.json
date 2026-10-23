@@ -1,0 +1,11 @@
+{
+  "aturan": "Status langkah dengan percobaan",
+  "prd": "§7.4",
+  "catatan": "Langkah Selesai begitu ada satu percobaan lulus; tanggal selesai = tanggal percobaan lulus itu. percobaanPenentu adalah urutan percobaan (mulai 1).",
+  "kasus": [
+    { "nama": "belum ada percobaan", "input": { "percobaan": [] }, "output": { "status": "Belum", "tanggalSelesai": null, "percobaanPenentu": null } },
+    { "nama": "satu percobaan tidak lulus", "input": { "percobaan": [{ "tanggal": "2026-05-02", "hasil": "tidak lulus" }] }, "output": { "status": "Belum", "tanggalSelesai": null, "percobaanPenentu": null } },
+    { "nama": "lulus di percobaan kedua", "input": { "percobaan": [{ "tanggal": "2026-05-02", "hasil": "tidak lulus" }, { "tanggal": "2026-06-06", "hasil": "lulus" }] }, "output": { "status": "Selesai", "tanggalSelesai": "2026-06-06", "percobaanPenentu": 2 } },
+    { "nama": "lulus di percobaan pertama", "input": { "percobaan": [{ "tanggal": "2026-05-02", "hasil": "lulus" }] }, "output": { "status": "Selesai", "tanggalSelesai": "2026-05-02", "percobaanPenentu": 1 } }
+  ]
+}

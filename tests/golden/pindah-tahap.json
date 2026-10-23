@@ -1,0 +1,12 @@
+{
+  "aturan": "Syarat pindah tahap",
+  "prd": "§7.3",
+  "catatan": "Pindah satu tahap ke depan hanya bila tidak ada langkah tahap saat ini yang berstatus Belum. Pindah dari tahap 1 ke 2 berarti lolos seleksi. Tahap 6 tidak punya tahap berikutnya.",
+  "kasus": [
+    { "nama": "tahap 1 semua selesai", "input": { "tahap": 1, "langkah": { "L1.1": "Selesai", "L1.2": "Selesai", "L1.3": "Selesai", "L1.4": "Selesai", "L1.5": "Selesai" } }, "output": { "boleh": true, "tahapTujuan": 2, "penghalang": [], "lolosSeleksi": true } },
+    { "nama": "tahap 1 pra-MCU belum", "input": { "tahap": 1, "langkah": { "L1.1": "Selesai", "L1.2": "Selesai", "L1.3": "Selesai", "L1.4": "Selesai", "L1.5": "Belum" } }, "output": { "boleh": false, "tahapTujuan": null, "penghalang": ["L1.5"], "lolosSeleksi": false } },
+    { "nama": "tahap 3 dengan ujian keterampilan tidak berlaku", "input": { "tahap": 3, "langkah": { "L3.1": "Selesai", "L3.2": "Selesai", "L3.3": "Tidak berlaku" } }, "output": { "boleh": true, "tahapTujuan": 4, "penghalang": [], "lolosSeleksi": false } },
+    { "nama": "tahap 4 dua langkah belum", "input": { "tahap": 4, "langkah": { "L4.1": "Selesai", "L4.2": "Belum", "L4.3": "Selesai", "L4.4": "Belum", "L4.5": "Selesai" } }, "output": { "boleh": false, "tahapTujuan": null, "penghalang": ["L4.2", "L4.4"], "lolosSeleksi": false } },
+    { "nama": "tahap 6 adalah tahap terakhir", "input": { "tahap": 6, "langkah": { "L6.1": "Selesai", "L6.2": "Selesai", "L6.3": "Selesai", "L6.4": "Belum" } }, "output": { "boleh": false, "tahapTujuan": null, "penghalang": [], "lolosSeleksi": false } }
+  ]
+}

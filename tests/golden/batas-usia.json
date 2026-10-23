@@ -1,0 +1,15 @@
+{
+  "aturan": "Batas usia pendaftaran",
+  "prd": "§6.3",
+  "catatan": "Usia dalam tahun penuh pada tanggal kirim WIB (UTC+7). Kedua batas termasuk. Lahir 29 Februari berulang tahun pada 1 Maret di tahun bukan kabisat.",
+  "kasus": [
+    { "nama": "sehari sebelum ulang tahun ke-18", "input": { "tanggalLahir": "2008-10-24", "dikirimPada": "2026-10-23T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-10-23", "usia": 17, "memenuhi": false } },
+    { "nama": "tepat ulang tahun ke-18", "input": { "tanggalLahir": "2008-10-23", "dikirimPada": "2026-10-23T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-10-23", "usia": 18, "memenuhi": true } },
+    { "nama": "usia maksimal termasuk", "input": { "tanggalLahir": "1995-10-24", "dikirimPada": "2026-10-23T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-10-23", "usia": 30, "memenuhi": true } },
+    { "nama": "lewat usia maksimal", "input": { "tanggalLahir": "1995-10-23", "dikirimPada": "2026-10-23T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-10-23", "usia": 31, "memenuhi": false } },
+    { "nama": "lahir 29 Februari, 28 Februari tahun bukan kabisat", "input": { "tanggalLahir": "2008-02-29", "dikirimPada": "2026-02-28T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-02-28", "usia": 17, "memenuhi": false } },
+    { "nama": "lahir 29 Februari, 1 Maret tahun bukan kabisat", "input": { "tanggalLahir": "2008-02-29", "dikirimPada": "2026-03-01T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-03-01", "usia": 18, "memenuhi": true } },
+    { "nama": "lahir 29 Februari, 29 Februari tahun kabisat", "input": { "tanggalLahir": "2008-02-29", "dikirimPada": "2028-02-29T03:00:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2028-02-29", "usia": 20, "memenuhi": true } },
+    { "nama": "dikirim lewat tengah malam WIB tetapi masih tanggal sebelumnya di UTC", "input": { "tanggalLahir": "2008-10-23", "dikirimPada": "2026-10-22T17:30:00Z", "usiaMinimal": 18, "usiaMaksimal": 30 }, "output": { "tanggalKirimWib": "2026-10-23", "usia": 18, "memenuhi": true } }
+  ]
+}

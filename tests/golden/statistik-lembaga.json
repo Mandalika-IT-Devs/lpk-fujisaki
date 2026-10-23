@@ -1,0 +1,10 @@
+{
+  "aturan": "Total siswa dan kecocokan statistik lembaga",
+  "prd": "§3.3",
+  "catatan": "Total siswa = N5 + N4 + N3 + N2. Penyimpanan ditolak bila jumlah per bidang kerja tidak sama dengan total siswa.",
+  "kasus": [
+    { "nama": "angka dari profil lembaga", "input": { "perLevel": { "N5": 65, "N4": 124, "N3": 21, "N2": 0 }, "perBidangKerja": [88, 68, 30, 24], "alumniDiJepang": 1214 }, "output": { "totalSiswa": 210, "jumlahPerBidangKerja": 210, "sah": true } },
+    { "nama": "jumlah per bidang kerja kurang satu", "input": { "perLevel": { "N5": 65, "N4": 124, "N3": 21, "N2": 0 }, "perBidangKerja": [88, 68, 30, 23], "alumniDiJepang": 1214 }, "output": { "totalSiswa": 210, "jumlahPerBidangKerja": 209, "sah": false } },
+    { "nama": "semua nol", "input": { "perLevel": { "N5": 0, "N4": 0, "N3": 0, "N2": 0 }, "perBidangKerja": [0, 0, 0, 0], "alumniDiJepang": 0 }, "output": { "totalSiswa": 0, "jumlahPerBidangKerja": 0, "sah": true } }
+  ]
+}

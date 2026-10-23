@@ -1,0 +1,12 @@
+{
+  "aturan": "Syarat unggah foto galeri",
+  "prd": "§3.4",
+  "catatan": "Format JPG, PNG, atau WebP. Ukuran paling besar 5 MB = 5 x 1.048.576 = 5.242.880 byte. Centang persetujuan orang di foto wajib. Bila beberapa syarat gagal, alasan memuat semuanya dengan urutan format, ukuran, persetujuan.",
+  "kasus": [
+    { "nama": "JPG tepat 5 MB", "input": { "jenisBerkas": "image/jpeg", "ukuranByte": 5242880, "persetujuanOrangDiFoto": true }, "output": { "diterima": true, "alasan": [] } },
+    { "nama": "PNG lebih satu byte dari 5 MB", "input": { "jenisBerkas": "image/png", "ukuranByte": 5242881, "persetujuanOrangDiFoto": true }, "output": { "diterima": false, "alasan": ["ukuran"] } },
+    { "nama": "GIF tidak didukung", "input": { "jenisBerkas": "image/gif", "ukuranByte": 100000, "persetujuanOrangDiFoto": true }, "output": { "diterima": false, "alasan": ["format"] } },
+    { "nama": "WebP tanpa persetujuan", "input": { "jenisBerkas": "image/webp", "ukuranByte": 1000000, "persetujuanOrangDiFoto": false }, "output": { "diterima": false, "alasan": ["persetujuan"] } },
+    { "nama": "semua syarat gagal", "input": { "jenisBerkas": "image/gif", "ukuranByte": 6000000, "persetujuanOrangDiFoto": false }, "output": { "diterima": false, "alasan": ["format", "ukuran", "persetujuan"] } }
+  ]
+}

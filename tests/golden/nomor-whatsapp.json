@@ -1,0 +1,16 @@
+{
+  "aturan": "Normalisasi dan keabsahan nomor WhatsApp",
+  "prd": "§5.2",
+  "catatan": "Buang spasi, tanda hubung, titik, kurung, dan + di depan; ganti awalan 0 dengan 62. Hasil sah bila diawali 628 dan terdiri dari 11 sampai 14 digit. Dua nomor dianggap sama bila hasil normalisasinya sama.",
+  "kasus": [
+    { "nama": "format lokal dengan tanda hubung", "input": { "nomor": "0812-3456-7890" }, "output": { "sah": true, "dinormalkan": "6281234567890" } },
+    { "nama": "format internasional dengan spasi", "input": { "nomor": "+62 812 3456 7890" }, "output": { "sah": true, "dinormalkan": "6281234567890" } },
+    { "nama": "sudah berbentuk 62", "input": { "nomor": "6281234567890" }, "output": { "sah": true, "dinormalkan": "6281234567890" } },
+    { "nama": "nomor terpendek yang sah", "input": { "nomor": "0812345678" }, "output": { "sah": true, "dinormalkan": "62812345678" } },
+    { "nama": "nomor terpanjang yang sah", "input": { "nomor": "0812-3456-78901" }, "output": { "sah": true, "dinormalkan": "62812345678901" } },
+    { "nama": "terlalu pendek", "input": { "nomor": "081234567" }, "output": { "sah": false, "dinormalkan": "6281234567" } },
+    { "nama": "terlalu panjang", "input": { "nomor": "081234567890123" }, "output": { "sah": false, "dinormalkan": "6281234567890123" } },
+    { "nama": "nomor telepon rumah", "input": { "nomor": "(021) 555-1234" }, "output": { "sah": false, "dinormalkan": "62215551234" } },
+    { "nama": "nomor luar negeri (OD-09: nilai contoh)", "input": { "nomor": "+1 415 555 0100" }, "output": { "sah": false, "dinormalkan": "14155550100" } }
+  ]
+}

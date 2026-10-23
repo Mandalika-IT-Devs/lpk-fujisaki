@@ -1,0 +1,561 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T17:33:46+00:00",
+  "title": "Design System: LPKS Fujisaki Gakuin Center",
+  "extensions": {
+    "colorMeta": {
+      "jalur": {
+        "role": "primary",
+        "displayName": "Biru Jalur",
+        "canonical": "#2B55C4",
+        "oklch": "oklch(48.8% 0.180 264.7)",
+        "tonalRamp": [
+          "#0B1440",
+          "#1D3E99",
+          "#2B55C4",
+          "#5F80D6",
+          "#9DB3EA",
+          "#D5DBEA",
+          "#EEF2FB",
+          "#FFFFFF"
+        ]
+      },
+      "jalur-tua": {
+        "role": "primary",
+        "displayName": "Biru Jalur Tua",
+        "canonical": "#1D3E99",
+        "oklch": "oklch(40.0% 0.154 264.9)",
+        "tonalRamp": [
+          "#010039",
+          "#031470",
+          "#1B3B96",
+          "#395FBD",
+          "#5A84E6",
+          "#87ACFD",
+          "#BCD1FE",
+          "#E7EFFF"
+        ]
+      },
+      "jalur-sedang": {
+        "role": "primary",
+        "displayName": "Biru Jalur Sedang",
+        "canonical": "#5F80D6",
+        "oklch": "oklch(61.5% 0.136 266.6)",
+        "tonalRamp": [
+          "#020038",
+          "#0A1967",
+          "#243D8D",
+          "#4260B3",
+          "#6385DB",
+          "#8AABFC",
+          "#BED1FD",
+          "#E7EFFE"
+        ]
+      },
+      "jalur-muda": {
+        "role": "primary",
+        "displayName": "Biru Jalur Muda",
+        "canonical": "#9DB3EA",
+        "oklch": "oklch(77.0% 0.083 267.6)",
+        "tonalRamp": [
+          "#02042D",
+          "#15224E",
+          "#314271",
+          "#516496",
+          "#7388BC",
+          "#97ADE3",
+          "#BED0FE",
+          "#E7EEFF"
+        ]
+      },
+      "jalur-pucat": {
+        "role": "primary",
+        "displayName": "Biru Pucat Peron",
+        "canonical": "#EEF2FB",
+        "oklch": "oklch(96.1% 0.013 266.7)",
+        "tonalRamp": [
+          "#090B11",
+          "#24262D",
+          "#42454C",
+          "#63666E",
+          "#868991",
+          "#AAAEB6",
+          "#CDD1DA",
+          "#EAEEF7"
+        ]
+      },
+      "oranye": {
+        "role": "secondary",
+        "displayName": "Oranye Matahari",
+        "canonical": "#EE5A24",
+        "oklch": "oklch(65.6% 0.193 38.5)",
+        "tonalRamp": [
+          "#220000",
+          "#490F00",
+          "#7A2300",
+          "#AC3B0F",
+          "#E55118",
+          "#F98C69",
+          "#FDC1AD",
+          "#FEEAE3"
+        ]
+      },
+      "oranye-tekan": {
+        "role": "secondary",
+        "displayName": "Oranye Tekan",
+        "canonical": "#D44A17",
+        "oklch": "oklch(59.4% 0.183 38.0)",
+        "tonalRamp": [
+          "#210000",
+          "#481100",
+          "#772608",
+          "#B03704",
+          "#E15626",
+          "#FC8966",
+          "#FBC2B0",
+          "#FEE9E3"
+        ]
+      },
+      "oranye-teks": {
+        "role": "secondary",
+        "displayName": "Oranye Teks",
+        "canonical": "#B93E0F",
+        "oklch": "oklch(53.5% 0.167 38.0)",
+        "tonalRamp": [
+          "#210000",
+          "#481000",
+          "#782506",
+          "#B03600",
+          "#DA5D34",
+          "#FD8965",
+          "#FCC1AF",
+          "#FFE9E3"
+        ]
+      },
+      "oranye-pucat": {
+        "role": "secondary",
+        "displayName": "Oranye Pucat",
+        "canonical": "#FDE3D7",
+        "oklch": "oklch(93.4% 0.033 46.4)",
+        "tonalRamp": [
+          "#160702",
+          "#342118",
+          "#544036",
+          "#776156",
+          "#9B8379",
+          "#C1A89D",
+          "#E4CBBF",
+          "#FFEAE0"
+        ]
+      },
+      "navy": {
+        "role": "neutral",
+        "displayName": "Navy Malam",
+        "canonical": "#0B1440",
+        "oklch": "oklch(21.7% 0.084 269.2)",
+        "tonalRamp": [
+          "#03032E",
+          "#16224F",
+          "#334272",
+          "#526497",
+          "#7487BD",
+          "#98ACE4",
+          "#BFD0FF",
+          "#E8EEFD"
+        ]
+      },
+      "teks-2": {
+        "role": "neutral",
+        "displayName": "Navy Redup",
+        "canonical": "#3D4A7A",
+        "oklch": "oklch(42.1% 0.082 271.1)",
+        "tonalRamp": [
+          "#04032D",
+          "#18224E",
+          "#354171",
+          "#556395",
+          "#7787BB",
+          "#9BACE3",
+          "#C1CFFD",
+          "#E9EEFF"
+        ]
+      },
+      "teks-di-jalur": {
+        "role": "neutral",
+        "displayName": "Teks di Jalur",
+        "canonical": "#DCE4F7",
+        "oklch": "oklch(91.9% 0.027 267.5)",
+        "tonalRamp": [
+          "#060B17",
+          "#212634",
+          "#3F4554",
+          "#5F6676",
+          "#82899A",
+          "#A6AEC0",
+          "#C9D1E4",
+          "#E8EEFE"
+        ]
+      },
+      "garis": {
+        "role": "neutral",
+        "displayName": "Garis Peron",
+        "canonical": "#D5DBEA",
+        "oklch": "oklch(89.1% 0.022 268.4)",
+        "tonalRamp": [
+          "#070B14",
+          "#222631",
+          "#404551",
+          "#616673",
+          "#848997",
+          "#A8AEBC",
+          "#CBD1E0",
+          "#E8EEFE"
+        ]
+      },
+      "lewat": {
+        "role": "neutral",
+        "displayName": "Abu Terlewat",
+        "canonical": "#8A93AD",
+        "oklch": "oklch(66.5% 0.040 270.2)",
+        "tonalRamp": [
+          "#06091C",
+          "#1F253A",
+          "#3D445B",
+          "#5D657E",
+          "#8088A2",
+          "#A4ADC8",
+          "#C7D0EC",
+          "#E8EEFF"
+        ]
+      },
+      "dasar": {
+        "role": "neutral",
+        "displayName": "Putih Papan",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#AEAEAE",
+          "#D1D1D1",
+          "#EEEEEE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-lebar": {
+        "displayName": "Display lebar",
+        "purpose": "Nama stasiun papan FG 01, layar >=1024px."
+      },
+      "headline-lebar": {
+        "displayName": "Headline lebar",
+        "purpose": "h1, layar >=1024px."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Nama stasiun pada papan stasiun di HP."
+      },
+      "headline-bagian-lebar": {
+        "displayName": "Headline bagian lebar",
+        "purpose": "Judul h2 bagian, layar >=1024px."
+      },
+      "display-tiba": {
+        "displayName": "Display tiba",
+        "purpose": "Nama stasiun papan kedatangan FG 06 di HP."
+      },
+      "headline-alur-lebar": {
+        "displayName": "Headline alur lebar",
+        "purpose": "Judul bagian peta jalur, layar >=1024px."
+      },
+      "display-tiba-lebar": {
+        "displayName": "Display tiba lebar",
+        "purpose": "Nama stasiun papan kedatangan FG 06, layar >=1024px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Satu h1 per halaman di HP."
+      },
+      "angka-bukti": {
+        "displayName": "Angka bukti",
+        "purpose": "Angka di papan kedatangan (1.214 alumni) di HP."
+      },
+      "merek-kaki": {
+        "displayName": "Merek kaki",
+        "purpose": "Tulisan merek pengganti di kaki halaman."
+      },
+      "headline-bagian": {
+        "displayName": "Headline bagian",
+        "purpose": "Judul h2 bagian di HP."
+      },
+      "title-konter-lebar": {
+        "displayName": "Title konter lebar",
+        "purpose": "Judul konter cek usia, layar >=1024px."
+      },
+      "angka-bukti-lebar": {
+        "displayName": "Angka bukti lebar",
+        "purpose": "Angka di papan kedatangan, layar >=1024px."
+      },
+      "kode-lebar": {
+        "displayName": "Kode lebar",
+        "purpose": "Nomor lencana kode besar, layar >=1024px."
+      },
+      "merek": {
+        "displayName": "Merek",
+        "purpose": "Tulisan merek pengganti di bar atas (sampai logo OD-06)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Nama stasiun dalam daftar dan nama program."
+      },
+      "kode": {
+        "displayName": "Kode",
+        "purpose": "Nomor lencana kode besar di HP."
+      },
+      "title-konter": {
+        "displayName": "Title konter",
+        "purpose": "Judul konter cek usia di HP."
+      },
+      "nomor": {
+        "displayName": "Nomor",
+        "purpose": "Nomor pendaftaran FGC-TTTT-NNNN; juga lencana kode di papan kedatangan layar lebar."
+      },
+      "title-kecil": {
+        "displayName": "Title kecil",
+        "purpose": "Judul tahap di kartu akun."
+      },
+      "tombol": {
+        "displayName": "Tombol",
+        "purpose": "Teks tombol utama."
+      },
+      "body-lebar": {
+        "displayName": "Body lebar",
+        "purpose": "Paragraf di layar >=1024px; alamat kontak."
+      },
+      "tombol-kedua": {
+        "displayName": "Tombol kedua",
+        "purpose": "Teks tombol kedua."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraf dan isian di HP, angka tabular."
+      },
+      "body-sedang": {
+        "displayName": "Body sedang",
+        "purpose": "Arti tanda, judul langkah; teks stasiun dan pita di layar lebar."
+      },
+      "body-kecil": {
+        "displayName": "Body kecil",
+        "purpose": "Sub-baris papan, label isian, jawaban cek usia, catatan, teks kaki."
+      },
+      "keterangan": {
+        "displayName": "Keterangan",
+        "purpose": "Catatan konter, sumber data, keterangan langkah, hak cipta, nomor lencana kode kecil."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Chip status pendaftaran."
+      },
+      "mikro": {
+        "displayName": "Mikro",
+        "purpose": "Awalan FG, lencana kamu di sini, nomor tahap peta mini, teks contoh."
+      },
+      "jp": {
+        "displayName": "Huruf Jepang",
+        "purpose": "Hanya kata Jepang pendek (日本, 藤崎学院センター), lang=ja, subset glyph."
+      }
+    },
+    "shadows": [
+      {
+        "name": "bayang",
+        "value": "0 2px 10px rgba(11, 20, 64, 0.08), 0 1px 2px rgba(11, 20, 64, 0.06)",
+        "purpose": "Satu-satunya elevasi: papan stasiun, kartu akun, menu HP."
+      },
+      {
+        "name": "cincin-stasiun-besar",
+        "value": "0 0 0 4px #FFFFFF, 0 0 0 8px #2B55C4",
+        "purpose": "Cincin ganda titik FG 06 dan lingkaran ujung garis."
+      },
+      {
+        "name": "halo-sekarang",
+        "value": "0 0 0 4px #FDE3D7",
+        "purpose": "Halo tanda tahap atau langkah sekarang."
+      },
+      {
+        "name": "halo-fokus-isian",
+        "value": "0 0 0 3px #9DB3EA",
+        "purpose": "Fokus isian, bersama border jalur."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-keluar",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Transisi keadaan tombol."
+      },
+      {
+        "name": "durasi-warna",
+        "value": "160ms",
+        "purpose": "Perubahan warna latar tombol utama saat hover."
+      },
+      {
+        "name": "durasi-tekan",
+        "value": "120ms",
+        "purpose": "Tombol turun 1px saat ditekan."
+      },
+      {
+        "name": "kereta-jalan",
+        "value": "@keyframes translate 0 0 -> var(--dx) var(--dy); linear both; animation-timeline: view-timeline daftar stasiun; animation-range cover 17% cover 76% (HP), cover 19% cover 47% (>=1024px)",
+        "purpose": "Gerak khas: titik kamu di sini berjalan FG 01 ke FG 06 mengikuti guliran. Gerak dikurangi atau tanpa dukungan: diam di FG 01 dengan lencana statis."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sedang",
+        "value": "640px"
+      },
+      {
+        "name": "lebar",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Tombol utama",
+      "kind": "button",
+      "refersTo": "tombol-utama",
+      "description": "Satu aksi utama per tampilan, misalnya Daftar sekarang.",
+      "html": "<a class=\"ds-tombol-utama\" href=\"#\">Daftar sekarang <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></a>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-tombol-utama{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:54px;padding:0 24px;border:0;border-radius:var(--sudut);background:var(--oranye);color:#fff;font:700 20px/1 var(--huruf);text-decoration:none;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16,1,0.3,1),transform 120ms cubic-bezier(0.16,1,0.3,1);} .ds-tombol-utama:hover{background:var(--oranye-tekan);} .ds-tombol-utama:active{transform:translateY(1px);} .ds-tombol-utama:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}"
+    },
+    {
+      "name": "Tombol kedua",
+      "kind": "button",
+      "refersTo": "tombol-kedua",
+      "description": "Aksi pendamping bergaris biru jalur; bisa nonaktif dengan aria-disabled.",
+      "html": "<a class=\"ds-tombol-kedua\" href=\"#\">Chat WhatsApp</a> <a class=\"ds-tombol-kedua\" aria-disabled=\"true\">Nonaktif</a>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-tombol-kedua{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border:2px solid var(--jalur);border-radius:var(--sudut);background:var(--dasar);color:var(--jalur);font:700 18px/1 var(--huruf);text-decoration:none;} .ds-tombol-kedua:hover{background:var(--jalur-pucat);color:var(--jalur-tua);} .ds-tombol-kedua:focus-visible{outline:3px solid var(--jalur);outline-offset:2px;} .ds-tombol-kedua[aria-disabled=true]{border-color:var(--garis);color:var(--lewat);background:var(--dasar);cursor:not-allowed;}"
+    },
+    {
+      "name": "Isian",
+      "kind": "input",
+      "refersTo": "isian",
+      "description": "Isian 48px dengan label di atas; fokus berupa border jalur dan halo jalur-muda.",
+      "html": "<div class=\"ds-isian\"><label for=\"ds-lahir\">Tanggal lahir</label><input id=\"ds-lahir\" type=\"date\"></div>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-isian{display:grid;gap:4px;font-family:var(--huruf);color:var(--navy);max-width:320px;} .ds-isian label{font-weight:600;font-size:15px;} .ds-isian input{height:48px;padding:0 12px;border:2px solid var(--garis);border-radius:var(--sudut);background:var(--dasar);color:var(--navy);font:500 17px/1 var(--huruf);} .ds-isian input:hover{border-color:var(--jalur-muda);} .ds-isian input:focus-visible{outline:none;border-color:var(--jalur);box-shadow:0 0 0 3px var(--jalur-muda);}"
+    },
+    {
+      "name": "Bar atas",
+      "kind": "nav",
+      "refersTo": "tautan-masuk",
+      "description": "Merek oranye (pengganti logo, OD-06), menu navy, tautan Masuk biru jalur.",
+      "html": "<header class=\"ds-bar\"><a class=\"ds-merek\" href=\"#\"><span class=\"ds-merek-nama\">Fujisaki</span><span class=\"ds-merek-sub\">Gakuin Center</span></a><nav class=\"ds-nav\"><a href=\"#\">Alur Program</a><a href=\"#\">Program</a><a href=\"#\">Kontak</a></nav><a class=\"ds-masuk\" href=\"#\">Masuk</a></header>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 16px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--garis);font-family:var(--huruf);} .ds-merek{display:flex;align-items:baseline;gap:8px;text-decoration:none;} .ds-merek-nama{font:700 26px/1 var(--huruf-papan);color:var(--oranye);letter-spacing:-0.01em;} .ds-merek-sub{font:600 14px/1 var(--huruf);color:var(--teks-2);} .ds-nav{display:flex;gap:28px;} .ds-nav a{color:var(--navy);font-weight:600;text-decoration:none;} .ds-nav a:hover{color:var(--jalur);text-decoration:underline;} .ds-masuk{font-weight:700;color:var(--jalur);text-decoration:none;padding:10px 12px;border-radius:var(--sudut);} .ds-masuk:hover{background:var(--jalur-pucat);} .ds-bar a:focus-visible{outline:3px solid var(--jalur);outline-offset:2px;}"
+    },
+    {
+      "name": "Chip status Berjalan",
+      "kind": "chip",
+      "refersTo": "status-berjalan",
+      "description": "Status pendaftaran Berjalan. Ditutup dan Selesai belum punya tampilan.",
+      "html": "<span class=\"ds-status\">Berjalan</span>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-status{display:inline-flex;align-items:center;gap:6px;font:700 14px/1 var(--huruf);padding:6px 10px;border-radius:999px;border:2px solid var(--jalur);color:var(--jalur);} .ds-status::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;}"
+    },
+    {
+      "name": "Lencana kode stasiun",
+      "kind": "custom",
+      "refersTo": "kode-stasiun",
+      "description": "Kode tahap FG 01–FG 06, besar di papan dan kecil sebaris.",
+      "html": "<span class=\"ds-kode\"><small>FG</small><b>01</b></span> <span class=\"ds-kode ds-kecil\"><small>FG</small><b>02</b></span>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-kode{display:inline-grid;place-items:center;align-content:center;width:54px;height:54px;border:3px solid var(--jalur);border-radius:var(--sudut);background:var(--dasar);color:var(--navy);line-height:1;vertical-align:middle;} .ds-kode small{font:700 12px/1 var(--huruf);letter-spacing:.04em;color:var(--jalur);} .ds-kode b{font:700 23px/1 var(--huruf-papan);} .ds-kode.ds-kecil{width:auto;height:auto;padding:2px 6px;border-width:2px;display:inline-flex;gap:4px;align-items:baseline;} .ds-kode.ds-kecil small{font-size:11px;} .ds-kode.ds-kecil b{font-size:14px;}"
+    },
+    {
+      "name": "Papan stasiun",
+      "kind": "card",
+      "refersTo": "papan",
+      "description": "Papan nama stasiun dengan lencana kode, nama Display, dan pita biru penunjuk stasiun berikutnya.",
+      "html": "<div class=\"ds-papan\"><div class=\"ds-papan-atas\"><span class=\"ds-k\"><small>FG</small><b>01</b></span><div><p class=\"ds-nama\">Cilacap</p><p class=\"ds-sub\">Stasiun awal · Pendaftaran dan seleksi</p></div></div><div class=\"ds-pita\"><span class=\"ds-redup\">Awal jalur</span><span>Belajar bahasa Jepang <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></span></div></div>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-papan{max-width:420px;background:var(--dasar);border:1.5px solid var(--garis);border-radius:var(--sudut);overflow:hidden;box-shadow:var(--bayang);font-family:var(--huruf);color:var(--navy);} .ds-papan p{margin:0;} .ds-papan-atas{display:flex;align-items:center;gap:14px;padding:14px 16px 12px;} .ds-k{display:inline-grid;place-items:center;align-content:center;flex:none;width:54px;height:54px;border:3px solid var(--jalur);border-radius:var(--sudut);line-height:1;} .ds-k small{font:700 12px/1 var(--huruf);letter-spacing:.04em;color:var(--jalur);} .ds-k b{font:700 23px/1 var(--huruf-papan);} .ds-nama{font:700 48px/.95 var(--huruf-papan);letter-spacing:-0.02em;} .ds-sub{font-size:15px;color:var(--teks-2);margin-top:6px;} .ds-pita{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 12px;background:var(--jalur);color:#fff;padding:9px 16px;font-weight:600;font-size:15px;} .ds-pita span{display:inline-flex;align-items:center;gap:6px;} .ds-redup{color:var(--teks-di-jalur);}"
+    },
+    {
+      "name": "Tanda status",
+      "kind": "custom",
+      "refersTo": "tanda-selesai",
+      "description": "Selesai, Sedang berjalan (posisi sekarang), Belum, Tidak berlaku; bentuk dan teks, bukan warna saja.",
+      "html": "<ul class=\"ds-arti\"><li><span class=\"ds-tanda ds-selesai\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 5 5 9-10\"/></svg></span>Selesai</li><li><span class=\"ds-tanda ds-sekarang\"></span>Sedang berjalan</li><li><span class=\"ds-tanda\"></span>Belum</li><li><span class=\"ds-tanda ds-tb\"></span>Tidak berlaku</li></ul>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-arti{list-style:none;margin:0;padding:0;display:grid;gap:12px;font:700 16px/1.35 var(--huruf);color:var(--navy);} .ds-arti li{display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;} .ds-tanda{box-sizing:border-box;width:22px;height:22px;border-radius:50%;background:var(--dasar);border:4px solid var(--jalur);display:grid;place-items:center;} .ds-selesai{background:var(--jalur);color:#fff;} .ds-sekarang{border-color:var(--oranye);box-shadow:0 0 0 4px var(--oranye-pucat);} .ds-tb{border:3px dashed var(--lewat);width:20px;height:20px;margin:1px;}"
+    },
+    {
+      "name": "Peta jalur dengan kereta",
+      "kind": "custom",
+      "refersTo": "di-sini",
+      "description": "Garis 12px dengan titik stasiun; titik oranye kamu di sini di FG 01 (gerak guliran tidak dirender di panel).",
+      "html": "<div class=\"ds-peta\"><span class=\"ds-titik ds-kini\"></span><span class=\"ds-titik\"></span><span class=\"ds-titik\"></span><span class=\"ds-titik ds-besar\"></span><span class=\"ds-label\">Kamu di sini</span></div>",
+      "css": ":host{--jalur:#2B55C4;--jalur-tua:#1D3E99;--jalur-sedang:#5F80D6;--jalur-muda:#9DB3EA;--jalur-pucat:#EEF2FB;--navy:#0B1440;--teks-2:#3D4A7A;--garis:#D5DBEA;--oranye:#EE5A24;--oranye-tekan:#D44A17;--oranye-teks:#B93E0F;--oranye-pucat:#FDE3D7;--lewat:#8A93AD;--teks-di-jalur:#DCE4F7;--dasar:#FFFFFF;--sudut:6px;--huruf:'Barlow',system-ui,sans-serif;--huruf-papan:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;--bayang:0 2px 10px rgba(11,20,64,.08),0 1px 2px rgba(11,20,64,.06);} .ds-peta{position:relative;display:flex;justify-content:space-between;align-items:center;max-width:420px;padding:40px 8px 12px;} .ds-peta::before{content:'';position:absolute;left:16px;right:16px;top:calc(40px + 14px);height:12px;background:var(--jalur);} .ds-titik{position:relative;box-sizing:border-box;width:32px;height:32px;border-radius:50%;background:var(--dasar);border:7px solid var(--jalur);} .ds-besar{width:40px;height:40px;box-shadow:0 0 0 4px var(--dasar),0 0 0 8px var(--jalur);} .ds-kini::after{content:'';position:absolute;inset:-3px;border-radius:50%;background:var(--oranye);border:4px solid var(--dasar);box-shadow:0 2px 6px rgba(11,20,64,.25);} .ds-label{position:absolute;left:4px;top:8px;background:var(--oranye);color:var(--navy);font:700 12px/1 var(--huruf);padding:5px 7px;border-radius:4px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Peta Jalur Kereta",
+    "overview": "**Creative North Star: \"Peta Jalur Kereta\"**\n\nSitus ini adalah peta jalur kereta dari Cilacap ke Jepang. Enam stasiun, FG 01 sampai FG 06, sama persis dengan enam tahap yang nanti dilihat calon peserta dan siswa di akunnya dan dicatat pegawai di panel pegawai. Garis jalur biru setebal 12px bukan hiasan: ia adalah struktur halaman. Di HP garis turun tegak di sisi kiri; di layar lebar garis melintang di bawah pembuka, membelok turun di tepi kanan, lalu terus menjadi tulang bagian-bagian berikutnya sampai berakhir di lingkaran ujung pada bagian Kontak.\n\nDasarnya putih papan stasiun, hurufnya navy, dan bentuknya meminjam papan nama stasiun: huruf Barlow Semi Condensed yang rapat, kode stasiun dalam lencana bersudut, dan pita biru dengan penunjuk stasiun sebelumnya dan berikutnya. Oranye matahari, warna logo, sengaja langka: ia hanya menandai \"kamu di sini\" dan satu aksi utama per tampilan. Kepadatannya sedang, terbaca di HP Android murah di bawah sinar matahari, dengan target sentuh besar (44–54px).\n\nHalaman ini menolak susunan baku situs LPK: foto kelompok selebar layar, deretan angka besar, dan kartu program yang seragam. Program tampil sebagai cabang dari garis, angka tampil di dalam stasiun yang relevan.",
+    "keyCharacteristics": [
+      "Garis jalur biru 12px sebagai tulang tata letak, bukan dekorasi.",
+      "Enam stasiun FG 01–FG 06 = enam tahap; kode stasiun dalam lencana bersudut 6px.",
+      "Oranye hanya untuk posisi sekarang dan satu aksi utama.",
+      "Huruf papan stasiun (Barlow Semi Condensed) untuk judul, Barlow untuk bacaan.",
+      "Datar; bayangan hanya satu, lembut, untuk papan dan kartu yang \"ditempel\" di atas peta.",
+      "Satu gerak khas: titik \"kamu di sini\" berjalan di garis mengikuti guliran."
+    ],
+    "rules": [
+      {
+        "name": "The Matahari Satu Rule",
+        "body": "Oranye hanya untuk dua hal: posisi sekarang (\"kamu di sini\", tahap atau langkah yang sedang berjalan) dan satu aksi utama per tampilan. Pengecualian yang ada di bangunan: tulisan merek \"Fujisaki\" (komitmen logo), kursor ketik, dan warna seleksi teks. Bila oranye muncul di tempat lain, itu kesalahan.",
+        "section": "colors"
+      },
+      {
+        "name": "The Oranye Teks Rule",
+        "body": "Oranye seukuran teks (di bawah 18,66px tebal) selalu memakai oranye-teks, tidak pernah oranye.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tanpa Nilai Mentah Rule",
+        "body": "Komponen aplikasi memakai token di atas, tidak menulis heksa langsung.",
+        "section": "colors"
+      },
+      {
+        "name": "The Papan Nama Rule",
+        "body": "Barlow Semi Condensed hanya untuk hal yang dibaca seperti papan: judul, nama stasiun, kode, nomor pendaftaran, angka bukti. Kalimat bacaan selalu Barlow.",
+        "section": "typography"
+      },
+      {
+        "name": "The Angka Tabular Rule",
+        "body": "Seluruh halaman memakai `font-variant-numeric: tabular-nums`, supaya nomor pendaftaran, tanggal (DD-MM-YYYY), dan angka siswa sejajar.",
+        "section": "typography"
+      },
+      {
+        "name": "The Satu Bayang Rule",
+        "body": "Hanya ada satu bayangan elevasi (bayang papan). Kartu dan bagian lain dibedakan dengan latar jalur-pucat, bukan dengan bayangan baru.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** jadikan garis jalur 12px (tebal-jalur) tulang tata letak setiap halaman publik yang menceritakan alur, dan biarkan ia terus menyambung antarbagian.",
+      "**Do** sebut tahap dengan lencana kode FG 01–FG 06 dan nama tahap yang sama di situs publik, akun, dan panel pegawai.",
+      "**Do** pakai oranye hanya untuk posisi sekarang dan satu tombol utama per tampilan; teks oranye selalu oranye-teks.",
+      "**Do** tampilkan setiap status dengan bentuk tanda dan teksnya, bukan warna saja.",
+      "**Do** buat target sentuh minimal 44px; tombol utama 54px, isian 48px.",
+      "**Do** simpan huruf sendiri lewat `next/font` dan batasi Zen Kaku Gothic New pada glyph Jepang yang dipakai.",
+      "**Do** ganti tulisan merek pengganti dengan logo resmi (matahari oranye dalam lengkung ungu-biru dengan torii) begitu berkasnya diserahkan (OD-06); logo itu mengikat."
+    ],
+    "donts": [
+      "**Don't** pakai oranye untuk hiasan, judul, ikon dekoratif, atau tombol kedua.",
+      "**Don't** pakai abu lewat untuk teks bacaan; ia hanya untuk Tidak berlaku, keadaan nonaktif, dan bingkai kosong.",
+      "**Don't** tambah bayangan selain bayang papan, dan jangan pakai bayangan geser keras.",
+      "**Don't** pakai bentuk pil selain untuk chip status pendaftaran.",
+      "**Don't** pakai Barlow Semi Condensed untuk paragraf.",
+      "**Don't** karang tampilan status Ditutup atau Selesai untuk pendaftaran, foto, testimoni, atau logo mitra; tunggu keputusan dan data yang sah.",
+      "**Don't** tampilkan program sebagai deretan kartu seragam; program adalah cabang dari jalur yang sama."
+    ]
+  }
+}

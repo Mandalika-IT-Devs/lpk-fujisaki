@@ -1,0 +1,11 @@
+{
+  "aturan": "Nomor pendaftaran",
+  "prd": "§6.4",
+  "catatan": "Format FGC-TTTT-NNNN. TTTT tahun kirim WIB (UTC+7). NNNN nomor urut dalam tahun itu, minimal 4 digit dengan nol di depan; 10.000 ke atas ditulis apa adanya. urutan = nomor urut pendaftaran ini dalam tahun WIB-nya, dimulai dari 1.",
+  "kasus": [
+    { "nama": "pendaftaran ke-37 pada 2026", "input": { "dikirimPada": "2026-03-05T03:00:00Z", "urutan": 37 }, "output": { "tahunWib": 2026, "nomor": "FGC-2026-0037" } },
+    { "nama": "detik terakhir tahun 2026 WIB", "input": { "dikirimPada": "2026-12-31T16:59:59Z", "urutan": 121 }, "output": { "tahunWib": 2026, "nomor": "FGC-2026-0121" } },
+    { "nama": "masih 2026 di UTC tetapi sudah 2027 di WIB", "input": { "dikirimPada": "2026-12-31T17:30:00Z", "urutan": 1 }, "output": { "tahunWib": 2027, "nomor": "FGC-2027-0001" } },
+    { "nama": "urutan ke-10.000", "input": { "dikirimPada": "2026-11-01T03:00:00Z", "urutan": 10000 }, "output": { "tahunWib": 2026, "nomor": "FGC-2026-10000" } }
+  ]
+}

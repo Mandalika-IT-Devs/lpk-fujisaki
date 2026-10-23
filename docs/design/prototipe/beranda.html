@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LPKS Fujisaki Gakuin Center – Dari Cilacap ke Jepang</title>
+<meta name="description" content="Pelatihan bahasa Jepang dan pengiriman kerja ke Jepang dari Cilacap, lewat enam tahap yang bisa kamu pantau sendiri.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@700&text=%E6%97%A5%E6%9C%AC%E8%97%A4%E5%B4%8E%E5%AD%A6%E9%99%A2%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC&display=swap">
+<style>
+:root {
+  --jalur: #2B55C4;
+  --jalur-tua: #1D3E99;
+  --jalur-sedang: #5F80D6;
+  --jalur-muda: #9DB3EA;
+  --jalur-pucat: #EEF2FB;
+  --navy: #0B1440;
+  --teks-2: #3D4A7A;
+  --teks-di-jalur: #DCE4F7;
+  --garis: #D5DBEA;
+  --oranye: #EE5A24;
+  --oranye-tekan: #D44A17;
+  --oranye-teks: #B93E0F;
+  --oranye-pucat: #FDE3D7;
+  --lewat: #8A93AD;
+  --dasar: #FFFFFF;
+  --huruf: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --huruf-papan: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --huruf-jp: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --sudut: 6px;
+  --tebal-jalur: 12px;
+  --bayang: 0 2px 10px rgba(11, 20, 64, 0.08), 0 1px 2px rgba(11, 20, 64, 0.06);
+  --tepi: 16px;
+  --lebar: 1200px;
+  --pad: 56px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scrollbar-color: var(--jalur) var(--jalur-pucat); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--dasar);
+  color: var(--navy);
+  font: 400 17px/1.55 var(--huruf);
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--oranye);
+  accent-color: var(--jalur);
+}
+::selection { background: var(--oranye-pucat); color: var(--navy); }
+h1, h2, h3, p, ol, ul, figure { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+a { color: var(--jalur); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+a:hover { color: var(--jalur-tua); }
+:focus-visible { outline: 3px solid var(--jalur); outline-offset: 2px; border-radius: 4px; }
+.jp { font-family: var(--huruf-jp); font-weight: 700; }
+.wadah { width: 100%; max-width: var(--lebar); margin: 0 auto; padding: 0 var(--tepi); }
+.tersembunyi { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+svg.ikon { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Bar atas ---------- */
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255, 255, 255, 0.96); border-bottom: 1px solid var(--garis); }
+.bar .wadah { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 16px; }
+.merek { display: flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--navy); }
+.merek-nama { font: 700 26px/1 var(--huruf-papan); color: var(--oranye); letter-spacing: -0.01em; }
+.merek-sub { font: 600 14px/1 var(--huruf); color: var(--teks-2); }
+.nav-lebar { display: none; gap: 28px; }
+.nav-lebar a, .nav-kecil a { color: var(--navy); text-decoration: none; font-weight: 600; }
+.nav-lebar a:hover, .nav-kecil a:hover { color: var(--jalur); text-decoration: underline; }
+.bar-kanan { display: flex; align-items: center; gap: 4px; }
+.masuk { font-weight: 700; color: var(--jalur); text-decoration: none; padding: 10px 12px; border-radius: var(--sudut); }
+.masuk:hover { background: var(--jalur-pucat); }
+.menu { position: relative; }
+.menu summary { list-style: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--sudut); cursor: pointer; color: var(--navy); }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary:hover { background: var(--jalur-pucat); }
+.nav-kecil { position: absolute; right: 0; top: 52px; width: 240px; background: var(--dasar); border: 1px solid var(--garis); border-radius: var(--sudut); box-shadow: var(--bayang); padding: 8px; display: grid; }
+.nav-kecil a { padding: 12px; border-radius: 4px; }
+
+/* ---------- Pembuka ---------- */
+.pembuka { padding: 14px 0 8px; }
+.pembuka .wadah { display: grid; gap: 14px; }
+.pembuka-kiri { display: grid; gap: 14px; }
+h1 { font: 700 34px/1.04 var(--huruf-papan); letter-spacing: -0.015em; text-wrap: balance; max-width: 18ch; }
+
+/* Papan nama stasiun */
+.papan { background: var(--dasar); border: 1.5px solid var(--garis); border-radius: var(--sudut); overflow: hidden; box-shadow: var(--bayang); }
+.papan-atas { display: flex; align-items: center; gap: 14px; padding: 14px 16px 12px; }
+.kode { display: inline-grid; place-items: center; align-content: center; flex: none; width: 54px; height: 54px; border: 3px solid var(--jalur); border-radius: var(--sudut); background: var(--dasar); color: var(--navy); line-height: 1; }
+.kode small { font: 700 12px/1 var(--huruf); letter-spacing: 0.04em; color: var(--jalur); }
+.kode b { font: 700 23px/1 var(--huruf-papan); }
+.kode.kecil { width: auto; height: auto; padding: 2px 6px; border-width: 2px; display: inline-flex; gap: 4px; align-items: baseline; vertical-align: 2px; }
+.kode.kecil small { font-size: 12px; }
+.kode.kecil b { font-size: 14px; }
+.papan-nama { font: 700 48px/0.95 var(--huruf-papan); letter-spacing: -0.02em; }
+.papan-sub { font-size: 15px; color: var(--teks-2); margin-top: 6px; }
+.papan-pita { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 12px; background: var(--jalur); color: #fff; padding: 9px 16px; font-weight: 600; font-size: 15px; }
+.papan-pita span { display: inline-flex; align-items: center; gap: 6px; }
+.papan-pita .redup { color: var(--teks-di-jalur); }
+.papan-pita .kode.kecil { background: transparent; border-color: #fff; color: #fff; }
+.papan-pita .kode.kecil small { color: #fff; }
+
+/* Konter cek usia */
+.konter { background: var(--jalur-pucat); border-radius: var(--sudut); padding: 14px; display: grid; gap: 10px; }
+.konter h2 { font: 700 23px/1.1 var(--huruf-papan); }
+.isian { display: grid; gap: 4px; }
+.isian label { font-weight: 600; font-size: 15px; }
+.isian input, .isian select {
+  width: 100%; height: 48px; padding: 0 12px; border: 2px solid var(--garis); border-radius: var(--sudut);
+  background: var(--dasar); color: var(--navy); font: 500 17px/1 var(--huruf);
+}
+.isian select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230B1440' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px; }
+.isian input:hover, .isian select:hover { border-color: var(--jalur-muda); }
+.isian input:focus-visible, .isian select:focus-visible { outline: none; border-color: var(--jalur); box-shadow: 0 0 0 3px var(--jalur-muda); }
+.dua-isian { display: grid; gap: 12px; }
+.jawaban { display: flex; gap: 10px; align-items: flex-start; min-height: 50px; font-size: 15px; line-height: 1.4; color: var(--teks-2); }
+.jawaban .ikon { margin-top: 1px; }
+.jawaban[data-hasil="ya"] { color: var(--navy); }
+.jawaban[data-hasil="ya"] .ikon { color: var(--jalur); }
+.jawaban[data-hasil="tidak"] { color: var(--navy); }
+.jawaban[data-hasil="tidak"] .ikon { color: var(--navy); }
+.tombol-utama {
+  display: flex; align-items: center; justify-content: center; gap: 8px; height: 54px; padding: 0 24px; border: 0; border-radius: var(--sudut);
+  background: var(--oranye); color: #fff; font: 700 20px/1 var(--huruf); text-decoration: none; cursor: pointer;
+  transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tombol-utama:hover { background: var(--oranye-tekan); color: #fff; }
+.tombol-utama:active { transform: translateY(1px); }
+.tombol-utama:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+.konter-catatan { font-size: 14px; color: var(--teks-2); }
+
+/* ---------- Bagian umum ---------- */
+.bagian { padding: var(--pad-atas, var(--pad)) 0 var(--pad-bawah, var(--pad)); }
+.bagian h2 { font: 700 30px/1.06 var(--huruf-papan); letter-spacing: -0.01em; text-wrap: balance; max-width: 22ch; }
+.pengantar { margin-top: 12px; color: var(--teks-2); max-width: 60ch; }
+
+/* ---------- Peta jalur: enam stasiun ---------- */
+.bagian-alur { --pad-atas: 0px; }
+.jalur { position: relative; padding-left: 60px; timeline-scope: --jalur; }
+.jalur-kepala { position: relative; padding: 28px 0 32px; }
+/* Garis jalur dibangun dari ruas: sambungan dari tepi atas bagian ke FG 01, lalu satu ruas per stasiun. */
+.jalur-kepala::before, .stasiun::after { content: ""; position: absolute; left: -42px; width: var(--tebal-jalur); background: var(--jalur); }
+.jalur-kepala::before { top: 0; bottom: -18px; }
+.stasiun::after { top: 18px; bottom: -18px; }
+/* Sesudah FG 06 garis terus turun menjadi tulang bagian-bagian berikutnya. */
+.stasiun:last-child::after { bottom: calc(-1 * var(--pad)); }
+.stasiun { position: relative; padding-bottom: 40px; }
+.stasiun:last-child { padding-bottom: 0; }
+.titik { position: absolute; z-index: 1; left: -52px; top: 2px; width: 32px; height: 32px; border-radius: 50%; background: var(--dasar); border: 7px solid var(--jalur); }
+.titik.besar { left: -56px; top: -2px; width: 40px; height: 40px; box-shadow: 0 0 0 4px var(--dasar), 0 0 0 8px var(--jalur); }
+.stasiun-kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.stasiun h3 { font: 700 25px/1.05 var(--huruf-papan); margin-top: 6px; }
+.di-sini { display: inline-flex; align-items: center; gap: 6px; background: var(--oranye); color: var(--navy); font: 700 12px/1 var(--huruf); padding: 6px 8px; border-radius: 4px; }
+.stasiun > p { margin-top: 8px; color: var(--teks-2); max-width: 46ch; }
+.stasiun > p.sorot { color: var(--navy); font-weight: 600; }
+.data { margin-top: 14px; max-width: 420px; }
+.data-judul { font-size: 14px; font-weight: 600; color: var(--teks-2); }
+.batang { display: flex; height: 14px; border-radius: 3px; overflow: hidden; margin: 8px 0; background: var(--jalur-pucat); }
+.batang span { display: block; height: 100%; }
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 15px; }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.minat { display: grid; gap: 6px; margin-top: 8px; }
+.minat li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 15px; }
+.minat li b { font-weight: 700; }
+.minat li i { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--jalur-muda); }
+
+/* Papan kedatangan FG 06, pasangan papan Cilacap */
+.papan-tiba { margin-top: 14px; max-width: 420px; }
+.papan-tiba .papan-nama { font-size: 44px; }
+.papan-tiba .papan-atas .kode { width: 50px; height: 50px; }
+.tiba { padding: 0 16px 14px; font-size: 17px; line-height: 1.3; }
+.tiba b { font: 700 32px/1 var(--huruf-papan); color: var(--jalur); display: block; margin-bottom: 2px; }
+.sumber { margin-top: 8px; font-size: 14px; color: var(--teks-2); }
+
+/* Penanda "kamu di sini" yang berjalan dari FG 01 ke FG 06 */
+.kereta { display: none; position: absolute; z-index: 3; left: var(--kx0); top: var(--ky0); width: 24px; height: 24px; pointer-events: none; }
+.kereta-titik { position: absolute; inset: 0; border-radius: 50%; background: var(--oranye); border: 4px solid var(--dasar); box-shadow: 0 2px 6px rgba(11, 20, 64, 0.25); }
+.kereta-label { position: absolute; left: 1px; bottom: 26px; writing-mode: vertical-rl; rotate: 180deg; white-space: nowrap; background: var(--oranye); color: var(--navy); font: 700 12px/1 var(--huruf); padding: 7px 4px; border-radius: 4px; box-shadow: 0 1px 4px rgba(11, 20, 64, 0.2); }
+
+.jalur[data-siap] .kereta { display: block; }
+.kereta-label { display: none; }
+
+/* ---------- Bagian sesudah stasiun: garis tetap menjadi tulang ---------- */
+.lanjutan .bagian > .wadah { position: relative; padding-left: calc(var(--tepi) + 60px); }
+.lanjutan .bagian > .wadah::before { content: ""; position: absolute; left: calc(var(--tepi) + 18px); top: calc(-1 * var(--pad-atas, var(--pad))); bottom: calc(-1 * var(--pad-bawah, var(--pad))); width: var(--tebal-jalur); background: var(--jalur); }
+
+/* Pantau posisi */
+.pantau { background: var(--jalur-pucat); }
+.pantau .wadah { display: grid; gap: 24px; }
+.arti { display: grid; gap: 12px; margin-top: 20px; }
+.arti li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; }
+.arti p { font-size: 16px; line-height: 1.35; }
+.arti b { display: block; }
+.arti span.ket { color: var(--teks-2); }
+.akun { background: var(--dasar); border-radius: var(--sudut); box-shadow: var(--bayang); padding: 16px; display: grid; gap: 16px; min-width: 0; }
+.akun-kepala { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.nomor { font: 700 22px/1 var(--huruf-papan); letter-spacing: 0.01em; }
+.status { display: inline-flex; align-items: center; gap: 6px; font: 700 14px/1 var(--huruf); padding: 6px 10px; border-radius: 999px; border: 2px solid var(--jalur); color: var(--jalur); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.akun-program { font-size: 15px; color: var(--teks-2); margin-top: 4px; }
+.mini { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); padding-top: 4px; }
+.mini::before { content: ""; position: absolute; left: 8%; right: 8%; top: 15px; height: 6px; border-radius: 3px; background: var(--jalur); }
+.mini li { position: relative; display: grid; justify-items: center; gap: 6px; font: 700 12px/1 var(--huruf); color: var(--teks-2); }
+.tanda { position: relative; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: var(--dasar); border: 5px solid var(--jalur); display: grid; place-items: center; }
+.tanda.selesai { background: var(--jalur); color: #fff; }
+.tanda.selesai svg { width: 14px; height: 14px; stroke-width: 3; }
+.tanda.sekarang { border-color: var(--oranye); box-shadow: 0 0 0 4px var(--oranye-pucat); }
+.tanda.tidak-berlaku { border: 3px dashed var(--lewat); width: 20px; height: 20px; margin: 2px; }
+.mini li.aktif { color: var(--navy); }
+.langkah-judul { font: 700 20px/1.15 var(--huruf-papan); margin-bottom: 6px; }
+.langkah li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid var(--garis); }
+.langkah li:first-child { border-top: 0; }
+.langkah .tanda, .arti .tanda { width: 22px; height: 22px; border-width: 4px; margin-top: 1px; }
+.langkah .tanda.selesai svg, .arti .tanda.selesai svg { width: 12px; height: 12px; }
+.arti .tanda.tidak-berlaku { width: 20px; height: 20px; border-width: 3px; margin: 2px 1px; }
+.langkah p { font-size: 16px; line-height: 1.35; }
+.langkah small { display: block; font-size: 14px; color: var(--teks-2); margin-top: 2px; }
+.langkah small b { color: var(--oranye-teks); }
+.catatan { background: var(--jalur-pucat); border-radius: var(--sudut); padding: 12px 14px; font-size: 15px; }
+.catatan b { display: block; font-size: 14px; color: var(--teks-2); margin-bottom: 2px; }
+.contoh { font-size: 12px; color: var(--teks-2); }
+
+/* Program sebagai cabang dari garis */
+.program { margin-top: 28px; border-top: 2px solid var(--navy); }
+.program li { position: relative; display: grid; gap: 4px 14px; padding: 20px 0; border-bottom: 1px solid var(--garis); }
+.program li::before { content: ""; position: absolute; left: -36px; top: 22px; width: 36px; height: 6px; background: var(--jalur); }
+.program li::after { content: ""; position: absolute; left: -46px; top: 15px; width: 20px; height: 20px; border-radius: 50%; background: var(--dasar); border: 5px solid var(--jalur); }
+.program h3 { font: 700 25px/1.1 var(--huruf-papan); }
+.program p { color: var(--teks-2); max-width: 56ch; margin-top: 4px; }
+.program .info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin-top: 6px; font-size: 15px; color: var(--navy); }
+.program .info span { font-weight: 600; }
+.program .info a { font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+
+/* Galeri */
+.bagian-galeri { --pad-atas: 0px; }
+.galeri { margin: 28px calc(-1 * var(--tepi)) 0 0; padding: 0 var(--tepi) 8px 0; display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
+.bingkai { display: grid; gap: 8px; scroll-snap-align: start; }
+.bingkai div { aspect-ratio: 4 / 3; border: 1.5px dashed var(--garis); border-radius: var(--sudut); background: var(--jalur-pucat); display: grid; place-items: center; color: var(--lewat); }
+.bingkai div svg { width: 32px; height: 32px; stroke-width: 1.5; }
+.bingkai figcaption { font-weight: 600; }
+
+/* Kontak: ujung garis */
+.kontak { --pad-bawah: 72px; }
+.kontak .wadah { display: grid; gap: 20px; }
+.lanjutan .kontak > .wadah::before { bottom: auto; height: calc(var(--pad) + 30px); }
+.ujung { position: absolute; z-index: 1; left: calc(var(--tepi) + 4px); top: 10px; width: 40px; height: 40px; border-radius: 50%; background: var(--dasar); border: 7px solid var(--jalur); box-shadow: 0 0 0 4px var(--dasar), 0 0 0 8px var(--jalur); }
+.alamat { font-size: 18px; margin-top: 12px; max-width: 34ch; }
+.aksi-kontak { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.tombol-kedua {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 20px;
+  border: 2px solid var(--jalur); border-radius: var(--sudut); background: var(--dasar); color: var(--jalur);
+  font: 700 18px/1 var(--huruf); text-decoration: none;
+}
+.tombol-kedua:hover { background: var(--jalur-pucat); color: var(--jalur-tua); }
+.tombol-kedua[aria-disabled="true"] { border-color: var(--garis); color: var(--lewat); background: var(--dasar); cursor: not-allowed; }
+.kolom-aksi { display: grid; gap: 10px; }
+.kontak-catatan { font-size: 14px; color: var(--teks-2); }
+
+/* ---------- Kaki ---------- */
+.kaki { background: var(--jalur); color: #fff; padding: 40px 0 28px; }
+.kaki .wadah { display: grid; gap: 24px; }
+.kaki .merek-nama { color: #fff; font-size: 32px; }
+.kaki p { color: var(--teks-di-jalur); font-size: 15px; }
+.kaki nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+.kaki nav a { color: #fff; font-weight: 600; text-decoration: none; }
+.kaki nav a:hover { text-decoration: underline; }
+.kaki :focus-visible { outline-color: #fff; }
+.kaki-bawah { border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 16px; font-size: 14px; color: var(--teks-di-jalur); }
+
+/* ---------- Gerak: satu-satunya gerak khas halaman ini ---------- */
+@keyframes kereta-jalan { from { translate: 0 0; } to { translate: var(--dx) var(--dy); } }
+@supports (animation-timeline: view()) and (timeline-scope: --a) {
+  @media (prefers-reduced-motion: no-preference) {
+    .daftar-stasiun { view-timeline: --jalur block; }
+    .jalur[data-siap] .kereta-label { display: block; }
+    .jalur[data-siap] .kereta { animation: kereta-jalan linear both; animation-timeline: --jalur; animation-range: cover 17% cover 76%; }
+    /* Penanda tetap di FG 01 hanya untuk cadangan; pembaca layar tetap membacanya. */
+    .jalur[data-siap] .di-sini { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  }
+}
+
+/* ---------- Layar sedang ---------- */
+@media (min-width: 640px) {
+  .dua-isian { grid-template-columns: 1fr 1fr; }
+  .kaki nav { grid-template-columns: repeat(3, auto); justify-content: start; }
+}
+
+/* ---------- Layar lebar ---------- */
+@media (min-width: 1024px) {
+  :root { --tepi: 32px; --pad: 88px; }
+  body { font-size: 18px; }
+  .nav-lebar { display: flex; }
+  .menu { display: none; }
+  .bar .wadah { height: 68px; }
+
+  .pembuka { padding: 24px 0 8px; }
+  .pembuka .wadah { grid-template-columns: 7fr 5fr; gap: 40px; align-items: end; }
+  .pembuka-kiri { gap: 20px; }
+  h1 { font-size: 56px; max-width: none; }
+  .papan-atas { padding: 16px 24px 14px; gap: 18px; }
+  .kode { width: 60px; height: 60px; }
+  .kode b { font-size: 26px; }
+  .papan-nama { font-size: 64px; }
+  .papan-sub { font-size: 17px; }
+  .papan-pita { padding: 10px 24px; font-size: 16px; }
+  .konter { padding: 20px 24px; gap: 12px; }
+  .konter h2 { font-size: 28px; }
+  .dua-isian { grid-template-columns: 1fr; }
+  .bagian h2 { font-size: 46px; }
+
+  /* Garis mendatar di bawah pembuka */
+  .bagian-alur { --pad-atas: 32px; }
+  .jalur { padding-left: 0; }
+  .jalur-kepala { padding: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 40px; align-items: end; }
+  .jalur-kepala::before { display: none; }
+  .bagian-alur h2 { font-size: 36px; max-width: none; }
+  .jalur-kepala .pengantar { margin-top: 0; font-size: 16px; max-width: 64ch; }
+  .daftar-stasiun { display: grid; grid-template-columns: repeat(5, 1fr) 1.8fr; gap: 28px; margin-top: 40px; padding-top: 60px; }
+  .stasiun { padding-bottom: 0; }
+  .stasiun::after { left: 16px; top: -46px; bottom: auto; width: calc(100% + 28px); height: var(--tebal-jalur); }
+  .stasiun:last-child { padding-right: 36px; }
+  .stasiun:last-child::after { width: calc(100% - 16px); bottom: auto; }
+  .titik { left: 0; top: -56px; }
+  .titik.besar { left: -4px; top: -60px; }
+  .stasiun-kepala { min-height: 28px; }
+  .stasiun h3 { font-size: 25px; }
+  .stasiun > p { font-size: 16px; }
+  .data { max-width: none; }
+  .minat li { font-size: 14px; }
+  .legenda { font-size: 14px; }
+  .papan-tiba { max-width: none; }
+  .papan-tiba .papan-atas { padding: 12px 14px 10px; gap: 12px; }
+  .papan-tiba .papan-atas .kode { width: 46px; height: 46px; }
+  .papan-tiba .papan-atas .kode b { font-size: 22px; }
+  .papan-tiba .papan-nama { font-size: 36px; }
+  .papan-tiba .papan-sub { font-size: 14px; white-space: nowrap; }
+  .papan-tiba .papan-pita { padding: 8px 14px; font-size: 14px; }
+  .tiba { padding: 0 14px 12px; font-size: 15px; }
+  .tiba b { font-size: 28px; }
+  /* Belokan: dari FG 06 garis membelok turun di tepi kanan */
+  .jalur[data-siap]::after { content: ""; position: absolute; right: 0; top: calc(var(--garis-y) - 6px); bottom: calc(-1 * var(--pad)); width: var(--tebal-jalur); background: var(--jalur); }
+  .kereta-label { left: 50%; bottom: 30px; writing-mode: horizontal-tb; rotate: none; translate: -50% 0; padding: 5px 7px; }
+  @supports (animation-timeline: view()) and (timeline-scope: --a) {
+    @media (prefers-reduced-motion: no-preference) {
+      .jalur[data-siap] .kereta { animation-range: cover 19% cover 47%; }
+    }
+  }
+
+  /* Bagian sesudah stasiun: tulang garis di tepi kanan */
+  .lanjutan .bagian > .wadah { padding-left: var(--tepi); padding-right: calc(var(--tepi) + 56px); }
+  .lanjutan .bagian > .wadah::before { left: auto; right: var(--tepi); }
+  .ujung { left: auto; right: calc(var(--tepi) - 14px); }
+
+  .pantau .wadah { grid-template-columns: 5fr 7fr; gap: 48px; align-items: start; }
+  .akun { padding: 24px; }
+  .program li { grid-template-columns: 1fr auto; padding: 24px 0; align-items: start; }
+  .program li::before { left: auto; right: -50px; width: 50px; }
+  .program li::after { left: auto; right: -60px; }
+  .program .info { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: flex-end; margin-top: 0; text-align: right; }
+  .galeri { margin: 28px 0 0; padding: 0; grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); overflow: visible; }
+  .kontak .wadah { grid-template-columns: 7fr 5fr; align-items: end; }
+  .kolom-aksi { justify-items: end; }
+  .aksi-kontak { justify-content: flex-end; }
+  .kontak-catatan { text-align: right; }
+  .kaki .wadah { grid-template-columns: 1fr auto; align-items: start; }
+  .kaki-bawah { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wadah">
+    <a class="merek" href="#" aria-label="Fujisaki, ke beranda">
+      <span class="merek-nama">Fujisaki</span>
+      <span class="merek-sub">Gakuin Center</span>
+    </a>
+    <nav class="nav-lebar" aria-label="Menu utama">
+      <a href="#alur">Alur Program</a>
+      <a href="#program">Program</a>
+      <a href="#galeri">Galeri</a>
+      <a href="#tentang">Tentang Kami</a>
+      <a href="#kontak">Kontak</a>
+    </nav>
+    <div class="bar-kanan">
+      <a class="masuk" href="#masuk">Masuk</a>
+      <details class="menu">
+        <summary aria-label="Buka menu">
+          <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+        <nav class="nav-kecil" aria-label="Menu utama">
+          <a href="#alur">Alur Program</a>
+          <a href="#program">Program</a>
+          <a href="#galeri">Galeri</a>
+          <a href="#tentang">Tentang Kami</a>
+          <a href="#kontak">Kontak</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="pembuka" aria-labelledby="judul">
+    <div class="wadah">
+      <div class="pembuka-kiri">
+        <h1 id="judul">Dari Cilacap ke Jepang, lewat jalur yang bisa kamu pantau sendiri.</h1>
+        <div class="papan" role="img" aria-label="Papan stasiun FG 01 Cilacap, stasiun awal: pendaftaran dan seleksi. Berikutnya: belajar bahasa Jepang, FG 02.">
+          <div class="papan-atas">
+            <span class="kode"><small>FG</small><b>01</b></span>
+            <div>
+              <p class="papan-nama">Cilacap</p>
+              <p class="papan-sub">Stasiun awal · Pendaftaran dan seleksi</p>
+            </div>
+          </div>
+          <div class="papan-pita">
+            <span class="redup">Awal jalur</span>
+            <span>Belajar bahasa Jepang <span class="kode kecil"><small>FG</small><b>02</b></span>
+              <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <form class="konter" id="daftar" action="#masuk" novalidate>
+        <h2>Cek usiamu, lalu daftar</h2>
+        <div class="dua-isian">
+          <div class="isian">
+            <label for="lahir">Tanggal lahir</label>
+            <input id="lahir" name="lahir" type="date" min="1960-01-01" autocomplete="bday">
+          </div>
+          <div class="isian">
+            <label for="program-pilih">Program</label>
+            <select id="program-pilih" name="program">
+              <option value="ssw">Tokutei Ginou (SSW)</option>
+              <option value="magang">Pemagangan</option>
+              <option value="gijinkoku">Gijinkoku</option>
+              <option value="pelajar">Pelajar</option>
+            </select>
+          </div>
+        </div>
+        <p class="jawaban" id="jawaban" role="status" aria-live="polite">
+          <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <span>Isi tanggal lahirmu untuk melihat apakah usiamu masuk rentang program.</span>
+        </p>
+        <a class="tombol-utama" href="#masuk">Daftar sekarang
+          <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <p class="konter-catatan">Sudah punya akun? <a href="#masuk">Masuk</a>. Rentang usia di sini masih contoh.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="bagian bagian-alur" id="alur" aria-labelledby="judul-alur">
+    <div class="wadah">
+      <div class="jalur">
+        <span class="kereta" aria-hidden="true"><i class="kereta-titik"></i><span class="kereta-label">Kamu di sini</span></span>
+        <div class="jalur-kepala">
+          <h2 id="judul-alur">Enam stasiun dari Cilacap ke Jepang</h2>
+          <p class="pengantar">Semua program melewati enam stasiun yang sama. Setelah mendaftar, kamu dan orang tuamu bisa melihat sendiri stasiun mana yang sudah dilewati.</p>
+        </div>
+        <ol class="daftar-stasiun">
+          <li class="stasiun">
+            <span class="titik" aria-hidden="true"></span>
+            <div class="stasiun-kepala">
+              <span class="kode kecil"><small>FG</small><b>01</b></span>
+              <span class="di-sini">Kamu di sini</span>
+            </div>
+            <h3>Pendaftaran dan seleksi</h3>
+            <p>Serahkan berkas di kantor, lalu ikuti pemeriksaan fisik, psikotes, tes matematika, dan pra-MCU.</p>
+          </li>
+          <li class="stasiun">
+            <span class="titik" aria-hidden="true"></span>
+            <div class="stasiun-kepala"><span class="kode kecil"><small>FG</small><b>02</b></span></div>
+            <h3>Belajar bahasa Jepang</h3>
+            <p>Kelas sesuai level, pengenalan budaya Jepang, lalu ujian JFT-Basic atau JLPT. Penutur asli bahasa Jepang rutin datang ke kelas.</p>
+            <div class="data">
+              <p class="data-judul">Siswa di kelas sekarang: 210</p>
+              <div class="batang" role="img" aria-label="N5 65 siswa, N4 124 siswa, N3 21 siswa, N2 0 siswa">
+                <span style="width:30.95%;background:var(--jalur-muda)"></span>
+                <span style="width:59.05%;background:var(--jalur-sedang)"></span>
+                <span style="width:10%;background:var(--jalur)"></span>
+              </div>
+              <p class="legenda">
+                <span><i style="background:var(--jalur-muda)"></i>N5 65</span>
+                <span><i style="background:var(--jalur-sedang)"></i>N4 124</span>
+                <span><i style="background:var(--jalur)"></i>N3 21</span>
+                <span><i style="background:var(--jalur-tua)"></i>N2 0</span>
+              </p>
+            </div>
+          </li>
+          <li class="stasiun">
+            <span class="titik" aria-hidden="true"></span>
+            <div class="stasiun-kepala"><span class="kode kecil"><small>FG</small><b>03</b></span></div>
+            <h3>Belajar tokutei ginou</h3>
+            <p>Pelatihan teori dan praktik sesuai bidang kerja, budaya kerja Jepang, lalu ujian keterampilan SSW.</p>
+            <div class="data">
+              <p class="data-judul">Bidang kerja yang paling diminati siswa</p>
+              <ul class="minat">
+                <li><span>Pembersihan gedung</span><b>88</b><i style="width:100%"></i></li>
+                <li><span>Perawat lansia (kaigo)</span><b>68</b><i style="width:77.3%"></i></li>
+                <li><span>Pengolahan makanan dan minuman</span><b>30</b><i style="width:34.1%"></i></li>
+                <li><span>Restoran</span><b>24</b><i style="width:27.3%"></i></li>
+              </ul>
+            </div>
+          </li>
+          <li class="stasiun">
+            <span class="titik" aria-hidden="true"></span>
+            <div class="stasiun-kepala"><span class="kode kecil"><small>FG</small><b>04</b></span></div>
+            <h3>Job matching</h3>
+            <p>Wawancara dengan lembaga pendamping dan perusahaan penerima di Jepang, MCU, tanda tangan kontrak kerja, dan pembuatan paspor.</p>
+            <p class="sorot">Lembaga ini melatih sekaligus memberangkatkan (P3MI), jadi kamu tidak berpindah tangan.</p>
+          </li>
+          <li class="stasiun">
+            <span class="titik" aria-hidden="true"></span>
+            <div class="stasiun-kepala"><span class="kode kecil"><small>FG</small><b>05</b></span></div>
+            <h3>Magang kerja</h3>
+            <p>Bekerja sementara di perusahaan Indonesia yang sebidang dengan perusahaan penerimamu.</p>
+          </li>
+          <li class="stasiun">
+            <span class="titik besar" aria-hidden="true"></span>
+            <div class="stasiun-kepala"><span class="kode kecil"><small>FG</small><b>06</b></span></div>
+            <h3>Persiapan berangkat</h3>
+            <p>Review bahasa dan percakapan selama sebulan, COE dan visa terbit, lalu berangkat.</p>
+            <div class="papan papan-tiba" role="img" aria-label="Papan stasiun FG 06 Jepang, tujuan akhir. 1.214 alumni sudah tiba di sini sejak 2019. Sebelumnya: magang kerja, FG 05.">
+              <div class="papan-atas">
+                <span class="kode"><small>FG</small><b>06</b></span>
+                <div>
+                  <p class="papan-nama">Jepang</p>
+                  <p class="papan-sub"><span class="jp" lang="ja">日本</span> · Tujuan akhir</p>
+                </div>
+              </div>
+              <p class="tiba"><b>1.214 alumni</b>sudah tiba di sini sejak 2019.</p>
+              <div class="papan-pita">
+                <span><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Magang kerja <span class="kode kecil"><small>FG</small><b>05</b></span></span>
+              </div>
+            </div>
+            <p class="sumber">Data per 28-08-2025.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <div class="lanjutan">
+    <section class="bagian pantau" id="pantau" aria-labelledby="judul-pantau">
+      <div class="wadah">
+        <div>
+          <h2 id="judul-pantau">Setelah mendaftar, pantau posisimu sendiri</h2>
+          <p class="pengantar">Di akunmu terlihat stasiun yang sudah dilewati, langkah yang sedang berjalan, dan catatan dari staf. Orang tuamu bisa ikut melihatnya dari HP yang sama. Begini contohnya:</p>
+          <ul class="arti" aria-label="Arti tanda di akun">
+            <li><span class="tanda selesai"><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><p><b>Selesai</b><span class="ket">Langkah atau tahap yang sudah kamu lewati.</span></p></li>
+            <li><span class="tanda sekarang"></span><p><b>Sedang berjalan</b><span class="ket">Tahap tempatmu sekarang, dan langkah berikutnya.</span></p></li>
+            <li><span class="tanda"></span><p><b>Belum</b><span class="ket">Langkah yang masih menunggu.</span></p></li>
+            <li><span class="tanda tidak-berlaku"></span><p><b>Tidak berlaku</b><span class="ket">Langkah yang tidak dibutuhkan programmu.</span></p></li>
+          </ul>
+        </div>
+
+        <div class="akun" role="group" aria-label="Contoh tampilan akun siswa">
+          <div class="akun-kepala">
+            <div>
+              <p class="nomor">FGC-2026-0037</p>
+              <p class="akun-program">Pemagangan · Pembersihan gedung</p>
+            </div>
+            <span class="status">Berjalan</span>
+          </div>
+
+          <ol class="mini" aria-label="Posisi di enam tahap">
+            <li><span class="tanda selesai"><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>01<span class="tersembunyi"> selesai</span></li>
+            <li class="aktif"><span class="tanda sekarang"></span>02<span class="tersembunyi"> tahap saat ini</span></li>
+            <li><span class="tanda"></span>03<span class="tersembunyi"> belum</span></li>
+            <li><span class="tanda"></span>04<span class="tersembunyi"> belum</span></li>
+            <li><span class="tanda"></span>05<span class="tersembunyi"> belum</span></li>
+            <li><span class="tanda"></span>06<span class="tersembunyi"> belum</span></li>
+          </ol>
+
+          <div>
+            <p class="langkah-judul">Tahap 02 · Belajar bahasa Jepang</p>
+            <ul class="langkah">
+              <li><span class="tanda selesai"><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><p>Pembelajaran bahasa Jepang<small>Selesai 12-05-2026</small></p></li>
+              <li><span class="tanda selesai"><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><p>Pengenalan budaya Jepang<small>Selesai 20-05-2026</small></p></li>
+              <li><span class="tanda sekarang"></span><p>Pengenalan kebiasaan organisasi Jepang<small><b>Berikutnya</b> · belum</small></p></li>
+              <li><span class="tanda"></span><p>Ujian bahasa Jepang<small>Belum</small></p></li>
+            </ul>
+          </div>
+
+          <p class="catatan"><b>Catatan untuk siswa</b>Pengenalan kebiasaan organisasi dimulai Senin depan pukul 08.00 di kelas N4-A.</p>
+          <p class="contoh">Nama, nomor, dan tanggal di atas hanya contoh.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="bagian" id="program" aria-labelledby="judul-program">
+      <div class="wadah">
+        <h2 id="judul-program">Empat program, satu jalur</h2>
+        <p class="pengantar">Setiap program bercabang dari jalur yang sama dan melewati enam stasiun yang sama. Rentang usia di bawah masih contoh dan akan diperbarui lembaga.</p>
+        <ul class="program">
+          <li>
+            <div><h3>Tokutei Ginou (SSW)</h3><p>Bekerja di Jepang dengan visa pekerja berketerampilan khusus, di bidang kerja yang kamu pelajari.</p></div>
+            <p class="info"><span>Usia 18–30 tahun</span><a href="#rincian-ssw">Rincian <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+          </li>
+          <li>
+            <div><h3>Pemagangan</h3><p>Magang kerja di perusahaan Jepang lewat program pemagangan teknis (ginou jisshu).</p></div>
+            <p class="info"><span>Usia 18–30 tahun</span><a href="#rincian-magang">Rincian <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+          </li>
+          <li>
+            <div><h3>Gijinkoku</h3><p>Bekerja sebagai tenaga ahli, misalnya insinyur, dengan visa gijinkoku.</p></div>
+            <p class="info"><span>Usia 18–30 tahun</span><a href="#rincian-gijinkoku">Rincian <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+          </li>
+          <li>
+            <div><h3>Pelajar</h3><p>Melanjutkan sekolah bahasa atau kuliah di Jepang.</p></div>
+            <p class="info"><span>Usia 18–30 tahun</span><a href="#rincian-pelajar">Rincian <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="bagian bagian-galeri" id="galeri" aria-labelledby="judul-galeri">
+      <div class="wadah">
+        <h2 id="judul-galeri">Kegiatan di lembaga</h2>
+        <p class="pengantar">Foto kegiatan tampil di sini setelah lembaga memilih foto yang orangnya sudah setuju dipublikasikan.</p>
+        <div class="galeri">
+          <figure class="bingkai"><div><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div><figcaption>Kelas bahasa Jepang</figcaption></figure>
+          <figure class="bingkai"><div><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div><figcaption>Praktik perawatan lansia</figcaption></figure>
+          <figure class="bingkai"><div><svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div><figcaption>Kunjungan penutur asli bahasa Jepang</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="bagian pantau kontak" id="kontak" aria-labelledby="judul-kontak">
+      <div class="wadah">
+        <span class="ujung" aria-hidden="true"></span>
+        <div>
+          <h2 id="judul-kontak">Datang ke loket kami di Kesugihan</h2>
+          <p class="alamat">Desa Kesugihan, Kabupaten Cilacap, Jawa Tengah. Alamat lengkap menyusul.</p>
+        </div>
+        <div class="kolom-aksi">
+          <div class="aksi-kontak">
+            <a class="tombol-utama" href="#daftar">Daftar sekarang
+              <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="tombol-kedua" role="link" aria-disabled="true">
+              <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.4-4.2A8 8 0 1 1 8.6 19z"/></svg>
+              Chat WhatsApp
+            </a>
+          </div>
+          <p class="kontak-catatan">Nomor WhatsApp kantor menyusul.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="kaki" id="tentang">
+  <div class="wadah">
+    <div>
+      <p class="merek-nama">Fujisaki</p>
+      <p style="margin-top:8px">LPKS Fujisaki Gakuin Center · <span class="jp" lang="ja">藤崎学院センター</span></p>
+      <p>PT Fujisaki Global Inspirasi · lembaga pelatihan kerja dan pengirim pekerja ke Jepang (P3MI).</p>
+    </div>
+    <nav aria-label="Menu kaki">
+      <a href="#tentang">Tentang Kami</a>
+      <a href="#program">Program</a>
+      <a href="#alur">Alur Program</a>
+      <a href="#galeri">Galeri</a>
+      <a href="#kontak">Kontak</a>
+      <a href="#privasi">Kebijakan Privasi</a>
+    </nav>
+    <p class="kaki-bawah">© 2026 PT Fujisaki Global Inspirasi</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // Rentang usia contoh (OD-01). Aplikasi mengambilnya dari data program.
+  var PROGRAM = {
+    ssw: { nama: "Tokutei Ginou (SSW)", min: 18, max: 30 },
+    magang: { nama: "Pemagangan", min: 18, max: 30 },
+    gijinkoku: { nama: "Gijinkoku", min: 18, max: 30 },
+    pelajar: { nama: "Pelajar", min: 18, max: 30 }
+  };
+  var IKON = {
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>',
+    ya: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+    tidak: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>'
+  };
+  var lahir = document.getElementById("lahir");
+  var pilih = document.getElementById("program-pilih");
+  var jawaban = document.getElementById("jawaban");
+
+  function hariIniWib() {
+    var s = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
+    var p = s.split("-");
+    return { y: +p[0], m: +p[1], d: +p[2] };
+  }
+  function kabisat(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+  // PRD §6.3: tahun penuh; lahir 29 Februari berulang tahun 1 Maret di tahun bukan kabisat.
+  function ulangTahun(lahirTgl, tahun) {
+    if (lahirTgl.m === 2 && lahirTgl.d === 29 && !kabisat(tahun)) return { y: tahun, m: 3, d: 1 };
+    return { y: tahun, m: lahirTgl.m, d: lahirTgl.d };
+  }
+  function sebelum(a, b) { return a.m < b.m || (a.m === b.m && a.d < b.d); }
+  function usia(lahirTgl, hari) {
+    var u = hari.y - lahirTgl.y;
+    if (sebelum(hari, ulangTahun(lahirTgl, hari.y))) u -= 1;
+    return u;
+  }
+  function tulis(tgl) {
+    var dua = function (n) { return (n < 10 ? "0" : "") + n; };
+    return dua(tgl.d) + "-" + dua(tgl.m) + "-" + tgl.y;
+  }
+  function tampil(hasil, teks) {
+    jawaban.dataset.hasil = hasil;
+    jawaban.innerHTML = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true">' + IKON[hasil] + "</svg><span>" + teks + "</span>";
+  }
+  function periksa() {
+    var prog = PROGRAM[pilih.value];
+    if (!lahir.value) { tampil("info", "Isi tanggal lahirmu untuk melihat apakah usiamu masuk rentang program."); return; }
+    var p = lahir.value.split("-");
+    var lt = { y: +p[0], m: +p[1], d: +p[2] };
+    var hari = hariIniWib();
+    var diMasaDepan = lt.y > hari.y || (lt.y === hari.y && sebelum(hari, lt));
+    if (isNaN(lt.y) || diMasaDepan) { tampil("tidak", "Tanggal lahir belum benar. Periksa lagi tahunnya."); return; }
+    var u = usia(lt, hari);
+    var rentang = prog.nama + " menerima usia " + prog.min + "–" + prog.max + " tahun";
+    if (u < prog.min) {
+      var boleh = ulangTahun(lt, lt.y + prog.min);
+      tampil("tidak", "Usiamu " + u + " tahun. " + rentang + ". Kamu bisa mendaftar mulai " + tulis(boleh) + ".");
+    } else if (u > prog.max) {
+      tampil("tidak", "Usiamu " + u + " tahun, di atas batas " + prog.max + " tahun untuk " + prog.nama + ". Tanyakan program lain di loket kami.");
+    } else {
+      tampil("ya", "Usiamu " + u + " tahun. " + rentang + ", jadi kamu bisa mendaftar.");
+    }
+  }
+  lahir.addEventListener("change", periksa);
+  lahir.addEventListener("input", periksa);
+  pilih.addEventListener("change", periksa);
+
+  // Ukur pusat titik FG 01 dan FG 06, supaya penanda berjalan tepat di atas garis
+  // dan belokan garis di layar lebar mulai dari ketinggian garis.
+  var jalur = document.querySelector(".jalur");
+  function ukurJalur() {
+    var titik = jalur.querySelectorAll(".titik");
+    var r = jalur.getBoundingClientRect();
+    var a = titik[0].getBoundingClientRect();
+    var b = titik[titik.length - 1].getBoundingClientRect();
+    var x0 = a.left + a.width / 2 - r.left - 12, y0 = a.top + a.height / 2 - r.top - 12;
+    var x1 = b.left + b.width / 2 - r.left - 12, y1 = b.top + b.height / 2 - r.top - 12;
+    function setel(nama, nilai) { jalur.style.setProperty(nama, Math.round(nilai) + "px"); }
+    setel("--kx0", x0);
+    setel("--ky0", y0);
+    setel("--dx", x1 - x0);
+    setel("--dy", y1 - y0);
+    setel("--garis-y", y1 + 12);
+    jalur.setAttribute("data-siap", "");
+  }
+  ukurJalur();
+  window.addEventListener("resize", ukurJalur);
+  if (document.fonts) document.fonts.ready.then(ukurJalur);
+})();
+</script>
+</body>
+</html>

@@ -18,7 +18,9 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     command: `pnpm build && pnpm start --port ${port}`,
-    url: baseURL,
+    // Playwright menunggu server siap sebelum globalSetup menerapkan migrasi, jadi di CI database test masih
+    // kosong saat itu. Kesiapan diperiksa di halaman yang isinya dari kode dan tidak membaca database.
+    url: `${baseURL}/kebijakan-privasi`,
     // Server yang sudah jalan bisa saja memuat .env pengembangan, jadi selalu mulai server sendiri.
     reuseExistingServer: false,
     timeout: 180_000,

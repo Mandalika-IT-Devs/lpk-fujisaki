@@ -5,7 +5,7 @@ import { IkonPanahBawah } from "@/components/ikon";
 import { TombolKirim } from "@/components/tombol";
 import { GAYA_ISIAN, GAYA_LABEL } from "../../akses-pegawai";
 import { buatAkun } from "./aksi";
-import { PesanTindakan } from "./pesan-tindakan";
+import { PesanTindakan } from "../pesan-tindakan";
 
 /** Formulir Admin untuk membuat akun pegawai dengan nama, email, dan peran (PRD §5.5). */
 export function FormulirBuatAkun() {

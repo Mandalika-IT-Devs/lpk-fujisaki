@@ -5,6 +5,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -109,3 +110,26 @@ export const verifikasi = pgTable(
   },
   (t) => [index("verifikasi_identifier_idx").on(t.identifier)],
 );
+
+// Program dan bidang kerja yang dikelola Admin (PRD §4). Keduanya tidak pernah dihapus, hanya dinonaktifkan
+// (§4.3). Id bilangan bulat dipakai di alamat halaman rincian program, misalnya /program/1.
+// Isi awalnya diisi oleh migrasi data drizzle/0003_isi_awal_program_bidang_kerja.sql.
+
+/** Program: jalur pelatihan menuju Jepang (PRD §4.1). Batas usia dalam tahun penuh (§6.3). */
+export const program = pgTable("program", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  nama: text("nama").notNull(),
+  deskripsi: text("deskripsi").notNull(),
+  syarat: text("syarat").notNull(),
+  lamaPelatihan: text("lama_pelatihan").notNull(),
+  usiaMinimal: integer("usia_minimal").notNull(),
+  usiaMaksimal: integer("usia_maksimal").notNull(),
+  aktif: boolean("aktif").notNull().default(true),
+});
+
+/** Bidang kerja: sektor pekerjaan di Jepang (PRD §4.2). "Belum tahu" adalah pilihan formulir, bukan bidang kerja. */
+export const bidangKerja = pgTable("bidang_kerja", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  nama: text("nama").notNull(),
+  aktif: boolean("aktif").notNull().default(true),
+});

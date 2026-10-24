@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import type { BarisPegawai } from "@/server/akun-pegawai";
 import { ubahAkunPegawai } from "./aksi";
-import { PesanTindakan } from "./pesan-tindakan";
+import { PesanTindakan } from "../pesan-tindakan";
 
 const NAMA_PERAN = { admin: "Admin", staf: "Staf" } as const;
 

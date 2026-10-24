@@ -2,6 +2,7 @@ import { expect, type Locator, test } from "@playwright/test";
 
 const HALAMAN = [
   { alamat: "/tentang-kami", judul: "Tentang Kami" },
+  { alamat: "/program", judul: "Program" },
   { alamat: "/kebijakan-privasi", judul: "Kebijakan Privasi" },
 ];
 

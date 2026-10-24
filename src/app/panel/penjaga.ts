@@ -49,11 +49,17 @@ export async function pastikanBolehMembuka(
   return menu;
 }
 
-/** Judul halaman menu panel: nama menunya, atau "Akses ditolak" bila menu itu bukan hak pegawai yang masuk. */
-export async function metadataMenu(kunci: string): Promise<Metadata> {
+/**
+ * Judul halaman menu panel: `judul` (bawaannya nama menu), atau "Akses ditolak" bila menu itu bukan hak pegawai
+ * yang masuk. Halaman di bawah sebuah menu, misalnya Ubah program, memberi judulnya sendiri.
+ */
+export async function metadataMenu(
+  kunci: string,
+  judul?: string,
+): Promise<Metadata> {
   const pegawai = await bacaPegawaiMasuk();
   const menu = cariMenuPanelPegawai(kunci);
   if (!pegawai || !menu) return {};
   const boleh = bolehMembukaMenu(pegawai.peran, menu.kunci);
-  return { title: boleh ? menu.nama : "Akses ditolak" };
+  return { title: boleh ? (judul ?? menu.nama) : "Akses ditolak" };
 }

@@ -15,6 +15,20 @@
       "when": 1792813248269,
       "tag": "0001_autentikasi",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792818285239,
+      "tag": "0002_program_bidang_kerja",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792818297517,
+      "tag": "0003_isi_awal_program_bidang_kerja",
+      "breakpoints": true
     }
   ]
 }

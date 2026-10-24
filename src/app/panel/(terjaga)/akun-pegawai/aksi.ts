@@ -10,13 +10,12 @@ import {
 import { bolehMembukaMenu } from "@/domain/panel-pegawai";
 import { buatAkunPegawai, ubahPegawai } from "@/server/akun-pegawai";
 import { pastikanPegawai } from "../../penjaga";
+import type { Pesan } from "../pesan-tindakan";
 
 // Mengelola akun pegawai hanya untuk Admin (PRD §2.2, §5.5). Kewenangan diperiksa di server pada setiap
 // tindakan, dengan aturan yang sama seperti menu Akun pegawai.
 
 const ALAMAT_HALAMAN = "/panel/akun-pegawai";
-
-export type Pesan = { jenis: "kabar" | "peringatan"; teks: string };
 
 type IsianBuatAkun = { nama: string; email: string; peran: string };
 

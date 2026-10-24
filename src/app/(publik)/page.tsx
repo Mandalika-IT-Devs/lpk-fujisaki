@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
+import { CabangProgram } from "@/components/cabang-program";
 import { nomorStasiun } from "@/components/kode-stasiun";
 import { PapanStasiun } from "@/components/papan-stasiun";
 import { PetaJalur } from "@/components/peta-jalur";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
 import { TAHAP } from "@/domain/tahap";
 import { cn } from "@/lib/utils";
+import { daftarProgramDiSitusPublik, type Program } from "@/server/program";
 
 export const metadata: Metadata = {
   title: { absolute: "LPKS Fujisaki Gakuin Center – Dari Cilacap ke Jepang" },
@@ -21,8 +24,12 @@ const JUDUL_BAGIAN =
 /**
  * Beranda (docs/design/prototipe/beranda.html). Garis jalur 12px menjadi tulang halaman:
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
+ * Program aktif dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung terlihat (PRD §3.1, §4.3).
  */
-export default function HalamanBeranda() {
+export default async function HalamanBeranda() {
+  await connection();
+  const daftarProgram = await daftarProgramDiSitusPublik();
+
   return (
     <main>
       <Pembuka />
@@ -58,7 +65,8 @@ export default function HalamanBeranda() {
         </div>
       </section>
       <BagianPantau />
-      {/* Program (T06), Galeri (T09), dan Kontak (T08) menyusul di sini, dengan garis jalur tetap menjadi tulangnya. */}
+      {daftarProgram.length > 0 && <BagianProgram daftar={daftarProgram} />}
+      {/* Galeri (T09) dan Kontak (T08) menyusul di sini, dengan garis jalur tetap menjadi tulangnya. */}
     </main>
   );
 }
@@ -276,5 +284,44 @@ function ContohAkun() {
         Nama, nomor, dan tanggal di atas hanya contoh.
       </p>
     </div>
+  );
+}
+
+const ANGKA = [
+  "Nol",
+  "Satu",
+  "Dua",
+  "Tiga",
+  "Empat",
+  "Lima",
+  "Enam",
+  "Tujuh",
+  "Delapan",
+  "Sembilan",
+  "Sepuluh",
+];
+
+/** Program aktif sebagai cabang dari garis jalur. Judulnya menyebut jumlah program aktif, misalnya "Empat program". */
+function BagianProgram({ daftar }: { daftar: readonly Program[] }) {
+  const jumlah = ANGKA[daftar.length] ?? String(daftar.length);
+  return (
+    <section
+      id="program"
+      aria-labelledby="judul-program"
+      className="py-pad lg:py-pad-lebar"
+    >
+      <div className="wadah">
+        <div className={TULANG_GARIS}>
+          <h2 id="judul-program" className={JUDUL_BAGIAN}>
+            {jumlah} program, satu jalur
+          </h2>
+          <p className="mt-3 max-w-[60ch] text-teks-2">
+            Setiap program bercabang dari jalur yang sama dan melewati enam
+            stasiun yang sama.
+          </p>
+          <CabangProgram daftar={daftar} tingkatJudul={3} className="mt-7" />
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,0 +1,16 @@
+# Prettier juga mengabaikan semua yang ada di .gitignore.
+
+# Worktree yang dibuat Claude Code
+.claude/worktrees/
+
+# Dokumen dan berkas terlindungi milik pemilik: formatnya tidak diubah alat
+*.md
+docs/
+tests/golden/
+.github/
+.claude/settings.json
+.impeccable/
+
+# Berkas yang dibuat alat
+pnpm-lock.yaml
+drizzle/meta/

@@ -10,6 +10,7 @@ import {
   STAF,
   STAF_LUPA_SANDI,
   STAF_NONAKTIF,
+  STAF_SESI_LAIN,
 } from "./pegawai-uji";
 
 /**
@@ -46,6 +47,7 @@ export default async function siapkanDatabase() {
     await isiStaf(db, STAF, true);
     await isiStaf(db, STAF_NONAKTIF, false);
     await isiStaf(db, STAF_LUPA_SANDI, true);
+    await isiStaf(db, STAF_SESI_LAIN, true);
   } finally {
     await klien.end();
   }

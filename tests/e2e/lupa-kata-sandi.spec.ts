@@ -1,9 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
 import { emailUntuk, tungguEmail } from "./kotak-keluar";
-import { masuk, masukKePanel, STAF, STAF_LUPA_SANDI } from "./pegawai-uji";
+import {
+  masuk,
+  masukKePanel,
+  STAF,
+  STAF_LUPA_SANDI,
+  STAF_SESI_LAIN,
+} from "./pegawai-uji";
 
-// Lupa kata sandi pegawai (PRD §5.4, issue T04). Kedaluwarsa tautan 1 jam diuji dengan jam yang disuntikkan
-// di src/server/auth.test.ts, karena jam server e2e tidak bisa dimajukan.
+// Lupa kata sandi pegawai (PRD §5.4, issue T04 dan T04-b). Kedaluwarsa tautan 1 jam diuji dengan jam yang
+// disuntikkan di src/server/auth.test.ts, karena jam server e2e tidak bisa dimajukan.
 
 const PESAN_TERKIRIM =
   "Bila email itu terdaftar untuk akun pegawai, tautan atur ulang kata sandi sudah kami kirim ke sana. Tautan berlaku 1 jam. Bila email belum masuk dalam beberapa menit, periksa folder spam, lalu minta tautan lagi.";
@@ -51,6 +57,46 @@ test("pegawai mengatur ulang kata sandi lewat tautan di email, lalu kata sandi l
   );
 
   await masukKePanel(page, { ...STAF_LUPA_SANDI, kataSandi: kataSandiBaru });
+});
+
+test("setelah kata sandi diatur ulang di browser pertama, browser kedua diarahkan ke halaman masuk saat panel dimuat ulang (UAT-E4)", async ({
+  page,
+  browser,
+}) => {
+  // Pegawai yang sama masuk di dua browser: `page` adalah browser pertama, `halamanKedua` browser kedua.
+  const browserKedua = await browser.newContext();
+  const halamanKedua = await browserKedua.newPage();
+  await masukKePanel(page, STAF_SESI_LAIN);
+  await masukKePanel(halamanKedua, STAF_SESI_LAIN);
+
+  const sejak = Date.now();
+  await mintaTautan(page, STAF_SESI_LAIN.email);
+  await expect(page.getByRole("main").getByRole("status")).toHaveText(
+    PESAN_TERKIRIM,
+  );
+  const email = await tungguEmail(STAF_SESI_LAIN.email, sejak);
+  const tautan = email.teks.match(/https?:\/\/\S+/)?.[0];
+  await page.goto(tautan ?? "");
+  const kataSandiBaru = "sandi-baru-staf-sesi-lain";
+  await page.getByLabel("Kata sandi baru").fill(kataSandiBaru);
+  await page.getByRole("button", { name: "Simpan kata sandi" }).click();
+  await expect(page.getByRole("main").getByRole("status")).toContainText(
+    "Kata sandi baru sudah disimpan",
+  );
+
+  await masuk(page, STAF_SESI_LAIN);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Email atau kata sandi salah",
+  );
+  await masukKePanel(page, { ...STAF_SESI_LAIN, kataSandi: kataSandiBaru });
+
+  await halamanKedua.reload();
+  await expect(halamanKedua).toHaveURL("/panel/masuk");
+  await expect(
+    halamanKedua.getByRole("heading", { level: 1, name: "Masuk pegawai" }),
+  ).toBeVisible();
+
+  await browserKedua.close();
 });
 
 test("permintaan untuk email yang tidak terdaftar menampilkan pesan yang sama dan tidak mengirim email", async ({

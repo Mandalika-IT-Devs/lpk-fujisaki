@@ -30,6 +30,13 @@ export const STAF_LUPA_SANDI: PegawaiUji = {
   kataSandi: "sandi-staf-lupa-uji",
 };
 
+// Hanya dipakai test sesi lain yang diakhiri setelah atur ulang kata sandi, karena kata sandinya diganti di tengah test.
+export const STAF_SESI_LAIN: PegawaiUji = {
+  nama: "Staf Sesi Lain Uji",
+  email: "staf.sesi.lain@contoh.test",
+  kataSandi: "sandi-staf-sesi-lain-uji",
+};
+
 /** Menjalankan `pnpm admin:pertama` dengan isian Admin dari variabel lingkungan. */
 export function jalankanAdminPertama(admin: PegawaiUji) {
   const hasil = spawnSync("pnpm", ["--silent", "admin:pertama"], {

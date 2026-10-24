@@ -55,6 +55,10 @@ export function buatAuth({
       // Lupa kata sandi (PRD §5.4). Better Auth menolak tautan yang sudah lewat masa berlakunya.
       resetPasswordTokenExpiresIn:
         MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM * 60 * 60,
+      // Setelah kata sandi diatur ulang, semua sesi akun itu diakhiri (PRD §5.4, ▶ Keputusan 2026-10-24), jadi
+      // perangkat yang masih masuk harus masuk lagi dengan kata sandi baru. Opsi ini berlaku untuk setiap
+      // resetPassword, termasuk tautan pegawai baru, yang belum punya sesi.
+      revokeSessionsOnPasswordReset: true,
       // Tautan menuju halaman atur ulang pegawai di situs yang sama dengan alamat dari Better Auth (BETTER_AUTH_URL).
       sendResetPassword: async ({ user, url, token }) => {
         const tautan = new URL(HALAMAN_ATUR_ULANG_KATA_SANDI_PEGAWAI, url);

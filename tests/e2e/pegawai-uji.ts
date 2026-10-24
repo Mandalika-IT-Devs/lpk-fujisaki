@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { expect, type Page } from "@playwright/test";
 
 // Pegawai sintetis untuk test e2e. Admin dibuat oleh skrip pemasangan `pnpm admin:pertama`;
-// Staf dan Staf nonaktif dibuat langsung oleh siapkan-database.ts, karena kelola akun pegawai baru ada di T05.
+// Para Staf uji dibuat langsung oleh siapkan-database.ts, karena kelola akun pegawai baru ada di T05.
 export type PegawaiUji = { nama: string; email: string; kataSandi: string };
 
 export const ADMIN: PegawaiUji = {
@@ -21,6 +21,13 @@ export const STAF_NONAKTIF: PegawaiUji = {
   nama: "Staf Nonaktif Uji",
   email: "staf.nonaktif@contoh.test",
   kataSandi: "sandi-staf-nonaktif-uji",
+};
+
+// Hanya dipakai test lupa kata sandi, karena kata sandinya diganti di tengah test.
+export const STAF_LUPA_SANDI: PegawaiUji = {
+  nama: "Staf Lupa Sandi Uji",
+  email: "staf.lupa.sandi@contoh.test",
+  kataSandi: "sandi-staf-lupa-uji",
 };
 
 /** Menjalankan `pnpm admin:pertama` dengan isian Admin dari variabel lingkungan. */

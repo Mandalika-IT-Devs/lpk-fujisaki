@@ -1,14 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
-import { IkonSeru } from "@/components/ikon";
 import { TombolKirim } from "@/components/tombol";
+import { GAYA_ISIAN, GAYA_LABEL, Peringatan } from "../akses-pegawai";
 import { masukPegawai } from "./aksi";
-
-// Isian (docs/DESIGN.md, Inputs / Fields): tinggi 48px, border 2px garis, fokus border jalur dengan halo jalur-muda.
-const GAYA_ISIAN =
-  "h-12 w-full rounded-sudut border-2 border-garis bg-dasar px-3 font-medium text-navy hover:border-jalur-muda focus-visible:border-jalur focus-visible:ring-3 focus-visible:ring-jalur-muda focus-visible:outline-none";
-const GAYA_LABEL = "text-body-kecil font-semibold";
 
 export function FormulirMasuk() {
   const [keadaan, kirim] = useActionState(masukPegawai, {
@@ -45,15 +40,7 @@ export function FormulirMasuk() {
           className={GAYA_ISIAN}
         />
       </div>
-      {keadaan.pesan && (
-        <p
-          role="alert"
-          className="flex gap-2 rounded-sudut bg-jalur-pucat px-3.5 py-3 text-body-kecil text-navy"
-        >
-          <IkonSeru />
-          {keadaan.pesan}
-        </p>
-      )}
+      {keadaan.pesan && <Peringatan>{keadaan.pesan}</Peringatan>}
       <TombolKirim>Masuk</TombolKirim>
     </form>
   );

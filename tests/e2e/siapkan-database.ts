@@ -8,6 +8,7 @@ import {
   jalankanAdminPertama,
   type PegawaiUji,
   STAF,
+  STAF_LUPA_SANDI,
   STAF_NONAKTIF,
 } from "./pegawai-uji";
 
@@ -44,6 +45,7 @@ export default async function siapkanDatabase() {
 
     await isiStaf(db, STAF, true);
     await isiStaf(db, STAF_NONAKTIF, false);
+    await isiStaf(db, STAF_LUPA_SANDI, true);
   } finally {
     await klien.end();
   }

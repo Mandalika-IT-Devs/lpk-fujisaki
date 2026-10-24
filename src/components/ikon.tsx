@@ -51,3 +51,12 @@ export function IkonSeru() {
     </Ikon>
   );
 }
+
+/** Centang: permintaan atau isian yang berhasil diproses. */
+export function IkonCentang() {
+  return (
+    <Ikon>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Ikon>
+  );
+}

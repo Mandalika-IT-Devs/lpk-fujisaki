@@ -5,6 +5,9 @@
 /** Panjang kata sandi paling sedikit, untuk semua akun (PRD §5.1). */
 export const PANJANG_MINIMAL_KATA_SANDI = 8;
 
+/** Lama tautan atur ulang kata sandi berlaku sejak diminta, dalam jam (PRD §5.4). */
+export const MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM = 1;
+
 /** Peran pegawai (PRD §2.2). */
 export type Peran = "admin" | "staf";
 

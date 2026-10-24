@@ -181,3 +181,22 @@ export const statistikLembagaBidangKerja = pgTable(
     ),
   ],
 );
+
+// Kontak lembaga yang dikelola Admin (PRD §3.5). Hanya ada satu kontak lembaga, jadi tabelnya satu baris (id 1).
+// Isi awalnya diisi oleh migrasi data drizzle/0007_isi_awal_kontak.sql.
+
+/**
+ * Alamat, nomor WhatsApp kantor, email kantor, dan tautan lokasi peta. Nomor WhatsApp disimpan dalam bentuk
+ * ternormalisasi (PRD §5.2), misalnya 6281234567890. Nomor WhatsApp dan tautan peta boleh kosong selama belum ada.
+ */
+export const kontak = pgTable(
+  "kontak",
+  {
+    id: integer("id").primaryKey().default(1),
+    alamat: text("alamat").notNull(),
+    nomorWhatsApp: text("nomor_whatsapp"),
+    email: text("email").notNull(),
+    tautanPeta: text("tautan_peta"),
+  },
+  (t) => [check("kontak_satu_baris", sql`${t.id} = 1`)],
+);

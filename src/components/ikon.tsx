@@ -69,3 +69,12 @@ export function IkonCentang() {
     </Ikon>
   );
 }
+
+/** Gelembung percakapan pada tombol "Chat WhatsApp" (docs/design/prototipe/beranda.html, bagian loket). */
+export function IkonPercakapan() {
+  return (
+    <Ikon>
+      <path d="M4 20l1.4-4.2A8 8 0 1 1 8.6 19z" />
+    </Ikon>
+  );
+}

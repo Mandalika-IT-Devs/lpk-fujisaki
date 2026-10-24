@@ -19,7 +19,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /statistik-lembaga\.spec\.ts$/,
+      testIgnore: /(statistik-lembaga|kontak)\.spec\.ts$/,
     },
     // Statistik lembaga berisi satu angka per bidang kerja aktif. Test program dan bidang kerja menambah dan
     // menonaktifkan bidang kerja, jadi test statistik baru berjalan sesudah semua test lain selesai.
@@ -27,6 +27,14 @@ export default defineConfig({
       name: "statistik-lembaga",
       use: { ...devices["Desktop Chrome"] },
       testMatch: /statistik-lembaga\.spec\.ts$/,
+      dependencies: ["chromium"],
+    },
+    // Test kontak mengubah kontak lembaga yang tampil di loket Beranda, jadi berjalan sesudah test Beranda dan test
+    // lain yang membuka Beranda selesai.
+    {
+      name: "kontak",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /kontak\.spec\.ts$/,
       dependencies: ["chromium"],
     },
   ],

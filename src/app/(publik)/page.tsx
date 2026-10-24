@@ -6,10 +6,14 @@ import { nomorStasiun } from "@/components/kode-stasiun";
 import { PapanStasiun } from "@/components/papan-stasiun";
 import { PetaJalur } from "@/components/peta-jalur";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
+import { ALAMAT_DAFTAR } from "@/components/tautan-situs";
+import { TombolUtama } from "@/components/tombol";
+import { TombolWhatsApp } from "@/components/tombol-whatsapp";
 import { LEVEL, type Level } from "@/domain/statistik-lembaga";
 import { TAHAP, type Tahap } from "@/domain/tahap";
 import { formatAngka, formatTanggal } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { bacaKontak, type Kontak } from "@/server/kontak";
 import { daftarProgramDiSitusPublik, type Program } from "@/server/program";
 import {
   bacaStatistikLembagaDiSitusPublik,
@@ -30,14 +34,16 @@ const JUDUL_BAGIAN =
 /**
  * Beranda (docs/design/prototipe/beranda.html). Garis jalur 12px menjadi tulang halaman:
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
- * Program aktif dan statistik lembaga dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung
- * terlihat (PRD §3.1, §3.3, §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan FG 06.
+ * Program aktif, statistik lembaga, dan kontak dibaca dari database pada setiap permintaan, jadi perubahan Admin
+ * langsung terlihat (PRD §3.1, §3.3, §3.5, §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan
+ * FG 06. Garis berakhir di lingkaran ujung pada loket kontak.
  */
 export default async function HalamanBeranda() {
   await connection();
-  const [daftarProgram, statistik] = await Promise.all([
+  const [daftarProgram, statistik, kontak] = await Promise.all([
     daftarProgramDiSitusPublik(),
     bacaStatistikLembagaDiSitusPublik(),
+    bacaKontak(),
   ]);
 
   return (
@@ -76,7 +82,8 @@ export default async function HalamanBeranda() {
       </section>
       <BagianPantau />
       {daftarProgram.length > 0 && <BagianProgram daftar={daftarProgram} />}
-      {/* Galeri (T09) dan Kontak (T08) menyusul di sini, dengan garis jalur tetap menjadi tulangnya. */}
+      {/* Galeri (T09) menyusul di sini, sebelum loket, dengan garis jalur tetap menjadi tulangnya. */}
+      <BagianLoket kontak={kontak} />
     </main>
   );
 }
@@ -468,6 +475,58 @@ function BagianProgram({ daftar }: { daftar: readonly Program[] }) {
             stasiun yang sama.
           </p>
           <CabangProgram daftar={daftar} tingkatJudul={3} className="mt-7" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Ujung garis di loket: garis turun dari bagian sebelumnya dan berhenti di pusat lingkaran ujung (30px dari atas),
+ * di sisi kiri (HP) atau kanan (layar lebar).
+ */
+const GARIS_KE_UJUNG =
+  "relative pl-15 before:absolute before:-top-pad before:left-4.5 before:h-[calc(var(--spacing-pad)+30px)] before:w-tebal-jalur before:bg-jalur lg:pr-14 lg:pl-0 lg:before:-top-pad-lebar lg:before:right-0 lg:before:left-auto lg:before:h-[calc(var(--spacing-pad-lebar)+30px)]";
+
+/**
+ * Loket di ujung garis (docs/design/prototipe/beranda.html, bagian kontak): alamat dari kontak lembaga, tombol utama
+ * "Daftar sekarang" yang diulang dari konter, dan tombol "Chat WhatsApp" ke nomor WhatsApp kantor (PRD §3.5).
+ */
+function BagianLoket({ kontak }: { kontak: Kontak | undefined }) {
+  return (
+    <section
+      id="kontak"
+      aria-labelledby="judul-kontak"
+      className="bg-jalur-pucat pt-pad pb-18 lg:pt-pad-lebar"
+    >
+      <div className="wadah">
+        <div
+          className={cn(
+            GARIS_KE_UJUNG,
+            "grid gap-5 lg:grid-cols-[7fr_5fr] lg:items-end",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className="absolute top-2.5 left-1 z-1 size-10 rounded-bulat border-7 border-jalur bg-dasar shadow-[0_0_0_4px_var(--color-dasar),0_0_0_8px_var(--color-jalur)] lg:-right-3.5 lg:left-auto"
+          />
+          <div>
+            <h2 id="judul-kontak" className={JUDUL_BAGIAN}>
+              Datang ke loket kami di Kesugihan
+            </h2>
+            {kontak && (
+              <p className="mt-3 max-w-[34ch] text-body-lebar">
+                {kontak.alamat}
+              </p>
+            )}
+          </div>
+          <TombolWhatsApp
+            nomor={kontak?.nomorWhatsApp ?? null}
+            aksiLain={
+              <TombolUtama href={ALAMAT_DAFTAR}>Daftar sekarang</TombolUtama>
+            }
+            className="lg:justify-items-end lg:text-right"
+          />
         </div>
       </div>
     </section>

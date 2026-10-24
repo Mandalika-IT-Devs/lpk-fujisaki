@@ -20,3 +20,6 @@ export const MENU_KAKI = [
 ];
 
 export const ALAMAT_MASUK = "/masuk";
+
+/** Halaman daftar akun calon peserta (PRD §5.1), tujuan tombol utama "Daftar sekarang". */
+export const ALAMAT_DAFTAR = "/daftar";

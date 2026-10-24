@@ -43,6 +43,20 @@
       "when": 1792839554834,
       "tag": "0005_isi_awal_statistik_lembaga",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792841461580,
+      "tag": "0006_kontak",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792841462116,
+      "tag": "0007_isi_awal_kontak",
+      "breakpoints": true
     }
   ]
 }

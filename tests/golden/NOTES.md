@@ -17,6 +17,7 @@ Setiap aturan PRD punya satu berkas JSON, misalnya `denda-keterlambatan.json`. I
 | Tautan atur ulang kata sandi berlaku 1 jam | §5.4 | Sama seperti di atas. |
 | Tautan atur kata sandi pegawai baru berlaku 24 jam | §5.5 | Sama seperti di atas. |
 | Jenis ujian yang menyelesaikan L2.4 Ujian bahasa Jepang | §9.3 | Menunggu OD-13. |
+| Cadangan data disimpan 14 hari | §12.7 | Diatur di skrip deploy, bukan fungsi domain. Diperiksa lewat kriteria penerimaan tiket deploy dan UAT-L4. |
 | Penghapusan otomatis untuk penutupan dengan alasan Dikeluarkan | §12.4 | Menunggu OD-17. Kasus lain ada di `penghapusan-otomatis.json`. |
 
 Daftar fixture yang sudah ada:

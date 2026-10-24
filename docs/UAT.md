@@ -292,3 +292,9 @@ Hasil: dua akun pertama terhapus beserta pendaftarannya. Akun yang masih Berjala
 2. Sebagai Admin, hapus seseorang dan ketik email akunnya sebagai konfirmasi.
 
 Hasil: Staf tidak punya tombol itu. Setelah dihapus Admin, akun itu tidak bisa masuk dan pendaftarannya hilang dari daftar.
+
+**UAT-L4 – Cadangan data harian** (§12.7)
+1. Di server, lihat daftar cadangan database sesuai `docs/DEPLOY.md`.
+2. Pulihkan cadangan terbaru ke database kosong mengikuti `docs/DEPLOY.md`.
+
+Hasil: ada satu cadangan untuk setiap hari, yang tertua berumur paling lama 14 hari, dan pemulihan berhasil.

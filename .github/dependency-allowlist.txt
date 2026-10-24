@@ -34,6 +34,9 @@ zod
 better-auth
 pg-boss
 
+# Pengiriman email lewat SMTP (keputusan M1, 2026-10-24)
+nodemailer
+
 # Alat
 vitest
 @vitest/*

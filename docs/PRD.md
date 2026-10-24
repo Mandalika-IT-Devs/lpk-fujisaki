@@ -74,6 +74,8 @@ Satu orang memakai satu akun sepanjang perjalanannya. Sebutannya berubah mengiku
 | Mengelola akun pegawai (§5.5) | – | – | – | ya |
 | Menghapus data seseorang secara permanen (§12.5) | – | – | – | ya |
 
+▶ Keputusan 2026-10-24: Galeri hanya dikelola Admin. Staf tidak bisa mengunggah maupun menghapus foto galeri (OD-16).
+
 ### 2.3 Yang dilihat pemilik akun
 
 Pemilik akun melihat:
@@ -90,6 +92,8 @@ Pemilik akun tidak melihat:
 - riwayat perubahan.
 
 Bila pendaftarannya ditutup, yang ia lihat mengikuti OD-14.
+
+▶ Keputusan 2026-10-24: Bila pendaftarannya ditutup, pemilik akun melihat status Ditutup beserta alasannya (Tidak lolos seleksi, Mundur, atau Dikeluarkan). Keterangan penutupan hanya terlihat oleh pegawai (OD-14).
 
 Permintaan salinan seluruh data pribadi dilayani pegawai di luar sistem (§12.6).
 
@@ -176,6 +180,8 @@ Admin mengelola program. Setiap program punya:
 
 Isi awalnya empat program: Tokutei Ginou (SSW), Pemagangan, Gijinkoku, dan Pelajar. Deskripsi, syarat, lama pelatihan, dan batas usianya mengikuti OD-01 dan OD-08.
 
+▶ Keputusan 2026-10-24: Batas usia awal keempat program adalah 18–30 tahun. Admin bisa mengubahnya per program (OD-01).
+
 ### 4.2 Bidang kerja
 
 Admin mengelola bidang kerja. Setiap bidang kerja punya nama dan status aktif atau nonaktif.
@@ -216,6 +222,8 @@ Nomor dinormalkan sebelum disimpan dan dibandingkan:
 3. ganti awalan `0` dengan `62`.
 
 Hasilnya harus diawali `628` dan terdiri dari 11 sampai 14 digit. Bentuk ini sama dengan nomor HP Indonesia 10 sampai 13 digit yang diawali `08`. Nomor yang tidak memenuhi syarat ini ditolak. Penerimaan nomor luar negeri mengikuti OD-09.
+
+▶ Keputusan 2026-10-24: Hanya nomor HP Indonesia yang diterima. Nomor luar negeri ditolak (OD-09).
 
 Contoh:
 - `0812-3456-7890` → `6281234567890` → **sah**.
@@ -262,6 +270,8 @@ Pemilik akun dan pegawai bisa meminta tautan atur ulang kata sandi lewat email. 
 | Nama kontak darurat | ya | teks |
 | Hubungan kontak darurat | ya | teks, misalnya "Ibu" |
 | Nomor HP kontak darurat | ya | nomor yang memenuhi §5.2 |
+
+▶ Keputusan 2026-10-24: Pilihan pendidikan terakhir adalah SMP, SMA, SMK, Paket C, D1, D2, D3, D4, S1, dan S2 (OD-10).
 
 Kemampuan bahasa Jepang di formulir hanya keterangan awal dari calon peserta. Level siswa ditentukan oleh kelasnya (§9.1).
 
@@ -634,11 +644,19 @@ Admin bisa menghapus secara permanen akun seseorang beserta semua pendaftaran, c
 
 Pemilik akun yang meminta salinan seluruh data pribadinya dilayani pegawai di luar sistem, misalnya lewat ekspor (§11.5) ditambah data yang dikecualikan dari ekspor.
 
+### 12.7 Cadangan data
+
+Database dicadangkan sekali sehari di server. Setiap cadangan disimpan **14 hari**, lalu dihapus otomatis. Karena itu, data yang dihapus dari sistem (§12.4, §12.5) paling lama masih ada di cadangan selama 14 hari.
+
+Contoh: cadangan dibuat 01-11-2026 pukul 02.00 WIB. Cadangan itu masih ada pada 14-11-2026, dan dihapus pada 15-11-2026.
+
+Cara membuat dan memulihkan cadangan dicatat di `docs/DEPLOY.md`.
+
 ## Lampiran A. Milestone
 
 | Milestone | Isi | Bagian PRD |
 |---|---|---|
-| M1 – Situs publik dan pendaftaran online | Fondasi aplikasi; situs publik; program, bidang kerja, statistik lembaga, galeri, dan kontak; akun calon peserta dan akun pegawai; formulir pendaftaran, batas usia, dan nomor pendaftaran; daftar dan halaman pendaftaran untuk pegawai; penutupan di tahap 1 | §3, §4, §5, §6, §7.5, §11.1, §11.2 (isian formulir), §12.1, §12.2, §12.5 |
+| M1 – Situs publik dan pendaftaran online | Fondasi aplikasi; situs publik; program, bidang kerja, statistik lembaga, galeri, dan kontak; akun calon peserta dan akun pegawai; formulir pendaftaran, batas usia, dan nomor pendaftaran; daftar dan halaman pendaftaran untuk pegawai; penutupan di tahap 1 | §3, §4, §5, §6, §7.5, §11.1, §11.2 (isian formulir), §12.1, §12.2, §12.5, §12.7 (bersama deploy) |
 | M2 – Seleksi dan belajar | Status langkah, pindah tahap, percobaan; pemeriksaan fisik, tes internal, pra-MCU; kelas dan level; ujian resmi; catatan; riwayat perubahan; tahap dan langkah di akun siswa | §2.3, §7.1–§7.4, §8, §9, §11.2–§11.4, §12.3 |
 | M3 – Job matching sampai berangkat | Perusahaan penerima, lembaga pendamping, wawancara, langkah bertanggal, magang kerja, berangkat dan alumni; ekspor; penghapusan otomatis | §7.6, §10, §11.5, §12.4 |
 | Nanti | Versi bahasa Jepang, akun pengajar, unggah dokumen, pencatatan pembayaran | – |

@@ -11,6 +11,6 @@
     { "nama": "terlalu pendek", "input": { "nomor": "081234567" }, "output": { "sah": false, "dinormalkan": "6281234567" } },
     { "nama": "terlalu panjang", "input": { "nomor": "081234567890123" }, "output": { "sah": false, "dinormalkan": "6281234567890123" } },
     { "nama": "nomor telepon rumah", "input": { "nomor": "(021) 555-1234" }, "output": { "sah": false, "dinormalkan": "62215551234" } },
-    { "nama": "nomor luar negeri (OD-09: nilai contoh)", "input": { "nomor": "+1 415 555 0100" }, "output": { "sah": false, "dinormalkan": "14155550100" } }
+    { "nama": "nomor luar negeri ditolak (keputusan OD-09)", "input": { "nomor": "+1 415 555 0100" }, "output": { "sah": false, "dinormalkan": "14155550100" } }
   ]
 }

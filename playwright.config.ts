@@ -10,6 +10,8 @@ const baseURL = `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Mengosongkan database test, menerapkan migrasi, dan mengisi pegawai uji.
+  globalSetup: "./tests/e2e/siapkan-database.ts",
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? "github" : "list",
   use: { baseURL },

@@ -6,6 +6,12 @@ import { IkonPanahKanan } from "./ikon";
 const TRANSISI =
   "[transition:background-color_160ms_var(--ease-papan),transform_120ms_var(--ease-papan)]";
 
+const GAYA_UTAMA = cn(
+  "inline-flex h-13.5 items-center justify-center gap-2 rounded-sudut bg-oranye px-6 font-sans text-tombol text-dasar no-underline",
+  "hover:bg-oranye-tekan hover:text-dasar focus-visible:outline-navy active:translate-y-px",
+  TRANSISI,
+);
+
 /**
  * Tombol utama (docs/DESIGN.md, Buttons): oranye, satu per tampilan, dengan panah di kanan.
  */
@@ -19,18 +25,20 @@ export function TombolUtama({
   className?: string;
 }) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        "inline-flex h-13.5 items-center justify-center gap-2 rounded-sudut bg-oranye px-6 font-sans text-tombol text-dasar no-underline",
-        "hover:bg-oranye-tekan hover:text-dasar focus-visible:outline-navy active:translate-y-px",
-        TRANSISI,
-        className,
-      )}
-    >
+    <Link href={href} className={cn(GAYA_UTAMA, className)}>
       {children}
       <IkonPanahKanan />
     </Link>
+  );
+}
+
+/** Tombol utama yang mengirim formulirnya. */
+export function TombolKirim({ children }: { children: ReactNode }) {
+  return (
+    <button type="submit" className={cn(GAYA_UTAMA, "cursor-pointer")}>
+      {children}
+      <IkonPanahKanan />
+    </button>
   );
 }
 

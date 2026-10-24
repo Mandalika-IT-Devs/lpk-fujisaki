@@ -2,7 +2,4 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   // knip membaca .gitignore, jadi .claude/worktrees/ (worktree Claude Code) sudah diabaikan.
   // Entri "ignore" untuk folder itu justru memicu petunjuk knip "Remove from ignore".
-
-  // drizzle-kit memuat drizzle-orm saat membuat migrasi, tanpa impor yang terlihat oleh knip.
-  "ignoreDependencies": ["drizzle-orm"],
 }

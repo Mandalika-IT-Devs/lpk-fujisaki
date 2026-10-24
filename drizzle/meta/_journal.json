@@ -8,6 +8,13 @@
       "when": 1792808390598,
       "tag": "0000_awal",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792813248269,
+      "tag": "0001_autentikasi",
+      "breakpoints": true
     }
   ]
 }

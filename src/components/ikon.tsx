@@ -41,3 +41,13 @@ export function IkonMenu() {
     </Ikon>
   );
 }
+
+/** Tanda seru dalam lingkaran: isian atau tindakan yang tidak memenuhi syarat. */
+export function IkonSeru() {
+  return (
+    <Ikon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v5M12 16.5h.01" />
+    </Ikon>
+  );
+}

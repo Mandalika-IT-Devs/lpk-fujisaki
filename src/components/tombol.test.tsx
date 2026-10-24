@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { TombolKedua, TombolUtama } from "./tombol";
+import { TombolKedua, TombolKirim, TombolUtama } from "./tombol";
 
 afterEach(cleanup);
 
@@ -11,6 +11,19 @@ describe("TombolUtama", () => {
 
     const tombol = screen.getByRole("link", { name: "Daftar sekarang" });
     expect(tombol.getAttribute("href")).toBe("/daftar");
+  });
+});
+
+describe("TombolKirim", () => {
+  it("mengirim formulirnya", () => {
+    render(
+      <form>
+        <TombolKirim>Masuk</TombolKirim>
+      </form>,
+    );
+
+    const tombol = screen.getByRole("button", { name: "Masuk" });
+    expect(tombol.getAttribute("type")).toBe("submit");
   });
 });
 

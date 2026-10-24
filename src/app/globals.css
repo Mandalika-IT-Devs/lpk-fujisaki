@@ -172,6 +172,44 @@
   }
 }
 
+/*
+ * Gerak khas (docs/DESIGN.md, Titik Stasiun dan Peta Jalur): penanda "kamu di sini" berjalan dari FG 01 ke FG 06
+ * mengikuti guliran. Hanya `translate` yang berubah. src/components/jalur-berkereta.tsx mengukur jaraknya
+ * (--dx, --dy) lalu memasang data-siap pada peta.
+ */
+@keyframes kereta-jalan {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--dx) var(--dy);
+  }
+}
+
+/* Peta jalur sudah diukur. */
+@custom-variant jalur-siap (&:where([data-siap] *));
+
+/* Penanda berjalan: peta sudah diukur dan memakai penanda berjalan, peramban mendukung animasi guliran, dan gerak tidak dikurangi. */
+@custom-variant kereta-jalan {
+  @supports (animation-timeline: view()) and (timeline-scope: --a) {
+    @media (prefers-reduced-motion: no-preference) {
+      &:where([data-siap][data-berjalan] *) {
+        @slot;
+      }
+    }
+  }
+}
+
+/* Rentang guliran: cover 17%–76% di HP, cover 19%–47% di layar lebar. */
+@utility animate-kereta {
+  animation: kereta-jalan linear both;
+  animation-timeline: --jalur;
+  animation-range: cover 17% cover 76%;
+  @media (width >= 64rem) {
+    animation-range: cover 19% cover 47%;
+  }
+}
+
 /* Permukaan browser: pilihan teks, kursor teks, cincin fokus, dan scrollbar (docs/DESIGN.md). */
 @layer base {
   html {

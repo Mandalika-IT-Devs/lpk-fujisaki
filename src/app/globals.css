@@ -1,123 +1,220 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * Berkas tema: satu-satunya tempat nilai warna mentah di src/app/ dan src/components/.
+ * Semua token di frontmatter docs/DESIGN.md menjadi tema Tailwind 4 di sini (dicek src/app/tema.test.ts).
+ * Komponen hanya memakai utilitas dari token ini, misalnya bg-jalur, text-navy, text-headline, rounded-sudut, px-tepi.
+ * Palet, ukuran huruf, sudut, dan bayangan bawaan Tailwind dihapus supaya nilai di luar DESIGN.md tidak bisa dipakai.
+ */
+@theme {
+  --color-*: initial;
+  --color-jalur: #2b55c4;
+  --color-jalur-tua: #1d3e99;
+  --color-jalur-sedang: #5f80d6;
+  --color-jalur-muda: #9db3ea;
+  --color-jalur-pucat: #eef2fb;
+  --color-oranye: #ee5a24;
+  --color-oranye-tekan: #d44a17;
+  --color-oranye-teks: #b93e0f;
+  --color-oranye-pucat: #fde3d7;
+  --color-navy: #0b1440;
+  --color-teks-2: #3d4a7a;
+  --color-teks-di-jalur: #dce4f7;
+  --color-garis: #d5dbea;
+  --color-lewat: #8a93ad;
+  --color-dasar: #ffffff;
 
+  /* Tipografi: ukuran, tinggi baris, spasi huruf, dan ketebalan. Keluarga hurufnya lewat font-papan, font-sans, dan font-jp. */
+  --text-*: initial;
+  --text-display-lebar: 64px;
+  --text-display-lebar--line-height: 0.95;
+  --text-display-lebar--letter-spacing: -0.02em;
+  --text-display-lebar--font-weight: 700;
+  --text-headline-lebar: 56px;
+  --text-headline-lebar--line-height: 1.04;
+  --text-headline-lebar--letter-spacing: -0.015em;
+  --text-headline-lebar--font-weight: 700;
+  --text-display: 48px;
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 700;
+  --text-headline-bagian-lebar: 46px;
+  --text-headline-bagian-lebar--line-height: 1.06;
+  --text-headline-bagian-lebar--letter-spacing: -0.01em;
+  --text-headline-bagian-lebar--font-weight: 700;
+  --text-display-tiba: 44px;
+  --text-display-tiba--line-height: 0.95;
+  --text-display-tiba--letter-spacing: -0.02em;
+  --text-display-tiba--font-weight: 700;
+  --text-headline-alur-lebar: 36px;
+  --text-headline-alur-lebar--line-height: 1.06;
+  --text-headline-alur-lebar--letter-spacing: -0.01em;
+  --text-headline-alur-lebar--font-weight: 700;
+  --text-display-tiba-lebar: 36px;
+  --text-display-tiba-lebar--line-height: 0.95;
+  --text-display-tiba-lebar--letter-spacing: -0.02em;
+  --text-display-tiba-lebar--font-weight: 700;
+  --text-headline: 34px;
+  --text-headline--line-height: 1.04;
+  --text-headline--letter-spacing: -0.015em;
+  --text-headline--font-weight: 700;
+  --text-angka-bukti: 32px;
+  --text-angka-bukti--line-height: 1;
+  --text-angka-bukti--font-weight: 700;
+  --text-merek-kaki: 32px;
+  --text-merek-kaki--line-height: 1;
+  --text-merek-kaki--letter-spacing: -0.01em;
+  --text-merek-kaki--font-weight: 700;
+  --text-headline-bagian: 30px;
+  --text-headline-bagian--line-height: 1.06;
+  --text-headline-bagian--letter-spacing: -0.01em;
+  --text-headline-bagian--font-weight: 700;
+  --text-title-konter-lebar: 28px;
+  --text-title-konter-lebar--line-height: 1.1;
+  --text-title-konter-lebar--font-weight: 700;
+  --text-angka-bukti-lebar: 28px;
+  --text-angka-bukti-lebar--line-height: 1;
+  --text-angka-bukti-lebar--font-weight: 700;
+  --text-kode-lebar: 26px;
+  --text-kode-lebar--line-height: 1;
+  --text-kode-lebar--font-weight: 700;
+  --text-merek: 26px;
+  --text-merek--line-height: 1;
+  --text-merek--letter-spacing: -0.01em;
+  --text-merek--font-weight: 700;
+  --text-title: 25px;
+  --text-title--line-height: 1.05;
+  --text-title--font-weight: 700;
+  --text-kode: 23px;
+  --text-kode--line-height: 1;
+  --text-kode--font-weight: 700;
+  --text-title-konter: 23px;
+  --text-title-konter--line-height: 1.1;
+  --text-title-konter--font-weight: 700;
+  --text-nomor: 22px;
+  --text-nomor--line-height: 1;
+  --text-nomor--letter-spacing: 0.01em;
+  --text-nomor--font-weight: 700;
+  --text-title-kecil: 20px;
+  --text-title-kecil--line-height: 1.15;
+  --text-title-kecil--font-weight: 700;
+  --text-tombol: 20px;
+  --text-tombol--line-height: 1;
+  --text-tombol--font-weight: 700;
+  --text-body-lebar: 18px;
+  --text-body-lebar--line-height: 1.55;
+  --text-body-lebar--font-weight: 400;
+  --text-tombol-kedua: 18px;
+  --text-tombol-kedua--line-height: 1;
+  --text-tombol-kedua--font-weight: 700;
+  --text-body: 17px;
+  --text-body--line-height: 1.55;
+  --text-body--font-weight: 400;
+  --text-body-sedang: 16px;
+  --text-body-sedang--line-height: 1.35;
+  --text-body-sedang--font-weight: 400;
+  --text-body-kecil: 15px;
+  --text-body-kecil--line-height: 1.4;
+  --text-body-kecil--font-weight: 400;
+  --text-keterangan: 14px;
+  --text-keterangan--line-height: 1.4;
+  --text-keterangan--font-weight: 400;
+  --text-label: 14px;
+  --text-label--line-height: 1;
+  --text-label--font-weight: 700;
+  --text-mikro: 12px;
+  --text-mikro--line-height: 1;
+  --text-mikro--letter-spacing: 0.04em;
+  --text-mikro--font-weight: 700;
+
+  --radius-*: initial;
+  --radius-sudut: 6px;
+  --radius-sudut-kecil: 4px;
+  --radius-batang: 3px;
+  --radius-pil: 999px;
+  --radius-bulat: 50%;
+
+  --spacing-tebal-jalur: 12px;
+  --spacing-tepi: 16px;
+  --spacing-tepi-lebar: 32px;
+  --spacing-pad: 56px;
+  --spacing-pad-lebar: 88px;
+  --spacing-lebar: 1200px;
+
+  /* Satu-satunya bayangan elevasi (docs/DESIGN.md, The Satu Bayang Rule). */
+  --shadow-*: initial;
+  --shadow-papan:
+    0 2px 10px rgba(11, 20, 64, 0.08), 0 1px 2px rgba(11, 20, 64, 0.06);
+
+  --ease-papan: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Huruf di-host sendiri lewat next/font (src/app/layout.tsx), yang memasang variabel --font-barlow dan kawan-kawan di <html>. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --font-*: initial;
+  --font-sans:
+    var(--font-barlow), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-papan:
+    var(--font-barlow-semi-condensed), var(--font-barlow), system-ui, sans-serif;
+  --font-jp:
+    var(--font-zen-kaku-gothic-new), "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/* Wadah halaman: selebar maksimal 1200px, tepi 16px di HP dan 32px di layar lebar. */
+@utility wadah {
+  width: 100%;
+  max-width: var(--spacing-lebar);
+  margin-inline: auto;
+  padding-inline: var(--spacing-tepi);
+  @media (width >= 64rem) {
+    padding-inline: var(--spacing-tepi-lebar);
+  }
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
+/* Permukaan browser: pilihan teks, kursor teks, cincin fokus, dan scrollbar (docs/DESIGN.md). */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scrollbar-color: var(--color-jalur) var(--color-jalur-pucat);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-dasar);
+    color: var(--color-navy);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: var(--text-body--font-weight);
+    font-variant-numeric: tabular-nums;
+    caret-color: var(--color-oranye);
+    accent-color: var(--color-jalur);
+    @media (width >= 64rem) {
+      font-size: var(--text-body-lebar);
+    }
+  }
+  ::selection {
+    background-color: var(--color-oranye-pucat);
+    color: var(--color-navy);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-jalur);
+    outline-offset: 2px;
+    border-radius: var(--radius-sudut-kecil);
+  }
+  /* Tautan dalam teks. */
+  a {
+    color: var(--color-jalur);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: var(--color-jalur-tua);
   }
 }

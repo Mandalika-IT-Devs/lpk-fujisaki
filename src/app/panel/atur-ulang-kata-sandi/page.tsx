@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GAYA_TAUTAN, KartuAksesPegawai } from "../akses-pegawai";
-import { FormulirAturUlang } from "./formulir-atur-ulang";
+import { FormulirAturKataSandi } from "../formulir-atur-kata-sandi";
+import { aturKataSandiBaru } from "./aksi";
 
 export const metadata: Metadata = { title: "Atur kata sandi baru" };
 
@@ -19,7 +20,11 @@ export default async function HalamanAturUlangKataSandi({
       judul="Atur kata sandi baru"
       pengantar="Isi kata sandi baru untuk akun pegawaimu. Sesudah disimpan, kata sandi lama tidak berlaku lagi."
     >
-      <FormulirAturUlang token={typeof token === "string" ? token : ""} />
+      <FormulirAturKataSandi
+        token={typeof token === "string" ? token : ""}
+        aksi={aturKataSandiBaru}
+        kabarBerhasil="Kata sandi baru sudah disimpan, dan kata sandi lama tidak berlaku lagi. Masuk dengan kata sandi barumu."
+      />
       <p className="text-body-kecil">
         <Link href="/panel/masuk" className={GAYA_TAUTAN}>
           Kembali ke halaman masuk

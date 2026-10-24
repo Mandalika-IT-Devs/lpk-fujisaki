@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { forbidden, notFound, redirect } from "next/navigation";
 import { cache } from "react";
@@ -46,4 +47,13 @@ export async function pastikanBolehMembuka(
   if (!menu) notFound();
   if (!bolehMembukaMenu(pegawai.peran, menu.kunci)) forbidden();
   return menu;
+}
+
+/** Judul halaman menu panel: nama menunya, atau "Akses ditolak" bila menu itu bukan hak pegawai yang masuk. */
+export async function metadataMenu(kunci: string): Promise<Metadata> {
+  const pegawai = await bacaPegawaiMasuk();
+  const menu = cariMenuPanelPegawai(kunci);
+  if (!pegawai || !menu) return {};
+  const boleh = bolehMembukaMenu(pegawai.peran, menu.kunci);
+  return { title: boleh ? menu.nama : "Akses ditolak" };
 }

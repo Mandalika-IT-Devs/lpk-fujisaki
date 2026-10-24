@@ -2,10 +2,11 @@ import { memoryAdapter } from "better-auth/adapters/memory";
 import { isAPIError } from "better-auth/api";
 import { hashPassword } from "better-auth/crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buatAuth } from "./auth";
+import { buatAuth, kirimTautanAturKataSandiPegawaiBaru } from "./auth";
 import type { Email } from "./email";
 
 // Lupa kata sandi pegawai (PRD §5.4, issue T04): tautan atur ulang berlaku 1 jam.
+// Pegawai baru (PRD §5.5, issue T05): tautan atur kata sandi berlaku 24 jam.
 // Jam disuntikkan dengan vi.setSystemTime; basis data memakai adapter memori Better Auth.
 
 const ALAMAT_SITUS = "http://localhost:3000";
@@ -17,7 +18,8 @@ const SEBELUM_1_JAM = new Date("2026-10-24T08:59:59+07:00");
 const SESUDAH_1_JAM = new Date("2026-10-24T09:00:01+07:00");
 
 // Pegawai uji diisi langsung ke basis data memori, sama seperti tests/e2e/siapkan-database.ts mengisi tabelnya.
-async function siapkan() {
+// Pegawai baru belum punya kata sandi, jadi belum punya baris kredensial.
+async function siapkan({ pegawaiBaru = false } = {}) {
   const id = "00000000-0000-4000-8000-000000000001";
   const dibuatPada = new Date("2026-10-01T08:00:00+07:00");
   const terkirim: Email[] = [];
@@ -37,17 +39,19 @@ async function siapkan() {
           updatedAt: dibuatPada,
         },
       ],
-      kredensial: [
-        {
-          id: "00000000-0000-4000-8000-000000000002",
-          accountId: id,
-          providerId: "credential",
-          userId: id,
-          password: await hashPassword("sandi-lama-uji"),
-          createdAt: dibuatPada,
-          updatedAt: dibuatPada,
-        },
-      ],
+      kredensial: pegawaiBaru
+        ? []
+        : [
+            {
+              id: "00000000-0000-4000-8000-000000000002",
+              accountId: id,
+              providerId: "credential",
+              userId: id,
+              password: await hashPassword("sandi-lama-uji"),
+              createdAt: dibuatPada,
+              updatedAt: dibuatPada,
+            },
+          ],
       sesi: [],
       verifikasi: [],
     }),
@@ -55,7 +59,7 @@ async function siapkan() {
       terkirim.push(email);
     },
   });
-  return { auth, terkirim };
+  return { auth, terkirim, id };
 }
 
 /** Meminta tautan atur ulang, lalu mengambil token dari tautan di email yang terkirim. */
@@ -137,5 +141,84 @@ describe("lupa kata sandi pegawai", () => {
     });
 
     expect(terkirim).toHaveLength(0);
+  });
+});
+
+// Pegawai dibuat Admin pada 24-10-2026 pukul 08.00 WIB. Batas 24 jam: 25-10-2026 pukul 08.00 WIB.
+const JAM_DIBUAT = new Date("2026-10-24T08:00:00+07:00");
+const SEBELUM_24_JAM = new Date("2026-10-25T07:59:59+07:00");
+const SESUDAH_24_JAM = new Date("2026-10-25T08:00:01+07:00");
+
+describe("tautan atur kata sandi pegawai baru", () => {
+  beforeEach(() => {
+    vi.stubEnv("BETTER_AUTH_URL", ALAMAT_SITUS);
+    vi.stubEnv("BETTER_AUTH_SECRET", "rahasia-khusus-test-unit-0123456789");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(JAM_DIBUAT);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
+
+  /** Mengirim email atur kata sandi pegawai baru, lalu mengambil tautan dari email yang terkirim. */
+  async function kirimTautan() {
+    const { auth, terkirim, id } = await siapkan({ pegawaiBaru: true });
+    await kirimTautanAturKataSandiPegawaiBaru(
+      {
+        auth,
+        kirimEmail: async (email) => {
+          terkirim.push(email);
+        },
+      },
+      { id, nama: PEGAWAI.nama, email: PEGAWAI.email },
+    );
+    const tautan = terkirim.at(-1)?.teks.match(/https?:\/\/\S+/)?.[0];
+    if (!tautan) throw new Error("Email atur kata sandi tidak berisi tautan.");
+    return { auth, terkirim, tautan: new URL(tautan) };
+  }
+
+  it("pegawai baru menerima email berbahasa Indonesia berisi tautan ke halaman atur kata sandi pegawai baru", async () => {
+    const { terkirim, tautan } = await kirimTautan();
+
+    expect(terkirim).toHaveLength(1);
+    expect(terkirim[0].kepada).toBe(PEGAWAI.email);
+    expect(terkirim[0].subjek).toBe("Atur kata sandi akun pegawai");
+    expect(terkirim[0].teks).toContain("Halo Staf Uji,");
+    expect(terkirim[0].teks).toContain("berlaku 24 jam");
+    expect(tautan.origin).toBe(ALAMAT_SITUS);
+    expect(tautan.pathname).toBe("/panel/atur-kata-sandi");
+    expect(tautan.searchParams.get("token")).toBeTruthy();
+  });
+
+  it("tautan diterima sebelum 24 jam, untuk pegawai yang belum punya kata sandi", async () => {
+    const { auth, tautan } = await kirimTautan();
+
+    vi.setSystemTime(SEBELUM_24_JAM);
+    const hasil = await auth.api.resetPassword({
+      body: {
+        token: tautan.searchParams.get("token") ?? "",
+        newPassword: "sandi-pertama-uji",
+      },
+    });
+
+    expect(hasil).toEqual({ status: true });
+  });
+
+  it("tautan ditolak sesudah 24 jam", async () => {
+    const { auth, tautan } = await kirimTautan();
+
+    vi.setSystemTime(SESUDAH_24_JAM);
+    const galat = await auth.api
+      .resetPassword({
+        body: {
+          token: tautan.searchParams.get("token") ?? "",
+          newPassword: "sandi-pertama-uji",
+        },
+      })
+      .catch((e: unknown) => e);
+
+    expect(isAPIError(galat) && galat.body?.code).toBe("INVALID_TOKEN");
   });
 });

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { expect, type Page } from "@playwright/test";
 
 // Pegawai sintetis untuk test e2e. Admin dibuat oleh skrip pemasangan `pnpm admin:pertama`;
-// Para Staf uji dibuat langsung oleh siapkan-database.ts, karena kelola akun pegawai baru ada di T05.
+// Para Staf uji dibuat langsung oleh siapkan-database.ts. Membuat akun lewat panel diuji di akun-pegawai.spec.ts.
 export type PegawaiUji = { nama: string; email: string; kataSandi: string };
 
 export const ADMIN: PegawaiUji = {

@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { IkonCentang, IkonSeru } from "@/components/ikon";
 
-// Bagian bersama halaman akses pegawai di luar penjaga panel: masuk, lupa kata sandi, dan atur kata sandi baru.
+// Bagian bersama halaman akses pegawai di luar penjaga panel: masuk, lupa kata sandi, atur ulang kata sandi,
+// dan atur kata sandi pegawai baru. Isian dan pesannya juga dipakai halaman Akun pegawai di panel.
 
 // Isian (docs/DESIGN.md, Inputs / Fields): tinggi 48px, border 2px garis, fokus border jalur dengan halo jalur-muda.
 export const GAYA_ISIAN =

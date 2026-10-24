@@ -1,4 +1,4 @@
-import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { type BetterAuthOptions, betterAuth, generateId } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
@@ -6,13 +6,17 @@ import { eq } from "drizzle-orm";
 import {
   type Akun,
   bolehMasuk,
+  MASA_BERLAKU_TAUTAN_ATUR_KATA_SANDI_PEGAWAI_BARU_JAM,
   MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM,
   PANJANG_MINIMAL_KATA_SANDI,
 } from "@/domain/akun";
 import { db } from "./db";
 import { akun, kredensial, sesi, verifikasi } from "./db/schema";
 import { type KirimEmail, kirimEmail } from "./email";
-import { templatAturUlangKataSandi } from "./templat-email";
+import {
+  templatAturKataSandiPegawaiBaru,
+  templatAturUlangKataSandi,
+} from "./templat-email";
 
 /** Kode dan pesan galat saat pegawai nonaktif mencoba masuk (PRD §5.5). */
 export const KODE_AKUN_NONAKTIF = "AKUN_NONAKTIF";
@@ -21,6 +25,12 @@ export const PESAN_AKUN_NONAKTIF =
 
 /** Halaman tempat pegawai mengatur kata sandi baru dari tautan di email (src/app/panel/atur-ulang-kata-sandi). */
 const HALAMAN_ATUR_ULANG_KATA_SANDI_PEGAWAI = "/panel/atur-ulang-kata-sandi";
+
+/** Halaman tempat pegawai baru mengatur kata sandinya dari tautan di email (src/app/panel/atur-kata-sandi). */
+const HALAMAN_ATUR_KATA_SANDI_PEGAWAI_BARU = "/panel/atur-kata-sandi";
+
+/** Awalan token atur ulang kata sandi di tabel verifikasi, yang dibaca resetPassword Better Auth. */
+const AWALAN_TOKEN_ATUR_ULANG_KATA_SANDI = "reset-password:";
 
 /**
  * Autentikasi email dan kata sandi dengan Better Auth (ADR-0001).
@@ -100,6 +110,42 @@ export function buatAuth({
     },
     // nextCookies harus menjadi plugin terakhir: ia menulis cookie sesi dari Server Action.
     plugins: [nextCookies()],
+  });
+}
+
+type Auth = ReturnType<typeof buatAuth>;
+
+/**
+ * Mengirim email atur kata sandi kepada pegawai baru yang akunnya dibuat Admin (PRD §5.5).
+ *
+ * Tautan ini berlaku 24 jam, sedangkan tautan lupa kata sandi berlaku 1 jam (resetPasswordTokenExpiresIn).
+ * Better Auth menyimpan masa berlaku pada setiap token, jadi tautan ini dibuat sebagai token atur ulang
+ * kata sandi dengan batas 24 jamnya sendiri, tanpa mengubah tautan lupa kata sandi. Kata sandinya disimpan lewat
+ * resetPassword yang sama, yang membuat kredensial bila pegawai belum punya kata sandi. Bedanya hanya di email
+ * dan halaman tujuan tautan.
+ */
+export async function kirimTautanAturKataSandiPegawaiBaru(
+  { auth, kirimEmail }: { auth: Auth; kirimEmail: KirimEmail },
+  pegawai: { id: string; nama: string; email: string },
+): Promise<void> {
+  const konteks = await auth.$context;
+  const token = generateId(24);
+  await konteks.internalAdapter.createVerificationValue({
+    identifier: `${AWALAN_TOKEN_ATUR_ULANG_KATA_SANDI}${token}`,
+    value: pegawai.id,
+    expiresAt: new Date(
+      Date.now() +
+        MASA_BERLAKU_TAUTAN_ATUR_KATA_SANDI_PEGAWAI_BARU_JAM * 60 * 60 * 1000,
+    ),
+  });
+  const tautan = new URL(HALAMAN_ATUR_KATA_SANDI_PEGAWAI_BARU, konteks.baseURL);
+  tautan.searchParams.set("token", token);
+  await kirimEmail({
+    kepada: pegawai.email,
+    ...templatAturKataSandiPegawaiBaru({
+      nama: pegawai.nama,
+      tautan: tautan.href,
+    }),
   });
 }
 

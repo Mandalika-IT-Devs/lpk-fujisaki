@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { bolehMembukaMenu, cariMenuPanelPegawai } from "@/domain/panel-pegawai";
-import { bacaPegawaiMasuk, pastikanBolehMembuka } from "../../penjaga";
+import { metadataMenu, pastikanBolehMembuka } from "../../penjaga";
 
 // Halaman kosong berjudul untuk menu panel yang belum dibangun. Tiket yang membangun sebuah menu
 // membuat rute tetapnya sendiri (misalnya panel/(terjaga)/program/page.tsx), yang didahulukan Next.js
-// atas rute ini, dan memanggil pastikanBolehMembuka() dengan kunci menunya.
+// atas rute ini, dan memanggil pastikanBolehMembuka() dan metadataMenu() dengan kunci menunya.
 
 export async function generateMetadata({
   params,
 }: PageProps<"/panel/[menu]">): Promise<Metadata> {
-  const pegawai = await bacaPegawaiMasuk();
-  const menu = cariMenuPanelPegawai((await params).menu);
-  if (!pegawai || !menu) return {};
-  const boleh = bolehMembukaMenu(pegawai.peran, menu.kunci);
-  return { title: boleh ? menu.nama : "Akses ditolak" };
+  return metadataMenu((await params).menu);
 }
 
 export default async function HalamanMenuPanel({

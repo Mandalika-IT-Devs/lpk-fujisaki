@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { bolehMasuk, kataSandiCukupPanjang } from "./akun";
+import {
+  bolehMasuk,
+  kataSandiCukupPanjang,
+  normalkanEmail,
+  type Pegawai,
+  periksaPerubahanPegawai,
+} from "./akun";
 
 // PRD §5.1 dan UAT-E3: kata sandi minimal 8 karakter; 7 karakter ditolak.
 describe("kataSandiCukupPanjang", () => {
@@ -34,5 +40,67 @@ describe("bolehMasuk", () => {
 
   it("pemilik akun boleh masuk", () => {
     expect(bolehMasuk({ jenis: "pemilik_akun" })).toBe(true);
+  });
+});
+
+// PRD §5.1: satu email hanya untuk satu akun, dibandingkan tanpa membedakan huruf besar dan kecil.
+describe("normalkanEmail", () => {
+  it("email yang hanya berbeda huruf besar dan kecil menjadi sama", () => {
+    expect(normalkanEmail("Staf.Baru@Contoh.TEST")).toBe(
+      "staf.baru@contoh.test",
+    );
+    expect(normalkanEmail("STAF@CONTOH.TEST")).toBe("staf@contoh.test");
+  });
+});
+
+// PRD §5.5 dan UAT-E5: sistem selalu menyisakan minimal satu Admin aktif.
+// Admin terakhir tidak bisa dinonaktifkan atau diturunkan menjadi Staf.
+describe("periksaPerubahanPegawai", () => {
+  const adminA: Pegawai = { id: "admin-a", peran: "admin", aktif: true };
+  const adminB: Pegawai = { id: "admin-b", peran: "admin", aktif: true };
+  const staf: Pegawai = { id: "staf", peran: "staf", aktif: true };
+
+  it("menolak menonaktifkan Admin aktif terakhir", () => {
+    expect(
+      periksaPerubahanPegawai([adminA, staf], { ...adminA, aktif: false }),
+    ).toEqual({ boleh: false, alasan: "admin-terakhir", adminAktifSesudah: 0 });
+  });
+
+  it("menolak menurunkan Admin aktif terakhir menjadi Staf", () => {
+    expect(
+      periksaPerubahanPegawai([adminA, staf], { ...adminA, peran: "staf" }),
+    ).toEqual({ boleh: false, alasan: "admin-terakhir", adminAktifSesudah: 0 });
+  });
+
+  it("Admin nonaktif tidak dihitung, jadi Admin aktif satu-satunya tetap Admin terakhir", () => {
+    const adminNonaktif: Pegawai = { ...adminB, aktif: false };
+
+    expect(
+      periksaPerubahanPegawai([adminA, adminNonaktif], {
+        ...adminA,
+        aktif: false,
+      }),
+    ).toEqual({ boleh: false, alasan: "admin-terakhir", adminAktifSesudah: 0 });
+  });
+
+  it("membolehkan menonaktifkan atau menurunkan Admin bila masih ada Admin aktif lain", () => {
+    expect(
+      periksaPerubahanPegawai([adminA, adminB], { ...adminA, aktif: false }),
+    ).toEqual({ boleh: true, adminAktifSesudah: 1 });
+    expect(
+      periksaPerubahanPegawai([adminA, adminB], { ...adminA, peran: "staf" }),
+    ).toEqual({ boleh: true, adminAktifSesudah: 1 });
+  });
+
+  it("membolehkan menonaktifkan, mengaktifkan kembali, dan mengubah peran Staf", () => {
+    expect(
+      periksaPerubahanPegawai([adminA, staf], { ...staf, aktif: false }),
+    ).toEqual({ boleh: true, adminAktifSesudah: 1 });
+    expect(
+      periksaPerubahanPegawai([adminA, { ...staf, aktif: false }], staf),
+    ).toEqual({ boleh: true, adminAktifSesudah: 1 });
+    expect(
+      periksaPerubahanPegawai([adminA, staf], { ...staf, peran: "admin" }),
+    ).toEqual({ boleh: true, adminAktifSesudah: 2 });
   });
 });

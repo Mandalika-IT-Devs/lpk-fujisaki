@@ -4,21 +4,31 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { TombolKirim, TombolUtama } from "@/components/tombol";
 import { PANJANG_MINIMAL_KATA_SANDI } from "@/domain/akun";
-import { GAYA_ISIAN, GAYA_LABEL, Kabar, Peringatan } from "../akses-pegawai";
-import { aturKataSandiBaru } from "./aksi";
+import { GAYA_ISIAN, GAYA_LABEL, Kabar, Peringatan } from "./akses-pegawai";
+import type { KeadaanAturKataSandi } from "./kata-sandi-dari-tautan";
 
-export function FormulirAturUlang({ token }: { token: string }) {
-  const [keadaan, kirim] = useActionState(aturKataSandiBaru, {
-    hasil: "belum",
-  });
+/**
+ * Formulir kata sandi dari tautan di email, untuk atur ulang kata sandi (PRD §5.4) dan pegawai baru (PRD §5.5).
+ * `aksi` adalah Server Action halaman pemakainya, dan `kabarBerhasil` tampil setelah kata sandi disimpan.
+ */
+export function FormulirAturKataSandi({
+  token,
+  aksi,
+  kabarBerhasil,
+}: {
+  token: string;
+  aksi: (
+    keadaan: KeadaanAturKataSandi,
+    formulir: FormData,
+  ) => Promise<KeadaanAturKataSandi>;
+  kabarBerhasil: string;
+}) {
+  const [keadaan, kirim] = useActionState(aksi, { hasil: "belum" });
 
   if (keadaan.hasil === "berhasil") {
     return (
       <div className="grid gap-5">
-        <Kabar>
-          Kata sandi baru sudah disimpan, dan kata sandi lama tidak berlaku
-          lagi. Masuk dengan kata sandi barumu.
-        </Kabar>
+        <Kabar>{kabarBerhasil}</Kabar>
         <TombolUtama href="/panel/masuk">Masuk</TombolUtama>
       </div>
     );

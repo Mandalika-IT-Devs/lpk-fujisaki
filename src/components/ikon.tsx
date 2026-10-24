@@ -34,6 +34,15 @@ export function IkonPanahKiri() {
   );
 }
 
+/** Panah bawah pada isian pilihan (docs/DESIGN.md, Inputs / Fields: select). */
+export function IkonPanahBawah() {
+  return (
+    <Ikon>
+      <path d="m6 9 6 6 6-6" />
+    </Ikon>
+  );
+}
+
 export function IkonMenu() {
   return (
     <Ikon>

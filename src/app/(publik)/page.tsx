@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { CabangProgram } from "@/components/cabang-program";
+import { GaleriFoto } from "@/components/galeri-foto";
 import { nomorStasiun } from "@/components/kode-stasiun";
 import { PapanStasiun } from "@/components/papan-stasiun";
 import { PetaJalur } from "@/components/peta-jalur";
@@ -13,6 +15,7 @@ import { LEVEL, type Level } from "@/domain/statistik-lembaga";
 import { TAHAP, type Tahap } from "@/domain/tahap";
 import { formatAngka, formatTanggal } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { daftarFotoGaleri, type FotoGaleri } from "@/server/foto-galeri";
 import { bacaKontak, type Kontak } from "@/server/kontak";
 import { daftarProgramDiSitusPublik, type Program } from "@/server/program";
 import {
@@ -28,21 +31,25 @@ export const metadata: Metadata = {
 
 const [TAHAP_1, TAHAP_2, , , TAHAP_5] = TAHAP;
 
+/** Beranda menampilkan tiga foto galeri terbaru (issue T09). */
+const JUMLAH_FOTO_DI_BERANDA = 3;
+
 const JUDUL_BAGIAN =
   "max-w-[22ch] font-papan text-headline-bagian text-balance lg:text-headline-bagian-lebar";
 
 /**
  * Beranda (docs/design/prototipe/beranda.html). Garis jalur 12px menjadi tulang halaman:
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
- * Program aktif, statistik lembaga, dan kontak dibaca dari database pada setiap permintaan, jadi perubahan Admin
- * langsung terlihat (PRD §3.1, §3.3, §3.5, §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan
- * FG 06. Garis berakhir di lingkaran ujung pada loket kontak.
+ * Program aktif, statistik lembaga, tiga foto galeri terbaru, dan kontak dibaca dari database pada setiap permintaan,
+ * jadi perubahan Admin langsung terlihat (PRD §3.1, §3.3, §3.4, §3.5, §4.3). Angka statistik tampil di stasiun yang
+ * relevan: FG 02, FG 03, dan FG 06. Garis berakhir di lingkaran ujung pada loket kontak.
  */
 export default async function HalamanBeranda() {
   await connection();
-  const [daftarProgram, statistik, kontak] = await Promise.all([
+  const [daftarProgram, statistik, daftarFoto, kontak] = await Promise.all([
     daftarProgramDiSitusPublik(),
     bacaStatistikLembagaDiSitusPublik(),
+    daftarFotoGaleri(JUMLAH_FOTO_DI_BERANDA),
     bacaKontak(),
   ]);
 
@@ -82,7 +89,10 @@ export default async function HalamanBeranda() {
       </section>
       <BagianPantau />
       {daftarProgram.length > 0 && <BagianProgram daftar={daftarProgram} />}
-      {/* Galeri (T09) menyusul di sini, sebelum loket, dengan garis jalur tetap menjadi tulangnya. */}
+      <BagianGaleri
+        daftar={daftarFoto}
+        sesudahProgram={daftarProgram.length > 0}
+      />
       <BagianLoket kontak={kontak} />
     </main>
   );
@@ -475,6 +485,53 @@ function BagianProgram({ daftar }: { daftar: readonly Program[] }) {
             stasiun yang sama.
           </p>
           <CabangProgram daftar={daftar} tingkatJudul={3} className="mt-7" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Galeri di Beranda (docs/design/prototipe/beranda.html, bagian galeri): tiga foto terbaru, atau tiga bingkai kosong
+ * berlabel selama belum ada foto (OD-06). Di HP foto bergeser mendatar dengan snap (kolom 78%), di layar lebar menjadi
+ * tiga kolom. Sesudah bagian program, jarak atasnya sudah diberi bagian program.
+ */
+function BagianGaleri({
+  daftar,
+  sesudahProgram,
+}: {
+  daftar: readonly FotoGaleri[];
+  sesudahProgram: boolean;
+}) {
+  return (
+    <section
+      id="galeri"
+      aria-labelledby="judul-galeri"
+      className={cn(
+        "pb-pad lg:pb-pad-lebar",
+        !sesudahProgram && "pt-pad lg:pt-pad-lebar",
+      )}
+    >
+      <div className="wadah">
+        <div className={TULANG_GARIS}>
+          <h2 id="judul-galeri" className={JUDUL_BAGIAN}>
+            Kegiatan di lembaga
+          </h2>
+          <p className="mt-3 max-w-[60ch] text-teks-2">
+            {daftar.length > 0 ? (
+              <>
+                Foto kegiatan terbaru di lembaga. Foto lainnya ada di halaman{" "}
+                <Link href="/galeri">Galeri</Link>.
+              </>
+            ) : (
+              "Foto kegiatan tampil di sini setelah lembaga memilih foto yang orangnya sudah setuju dipublikasikan."
+            )}
+          </p>
+          <GaleriFoto
+            daftar={daftar}
+            sizes="(min-width: 1024px) 360px, 78vw"
+            className="mt-7 -mr-tepi grid auto-cols-[78%] grid-flow-col gap-3 overflow-x-auto pr-tepi pb-2 snap-x snap-mandatory lg:mr-0 lg:grid-flow-row lg:grid-cols-3 lg:overflow-visible lg:pr-0 lg:pb-0"
+          />
         </div>
       </div>
     </section>

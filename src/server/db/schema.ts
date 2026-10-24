@@ -200,3 +200,17 @@ export const kontak = pgTable(
   },
   (t) => [check("kontak_satu_baris", sql`${t.id} = 1`)],
 );
+
+// Foto galeri yang dikelola Admin (PRD §3.4, ▶ Keputusan OD-16). Berkas fotonya disimpan di disk server, di folder
+// FOLDER_FOTO_GALERI (src/server/foto-galeri.ts); tabel ini hanya menyimpan nama berkasnya. Isi awalnya kosong
+// (OD-06).
+
+/** Judul, tanggal kegiatan, dan nama berkas foto di folder foto galeri, misalnya 3f2a…c9.jpg. */
+export const fotoGaleri = pgTable("foto_galeri", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  judul: text("judul").notNull(),
+  // Tanggal kalender tanpa jam, jadi disimpan sebagai date, bukan timestamptz.
+  tanggalKegiatan: date("tanggal_kegiatan", { mode: "string" }).notNull(),
+  namaBerkas: text("nama_berkas").notNull().unique(),
+  diunggahPada: waktu("diunggah_pada").notNull().defaultNow(),
+});

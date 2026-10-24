@@ -13,8 +13,9 @@ const JUDUL =
   "Dari Cilacap ke Jepang, lewat jalur yang bisa kamu pantau sendiri.";
 const PAPAN_CILACAP =
   "Papan stasiun FG 01 Cilacap, stasiun awal: pendaftaran dan seleksi. Berikutnya: belajar bahasa Jepang, FG 02.";
+// Angka alumni dari isi awal statistik lembaga, nilai contoh OD-07 [CONTOH] (issue T07).
 const PAPAN_JEPANG =
-  "Papan stasiun FG 06 Jepang, tujuan akhir. Sebelumnya: magang kerja, FG 05.";
+  "Papan stasiun FG 06 Jepang, tujuan akhir. 1.214 alumni sudah tiba di sini sejak 2019. Sebelumnya: magang kerja, FG 05.";
 
 const HP = { width: 390, height: 844 };
 const LEBAR = { width: 1440, height: 900 };
@@ -69,14 +70,16 @@ test("enam stasiun dengan nama tahap persis seperti PRD §7.1", async ({
   );
 });
 
-test("papan kedatangan FG 06 tanpa angka alumni", async ({ page }) => {
+test("papan kedatangan FG 06 dengan angka alumni dari statistik lembaga", async ({
+  page,
+}) => {
   await page.goto("/");
 
   const papan = bagianAlur(page).getByRole("img", { name: PAPAN_JEPANG });
   await expect(papan).toContainText("Jepang");
   await expect(papan).toContainText("日本 · Tujuan akhir");
+  await expect(papan).toContainText("1.214 alumni");
   await expect(papan).toContainText("Magang kerja");
-  await expect(papan).not.toContainText("alumni");
 });
 
 test("bagian pantau: arti keempat tanda status dan contoh tampilan akun", async ({

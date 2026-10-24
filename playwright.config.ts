@@ -15,7 +15,21 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? "github" : "list",
   use: { baseURL },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /statistik-lembaga\.spec\.ts$/,
+    },
+    // Statistik lembaga berisi satu angka per bidang kerja aktif. Test program dan bidang kerja menambah dan
+    // menonaktifkan bidang kerja, jadi test statistik baru berjalan sesudah semua test lain selesai.
+    {
+      name: "statistik-lembaga",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /statistik-lembaga\.spec\.ts$/,
+      dependencies: ["chromium"],
+    },
+  ],
   webServer: {
     command: `pnpm build && pnpm start --port ${port}`,
     // Playwright menunggu server siap sebelum globalSetup menerapkan migrasi, jadi di CI database test masih

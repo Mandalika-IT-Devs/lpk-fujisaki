@@ -5,11 +5,14 @@ import { KodeStasiun } from "./kode-stasiun";
 
 type Stasiun = { nomor: string; nama: string };
 
+/** Angka bukti di papan kedatangan, misalnya "1.214 alumni", beserta kalimat sesudahnya. */
+type Bukti = { angka: string; teks: string };
+
 /**
  * Papan nama stasiun (docs/DESIGN.md, Cards / Containers): lencana kode besar, nama stasiun, sub-baris,
  * lalu pita jalur dengan penunjuk stasiun sebelumnya dan berikutnya.
  * `tiba` membuat papan kedatangan FG 06, pasangan papan Cilacap, yang lebih kecil di layar lebar
- * karena duduk di kolom FG 06.
+ * karena duduk di kolom FG 06. `bukti` menampilkan angka bukti (Angka bukti, berwarna jalur) di antara kepala dan pita.
  * Seluruh papan dibaca sebagai satu gambar lewat `label`, seperti di prototipe.
  */
 export function PapanStasiun({
@@ -19,6 +22,7 @@ export function PapanStasiun({
   sub,
   sebelumnya,
   berikutnya,
+  bukti,
   tiba = false,
   className,
 }: {
@@ -28,6 +32,7 @@ export function PapanStasiun({
   sub: ReactNode;
   sebelumnya?: Stasiun;
   berikutnya?: Stasiun;
+  bukti?: Bukti;
   tiba?: boolean;
   className?: string;
 }) {
@@ -70,6 +75,14 @@ export function PapanStasiun({
           </p>
         </div>
       </div>
+      {bukti && (
+        <p className="px-4 pb-3.5 text-body leading-[1.3] lg:px-3.5 lg:pb-3 lg:text-body-kecil">
+          <b className="mb-0.5 block font-papan text-angka-bukti text-jalur lg:text-angka-bukti-lebar">
+            {bukti.angka}
+          </b>
+          {bukti.teks}
+        </p>
+      )}
       <div
         className={cn(
           "flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-jalur px-4 py-2.25 text-body-kecil font-semibold text-dasar",

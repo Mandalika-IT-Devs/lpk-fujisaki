@@ -29,6 +29,20 @@
       "when": 1792818297517,
       "tag": "0003_isi_awal_program_bidang_kerja",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792839554316,
+      "tag": "0004_statistik_lembaga",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792839554834,
+      "tag": "0005_isi_awal_statistik_lembaga",
+      "breakpoints": true
     }
   ]
 }

@@ -6,9 +6,15 @@ import { nomorStasiun } from "@/components/kode-stasiun";
 import { PapanStasiun } from "@/components/papan-stasiun";
 import { PetaJalur } from "@/components/peta-jalur";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
-import { TAHAP } from "@/domain/tahap";
+import { LEVEL, type Level } from "@/domain/statistik-lembaga";
+import { TAHAP, type Tahap } from "@/domain/tahap";
+import { formatAngka, formatTanggal } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { daftarProgramDiSitusPublik, type Program } from "@/server/program";
+import {
+  bacaStatistikLembagaDiSitusPublik,
+  type StatistikLembagaDiSitusPublik,
+} from "@/server/statistik-lembaga";
 
 export const metadata: Metadata = {
   title: { absolute: "LPKS Fujisaki Gakuin Center – Dari Cilacap ke Jepang" },
@@ -24,11 +30,15 @@ const JUDUL_BAGIAN =
 /**
  * Beranda (docs/design/prototipe/beranda.html). Garis jalur 12px menjadi tulang halaman:
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
- * Program aktif dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung terlihat (PRD §3.1, §4.3).
+ * Program aktif dan statistik lembaga dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung
+ * terlihat (PRD §3.1, §3.3, §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan FG 06.
  */
 export default async function HalamanBeranda() {
   await connection();
-  const daftarProgram = await daftarProgramDiSitusPublik();
+  const [daftarProgram, statistik] = await Promise.all([
+    daftarProgramDiSitusPublik(),
+    bacaStatistikLembagaDiSitusPublik(),
+  ]);
 
   return (
     <main>
@@ -58,9 +68,9 @@ export default async function HalamanBeranda() {
                 </p>
               </div>
             }
-            isiTambahan={(tahap) =>
-              tahap.nomor === TAHAP.length && <PapanKedatangan />
-            }
+            isiTambahan={(tahap) => (
+              <IsiStasiun tahap={tahap} statistik={statistik} />
+            )}
           />
         </div>
       </section>
@@ -99,12 +109,150 @@ function Pembuka() {
   );
 }
 
-/** Papan kedatangan FG 06, pasangan papan Cilacap. Angka alumni ditambahkan oleh statistik lembaga (T07). */
-function PapanKedatangan() {
+/**
+ * Isi tambahan setiap stasiun peta jalur: siswa per level di FG 02, siswa per bidang kerja di FG 03, dan papan
+ * kedatangan FG 06 dengan jumlah alumni. Tanpa statistik lembaga, hanya papan kedatangan yang tampil.
+ */
+function IsiStasiun({
+  tahap,
+  statistik,
+}: {
+  tahap: Tahap;
+  statistik: StatistikLembagaDiSitusPublik | undefined;
+}) {
+  if (tahap.nomor === TAHAP.length) {
+    return (
+      <>
+        <PapanKedatangan alumniDiJepang={statistik?.alumniDiJepang} />
+        {statistik && (
+          <p className="mt-2 text-keterangan text-teks-2">
+            Data per {formatTanggal(statistik.dataPer)}.
+          </p>
+        )}
+      </>
+    );
+  }
+  if (!statistik) return null;
+  if (tahap.nomor === 2) return <SiswaPerLevel statistik={statistik} />;
+  if (tahap.nomor === 3 && statistik.perBidangKerja.length > 0) {
+    return <SiswaPerBidangKerja perBidangKerja={statistik.perBidangKerja} />;
+  }
+  return null;
+}
+
+const GAYA_DATA = "mt-3.5 max-w-105 lg:max-w-none";
+const GAYA_JUDUL_DATA = "text-keterangan font-semibold text-teks-2";
+
+/** Tingkatan warna grafik batang dari N5 ke N2 (docs/DESIGN.md, Colors). */
+const WARNA_LEVEL: Record<Level, string> = {
+  N5: "bg-jalur-muda",
+  N4: "bg-jalur-sedang",
+  N3: "bg-jalur",
+  N2: "bg-jalur-tua",
+};
+
+/** Lebar sebuah bagian terhadap keseluruhan, dalam persen; 0 bila keseluruhannya 0. */
+function persen(bagian: number, keseluruhan: number): string {
+  return `${keseluruhan === 0 ? 0 : (bagian / keseluruhan) * 100}%`;
+}
+
+/** FG 02: total siswa dari aturan domain, grafik batang bertingkat per level, dan legendanya. */
+function SiswaPerLevel({
+  statistik,
+}: {
+  statistik: StatistikLembagaDiSitusPublik;
+}) {
+  const { perLevel, totalSiswa } = statistik;
+  return (
+    <div className={GAYA_DATA}>
+      <p className={GAYA_JUDUL_DATA}>
+        Siswa di kelas sekarang: {formatAngka(totalSiswa)}
+      </p>
+      <div
+        role="img"
+        aria-label={LEVEL.map(
+          (level) => `${level} ${formatAngka(perLevel[level])} siswa`,
+        ).join(", ")}
+        className="my-2 flex h-3.5 overflow-hidden rounded-batang bg-jalur-pucat"
+      >
+        {LEVEL.map((level) => (
+          <span
+            key={level}
+            className={cn("h-full", WARNA_LEVEL[level])}
+            style={{ width: persen(perLevel[level], totalSiswa) }}
+          />
+        ))}
+      </div>
+      <ul
+        aria-label="Siswa per level"
+        className="flex flex-wrap gap-x-3.5 gap-y-1 text-body-kecil lg:text-keterangan"
+      >
+        {LEVEL.map((level) => (
+          <li key={level} className="inline-flex items-center gap-1.5">
+            <i
+              aria-hidden="true"
+              className={cn("size-2.5 rounded-batang", WARNA_LEVEL[level])}
+            />
+            {level} {formatAngka(perLevel[level])}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** FG 03: jumlah siswa per bidang kerja aktif, dengan batang minat sepanjang angka terbesar. */
+function SiswaPerBidangKerja({
+  perBidangKerja,
+}: {
+  perBidangKerja: StatistikLembagaDiSitusPublik["perBidangKerja"];
+}) {
+  const terbanyak = Math.max(...perBidangKerja.map((b) => b.jumlahSiswa));
+  return (
+    <div className={GAYA_DATA}>
+      <p id="judul-minat" className={GAYA_JUDUL_DATA}>
+        Bidang kerja yang paling diminati siswa
+      </p>
+      <ul aria-labelledby="judul-minat" className="mt-2 grid gap-1.5">
+        {perBidangKerja.map(({ bidangKerjaId, nama, jumlahSiswa }) => (
+          <li
+            key={bidangKerjaId}
+            className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-body-kecil lg:text-keterangan"
+          >
+            <span>{nama}</span>
+            <b className="font-bold">{formatAngka(jumlahSiswa)}</b>
+            <i
+              aria-hidden="true"
+              className="col-span-full h-1.5 rounded-batang bg-jalur-muda"
+              style={{ width: persen(jumlahSiswa, terbanyak) }}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Papan kedatangan FG 06, pasangan papan Cilacap, dengan jumlah alumni di Jepang dari statistik lembaga. */
+function PapanKedatangan({ alumniDiJepang }: { alumniDiJepang?: number }) {
+  const bukti =
+    alumniDiJepang === undefined
+      ? undefined
+      : {
+          angka: `${formatAngka(alumniDiJepang)} alumni`,
+          teks: "sudah tiba di sini sejak 2019.",
+        };
   return (
     <PapanStasiun
       tiba
-      label="Papan stasiun FG 06 Jepang, tujuan akhir. Sebelumnya: magang kerja, FG 05."
+      label={[
+        "Papan stasiun FG 06 Jepang, tujuan akhir.",
+        bukti && `${bukti.angka} ${bukti.teks}`,
+        "Sebelumnya: magang kerja, FG 05.",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      bukti={bukti}
       nomor={nomorStasiun(TAHAP.length)}
       nama="Jepang"
       sub={

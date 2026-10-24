@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   pgTable,
@@ -133,3 +134,50 @@ export const bidangKerja = pgTable("bidang_kerja", {
   nama: text("nama").notNull(),
   aktif: boolean("aktif").notNull().default(true),
 });
+
+// Statistik lembaga yang diisi Admin secara manual (PRD §3.3, ADR-0005), bukan dihitung dari data pendaftaran.
+// Hanya ada satu statistik lembaga, jadi tabelnya satu baris (id 1) yang diubah setiap kali Admin menyimpan.
+// Total siswa tidak disimpan: total itu dihitung sistem dari jumlah siswa per level.
+// Isi awalnya diisi oleh migrasi data drizzle/0005_isi_awal_statistik_lembaga.sql.
+
+/** Kolom angka statistik lembaga: bilangan bulat wajib, 0 atau lebih (dijaga CHECK di setiap tabel). */
+const angkaStatistik = (nama: string) => integer(nama).notNull();
+
+/** Data per, jumlah siswa per level (N5, N4, N3, N2), dan jumlah alumni di Jepang. */
+export const statistikLembaga = pgTable(
+  "statistik_lembaga",
+  {
+    id: integer("id").primaryKey().default(1),
+    // Tanggal kalender tanpa jam, jadi disimpan sebagai date, bukan timestamptz.
+    dataPer: date("data_per", { mode: "string" }).notNull(),
+    siswaN5: angkaStatistik("siswa_n5"),
+    siswaN4: angkaStatistik("siswa_n4"),
+    siswaN3: angkaStatistik("siswa_n3"),
+    siswaN2: angkaStatistik("siswa_n2"),
+    alumniDiJepang: angkaStatistik("alumni_di_jepang"),
+  },
+  (t) => [
+    check("statistik_lembaga_satu_baris", sql`${t.id} = 1`),
+    check(
+      "statistik_lembaga_angka_tidak_negatif",
+      sql`${t.siswaN5} >= 0 and ${t.siswaN4} >= 0 and ${t.siswaN3} >= 0 and ${t.siswaN2} >= 0 and ${t.alumniDiJepang} >= 0`,
+    ),
+  ],
+);
+
+/** Jumlah siswa per bidang kerja dari statistik lembaga: satu baris untuk setiap bidang kerja aktif saat disimpan. */
+export const statistikLembagaBidangKerja = pgTable(
+  "statistik_lembaga_bidang_kerja",
+  {
+    bidangKerjaId: integer("bidang_kerja_id")
+      .primaryKey()
+      .references(() => bidangKerja.id),
+    jumlahSiswa: angkaStatistik("jumlah_siswa"),
+  },
+  (t) => [
+    check(
+      "statistik_lembaga_bidang_kerja_angka_tidak_negatif",
+      sql`${t.jumlahSiswa} >= 0`,
+    ),
+  ],
+);

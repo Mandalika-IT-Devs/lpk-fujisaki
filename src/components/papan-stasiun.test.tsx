@@ -47,4 +47,32 @@ describe("PapanStasiun", () => {
     expect(papan.textContent).toContain("FG 05");
     expect(papan.textContent).not.toContain("Awal jalur");
   });
+
+  it("papan kedatangan: angka bukti di antara kepala dan pita", () => {
+    const label =
+      "Papan stasiun FG 06 Jepang, tujuan akhir. 1.214 alumni sudah tiba di sini sejak 2019.";
+    render(
+      <PapanStasiun
+        tiba
+        label={label}
+        nomor="06"
+        nama="Jepang"
+        sub="Tujuan akhir"
+        bukti={{
+          angka: "1.214 alumni",
+          teks: "sudah tiba di sini sejak 2019.",
+        }}
+        sebelumnya={{ nomor: "05", nama: "Magang kerja" }}
+      />,
+    );
+
+    const teks = screen.getByRole("img", { name: label }).textContent ?? "";
+    expect(teks).toContain("1.214 alumnisudah tiba di sini sejak 2019.");
+    expect(teks.indexOf("Tujuan akhir")).toBeLessThan(
+      teks.indexOf("1.214 alumni"),
+    );
+    expect(teks.indexOf("1.214 alumni")).toBeLessThan(
+      teks.indexOf("Magang kerja"),
+    );
+  });
 });

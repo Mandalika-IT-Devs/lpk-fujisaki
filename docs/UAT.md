@@ -89,7 +89,7 @@ Hasil: WhatsApp terbuka dengan nomor kantor.
 3. Buka halaman Program dan formulir pendaftaran dengan akun lain.
 4. Buka pendaftaran dari langkah 1 di panel pegawai.
 
-Hasil: "Pelajar" tidak tampil di halaman Program dan tidak bisa dipilih di formulir. Pendaftaran dari langkah 1 tetap Berjalan dengan program "Pelajar".
+Hasil: "Pelajar" tidak tampil di halaman Program dan tidak bisa dipilih di formulir. Judul bagian program di Beranda menjadi "Tiga program, satu jalur". Pendaftaran dari langkah 1 tetap Berjalan dengan program "Pelajar".
 
 **UAT-D2 – Bidang kerja nonaktif** (§4.3)
 1. Nonaktifkan "Restoran", lalu buka formulir pendaftaran.
@@ -118,10 +118,12 @@ Hasil: keduanya ditolak, karena email dan nomornya sudah dipakai.
 Hasil: ketiganya ditolak dengan pesan yang jelas.
 
 **UAT-E4 – Lupa kata sandi** (§5.4)
-1. Minta atur ulang kata sandi, buka tautannya, lalu atur kata sandi baru.
-2. Masuk dengan kata sandi baru.
+1. Masuk dengan akun yang sama di perangkat atau browser kedua.
+2. Di perangkat pertama, minta atur ulang kata sandi, buka tautannya, lalu atur kata sandi baru.
+3. Masuk dengan kata sandi baru.
+4. Muat ulang halaman di perangkat kedua.
 
-Hasil: berhasil. Kata sandi lama tidak berlaku lagi.
+Hasil: berhasil. Kata sandi lama tidak berlaku lagi, dan perangkat kedua diminta masuk lagi.
 
 **UAT-E5 – Akun pegawai** (§5.5)
 1. Sebagai Admin, buat akun Staf baru, lalu atur kata sandinya lewat email.

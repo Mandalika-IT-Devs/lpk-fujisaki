@@ -480,6 +480,8 @@ Titik stasiun 32px: isi putih, cincin 7px jalur, duduk di atas garis 12px. Titik
 
 **Gerak khas, kereta "kamu di sini":** titik oranye 24px (border putih 4px) dengan label oranye "Kamu di sini" berjalan dari FG 01 ke FG 06 di sepanjang garis, digerakkan oleh `animation-timeline` guliran (hanya `translate`, linear). Rentang `cover 17%–76%` di HP dan `cover 19%–47%` di layar lebar. Label tegak di HP, mendatar di layar lebar. Saat gerak dikurangi atau peramban tidak mendukung, titik diam di FG 01 dan lencana "Kamu di sini" statis tampil di kepala FG 01. Ini satu-satunya gerak khas; `scroll-behavior: smooth` juga dimatikan saat gerak dikurangi.
 
+▶ Keputusan 2026-10-24: Di halaman Alur Program, penanda "Kamu di sini" diam di FG 01 dan tidak berjalan mengikuti guliran. Langkah setiap tahap ditampilkan dengan namanya saja, tanpa kode L1.1 dan seterusnya, di bawah pengantar halaman yang dibangun di T02.
+
 ### Bingkai Foto Kosong
 Selama foto belum disetujui (OD-06): bingkai 4:3, border putus-putus 1,5px garis, latar jalur-pucat, ikon kamera 32px lewat, keterangan di bawah 600.
 

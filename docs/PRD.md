@@ -114,6 +114,10 @@ Permintaan salinan seluruh data pribadi dilayani pegawai di luar sistem (§12.6)
 
 Teks yang bersumber dari kode diubah lewat tiket. Semua halaman dirancang untuk layar HP terlebih dulu.
 
+▶ Keputusan 2026-10-24: Selama OD-04 dan OD-07 belum diputuskan, halaman Tentang Kami dan Kebijakan Privasi menampilkan kotak catatan "[CONTOH]" tepat di bawah pengantarnya. Kotak itu hilang setelah teks resmi diserahkan (T18).
+
+▶ Keputusan 2026-10-24: Judul bagian program di Beranda mengikuti jumlah program aktif, misalnya "Empat program, satu jalur", lalu "Tiga program, satu jalur" bila satu program dinonaktifkan. Bila tidak ada program aktif, bagian itu tidak tampil.
+
 ### 3.2 Bahasa
 
 Semua halaman memakai Bahasa Indonesia.
@@ -190,6 +194,8 @@ Isi awalnya empat bidang kerja: Pembersihan gedung, Perawat lansia (kaigo), Peng
 
 "Belum tahu" adalah pilihan di formulir pendaftaran, bukan sebuah bidang kerja.
 
+▶ Keputusan 2026-10-24: Halaman Program menampilkan daftar bidang kerja aktif, berupa nama saja, di bawah daftar program.
+
 ### 4.3 Menonaktifkan
 
 Program dan bidang kerja tidak pernah dihapus, hanya dinonaktifkan. Yang nonaktif:
@@ -198,6 +204,10 @@ Program dan bidang kerja tidak pernah dihapus, hanya dinonaktifkan. Yang nonakti
 - tetap tercatat pada pendaftaran yang sudah memakainya. Pendaftaran yang sedang berjalan di program itu tetap lanjut seperti biasa.
 
 Admin bisa mengaktifkannya kembali.
+
+▶ Keputusan 2026-10-24: Program dan bidang kerja baru langsung aktif saat dibuat Admin.
+
+▶ Keputusan 2026-10-24: Bila tidak ada program aktif, halaman Program menampilkan "Belum ada program yang dibuka saat ini. Tanyakan program berikutnya ke kantor lembaga di Kesugihan, Cilacap."
 
 ## 5. Akun
 
@@ -238,9 +248,15 @@ Setelah membuat akun, sistem mengirim email berisi tautan verifikasi yang berlak
 
 Pemilik akun yang belum memverifikasi email tetap bisa masuk dan menyusun draf formulir pendaftaran, tetapi belum bisa mengirimnya (§6.2).
 
+▶ Keputusan 2026-10-24: Semua email sistem dikirim atas nama "LPKS Fujisaki Gakuin Center" dari alamat no-reply di domain lembaga, misalnya "LPKS Fujisaki Gakuin Center <no-reply@lpkfujisaki.com>". Alamat sebenarnya diisi saat menyiapkan server (T19).
+
 ### 5.4 Lupa kata sandi
 
 Pemilik akun dan pegawai bisa meminta tautan atur ulang kata sandi lewat email. Tautan itu berlaku 1 jam.
+
+▶ Keputusan 2026-10-24: Setelah kata sandi diatur ulang, semua sesi lain akun itu diakhiri. Perangkat lain yang masih masuk harus masuk lagi dengan kata sandi baru.
+
+▶ Keputusan 2026-10-24: Pegawai nonaktif tetap bisa meminta tautan dan mengatur ulang kata sandinya, tetapi tetap tidak bisa masuk (§5.5).
 
 ### 5.5 Akun pegawai
 
@@ -248,6 +264,17 @@ Pemilik akun dan pegawai bisa meminta tautan atur ulang kata sandi lewat email. 
 - Admin membuat akun pegawai dengan nama, email, dan peran (Admin atau Staf). Pegawai baru menerima email untuk mengatur kata sandinya. Tautan itu berlaku 24 jam.
 - Admin bisa mengubah peran dan menonaktifkan pegawai. Pegawai nonaktif tidak bisa masuk. Akunnya tidak dihapus, supaya riwayat perubahan tetap menunjuk orang yang benar.
 - Sistem selalu menyisakan minimal satu Admin aktif. Admin terakhir tidak bisa dinonaktifkan atau diturunkan menjadi Staf.
+
+▶ Keputusan 2026-10-24: Bar atas panel pegawai menampilkan nama dan peran pegawai yang sedang masuk, beserta tombol Keluar.
+
+▶ Keputusan 2026-10-24: Teks pesan panel pegawai yang dibangun di T03 berlaku:
+- akun nonaktif: "Akun pegawai ini nonaktif, jadi tidak bisa masuk. Hubungi Admin lembaga bila ini keliru.";
+- email atau kata sandi salah: "Email atau kata sandi salah. Periksa lagi keduanya, lalu coba masuk kembali.";
+- halaman khusus Admin: "Halaman ini hanya untuk Admin. Kembali ke Pendaftaran, atau hubungi Admin lembaga bila kamu memerlukan halaman ini.";
+- alamat panel yang bukan menu: "Halaman tidak ditemukan. Alamat ini bukan menu panel pegawai. Pilih salah satu menu, atau kembali ke Pendaftaran.";
+- gangguan server saat masuk: "Masuk gagal karena gangguan di server. Coba lagi beberapa saat lagi; bila tetap gagal, hubungi Admin lembaga."
+
+▶ Keputusan 2026-10-24: Bila tautan undangan 24 jam sudah kedaluwarsa, pegawai baru meminta tautan baru lewat halaman Lupa kata sandi (§5.4). Admin tidak punya tombol untuk mengirim ulang undangan.
 
 ## 6. Formulir pendaftaran dan pendaftaran
 

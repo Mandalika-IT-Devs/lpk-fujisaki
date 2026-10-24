@@ -205,7 +205,7 @@ export const kontak = pgTable(
 // FOLDER_FOTO_GALERI (src/server/foto-galeri.ts); tabel ini hanya menyimpan nama berkasnya. Isi awalnya kosong
 // (OD-06).
 
-/** Judul, tanggal kegiatan, dan nama berkas foto di folder foto galeri, misalnya 3f2a…c9.jpg. */
+/** Judul, tanggal kegiatan, dan nama berkas foto di folder foto galeri, misalnya 3f2a…c9.jpeg. */
 export const fotoGaleri = pgTable("foto_galeri", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   judul: text("judul").notNull(),

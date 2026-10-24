@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { desc, eq } from "drizzle-orm";
+import { z } from "zod";
+import { JENIS_BERKAS_FOTO_GALERI } from "@/domain/foto-galeri";
 import { db } from "./db";
 import { fotoGaleri } from "./db/schema";
 
@@ -24,16 +26,31 @@ const KOLOM = {
   namaBerkas: fotoGaleri.namaBerkas,
 };
 
-/** Jenis foto yang disimpan beserta akhiran nama berkasnya. */
-const BERKAS_FOTO = [
-  { jenis: "image/jpeg", akhiran: "jpg" },
-  { jenis: "image/png", akhiran: "png" },
-  { jenis: "image/webp", akhiran: "webp" },
-] as const;
+/**
+ * Akhiran nama berkas foto adalah bagian kedua jenis MIME-nya: image/jpeg → jpeg, image/png → png, image/webp → webp.
+ * Daftar jenisnya hanya ada di aturan domain (JENIS_BERKAS_FOTO_GALERI).
+ */
+function akhiranBerkas(jenisBerkas: string): string {
+  return jenisBerkas.slice(jenisBerkas.indexOf("/") + 1);
+}
 
-/** Nama berkas buatan server: UUID huruf kecil dengan akhiran jenis fotonya. Nama lain tidak pernah dibaca dari disk. */
-const NAMA_BERKAS =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/;
+const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+/**
+ * Nama berkas foto galeri buatan server: UUID huruf kecil dengan akhiran jenis fotonya, misalnya
+ * 3f2a9b1c-0d4e-4f5a-8b6c-7d8e9f0a1b2c.jpeg. Nama dari luar, misalnya dari alamat /foto-galeri/[nama], divalidasi
+ * dengan skema ini sebelum dipakai membaca disk; nama lain tidak pernah dibaca.
+ */
+export const skemaNamaBerkasFotoGaleri = z
+  .string()
+  .regex(
+    new RegExp(
+      `^${UUID}\\.(${JENIS_BERKAS_FOTO_GALERI.map(akhiranBerkas).join("|")})$`,
+    ),
+  )
+  .brand<"NamaBerkasFotoGaleri">();
+
+type NamaBerkasFotoGaleri = z.infer<typeof skemaNamaBerkasFotoGaleri>;
 
 const PESAN_FOLDER =
   "FOLDER_FOTO_GALERI belum diisi, jadi foto galeri tidak bisa disimpan atau dibaca. Isi dengan folder penyimpanan foto, misalnya data/foto-galeri, di .env, lalu mulai ulang aplikasi.";
@@ -101,13 +118,12 @@ export async function simpanFotoGaleri(foto: {
   isi: Uint8Array;
   jenisBerkas: string;
 }): Promise<FotoGaleri> {
-  const berkas = BERKAS_FOTO.find(({ jenis }) => jenis === foto.jenisBerkas);
-  if (!berkas) {
+  if (!JENIS_BERKAS_FOTO_GALERI.includes(foto.jenisBerkas)) {
     throw new Error(
       `Jenis berkas ${foto.jenisBerkas} bukan jenis foto galeri yang disimpan.`,
     );
   }
-  const namaBerkas = `${randomUUID()}.${berkas.akhiran}`;
+  const namaBerkas = `${randomUUID()}.${akhiranBerkas(foto.jenisBerkas)}`;
   const lokasi = lokasiBerkas(namaBerkas);
   await mkdir(path.dirname(lokasi), { recursive: true });
   await writeFile(lokasi, foto.isi, { flag: "wx" });
@@ -128,34 +144,61 @@ export async function simpanFotoGaleri(foto: {
 }
 
 /**
+ * Folder tembolok next/image di `next start` (<distDir>/cache/images, distDir bawaan .next), tempat salinan kecil
+ * setiap foto disimpan. Next.js tidak punya cara membatalkan satu salinan, dan salinan yang berkas aslinya sudah tidak
+ * ada terus disajikan sebagai salinan lama; dokumentasi next/image (images.minimumCacheTTL) menganjurkan menghapus
+ * folder ini. Salinan foto lain dibuat ulang saat diminta lagi.
+ */
+const FOLDER_TEMBOLOK_NEXT_IMAGE = path.join(
+  /*turbopackIgnore: true*/ ".next",
+  "cache",
+  "images",
+);
+
+/**
  * Menghapus foto galeri beserta berkasnya dari disk; undefined bila foto itu tidak ada. Bila berkasnya gagal dihapus,
- * datanya juga batal dihapus, supaya data dan berkas tidak pernah terpisah.
+ * datanya juga batal dihapus, supaya data dan berkas tidak pernah terpisah. Sesudahnya tembolok next/image
+ * dikosongkan, supaya salinan kecil foto itu juga hilang.
  */
 export async function hapusFotoGaleri(
   id: number,
 ): Promise<FotoGaleri | undefined> {
-  return db.transaction(async (tx) => {
-    const [foto] = await tx
+  const foto = await db.transaction(async (tx) => {
+    const [terhapus] = await tx
       .delete(fotoGaleri)
       .where(eq(fotoGaleri.id, id))
       .returning(KOLOM);
-    if (foto) {
-      await rm(lokasiBerkas(foto.namaBerkas), { force: true });
+    if (terhapus) {
+      await rm(lokasiBerkas(terhapus.namaBerkas), { force: true });
     }
-    return foto;
+    return terhapus;
   });
+  if (foto) {
+    // Foto dan berkas aslinya sudah terhapus, jadi kegagalan di sini dicatat tanpa membatalkan penghapusan.
+    await rm(FOLDER_TEMBOLOK_NEXT_IMAGE, {
+      recursive: true,
+      force: true,
+    }).catch((galat) =>
+      console.error(
+        `Tembolok next/image di ${FOLDER_TEMBOLOK_NEXT_IMAGE} belum terhapus, jadi salinan kecil foto "${foto.judul}" masih bisa tersaji. Hapus folder itu secara manual.`,
+        galat,
+      ),
+    );
+  }
+  return foto;
 }
 
-/** Isi dan jenis berkas sebuah foto galeri untuk ditampilkan; undefined bila namanya bukan nama foto galeri atau berkasnya tidak ada. */
+/** Isi dan jenis berkas sebuah foto galeri untuk ditampilkan; undefined bila berkasnya tidak ada. */
 export async function bacaBerkasFotoGaleri(
-  nama: string,
+  nama: NamaBerkasFotoGaleri,
 ): Promise<{ isi: Buffer; jenisBerkas: string } | undefined> {
-  const akhiran = NAMA_BERKAS.exec(nama)?.[1];
-  const berkas = BERKAS_FOTO.find((b) => b.akhiran === akhiran);
-  if (!berkas) return undefined;
+  const jenisBerkas = JENIS_BERKAS_FOTO_GALERI.find((jenis) =>
+    nama.endsWith(`.${akhiranBerkas(jenis)}`),
+  );
+  if (!jenisBerkas) return undefined;
   try {
     const isi = await readFile(lokasiBerkas(nama));
-    return { isi, jenisBerkas: berkas.jenis };
+    return { isi, jenisBerkas };
   } catch (galat) {
     if (galat instanceof Error && "code" in galat && galat.code === "ENOENT") {
       return undefined;

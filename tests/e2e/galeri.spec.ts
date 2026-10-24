@@ -151,7 +151,7 @@ async function berkasDiDisk(): Promise<string[]> {
   return readdir(folder).catch(() => []);
 }
 
-/** Nama berkas foto galeri dari alamat next/image, misalnya /_next/image?url=%2Ffoto-galeri%2F…jpg&w=…. */
+/** Nama berkas foto galeri dari alamat next/image, misalnya /_next/image?url=%2Ffoto-galeri%2F…jpeg&w=…. */
 async function namaBerkasFoto(page: Page, judul: string): Promise<string> {
   const src = await page
     .getByRole("img", { name: judul })
@@ -264,7 +264,7 @@ test("Admin mengunggah JPG di bawah 5 MB dengan centang persetujuan, dan foto ta
   // next/image mengecilkan foto lewat /_next/image (PRD §3.4).
   await expect(foto).toHaveAttribute(
     "src",
-    /^\/_next\/image\?url=%2Ffoto-galeri%2F[0-9a-f-]{36}\.jpg&w=\d+&q=\d+$/,
+    /^\/_next\/image\?url=%2Ffoto-galeri%2F[0-9a-f-]{36}\.jpeg&w=\d+&q=\d+$/,
   );
   await expect
     .poll(() =>
@@ -500,6 +500,10 @@ test("foto yang dihapus hilang dari panel, Galeri, dan Beranda, dan berkasnya hi
   await page.goto("/galeri");
   const namaBerkas = await namaBerkasFoto(page, judul);
   expect(await berkasDiDisk()).toEqual([namaBerkas]);
+  // Salinan kecil dari next/image tersaji, dan sejak itu tersimpan di tembolok next/image.
+  const alamatSalinan =
+    (await page.getByRole("img", { name: judul }).getAttribute("src")) ?? "";
+  expect((await page.request.get(alamatSalinan)).status()).toBe(200);
 
   // Konfirmasi dibatalkan: tidak ada yang terhapus.
   await page.goto(ALAMAT_PANEL);
@@ -520,9 +524,13 @@ test("foto yang dihapus hilang dari panel, Galeri, dan Beranda, dan berkasnya hi
 
   await expect(daftarPanel(page)).toHaveCount(0);
   expect(await berkasDiDisk()).toEqual([]);
-  expect((await page.request.get(`/foto-galeri/${namaBerkas}`)).status()).toBe(
-    404,
+  const jawabanAsli = await page.request.get(`/foto-galeri/${namaBerkas}`);
+  expect(jawabanAsli.status()).toBe(404);
+  expect(await jawabanAsli.text()).toBe(
+    "Foto tidak ditemukan; mungkin sudah dihapus dari galeri. Buka halaman Galeri di /galeri untuk melihat foto yang ada.",
   );
+  // Salinan kecilnya juga tidak tersaji lagi dari tembolok next/image.
+  expect((await page.request.get(alamatSalinan)).ok()).toBe(false);
   await page.goto("/galeri");
   await expect(page.getByRole("main").getByRole("img")).toHaveCount(0);
   await expect(page.getByRole("main").getByRole("figure")).toHaveText(
@@ -604,4 +612,22 @@ test("halaman Galeri, Beranda, dan panel galeri tidak bergulir ke samping di leb
   }
 
   for (const j of judul) await hapusLewatPanel(page, j);
+});
+
+test("alamat berkas foto yang bukan nama foto galeri dijawab 404 dengan pesan yang jelas", async ({
+  page,
+}) => {
+  for (const nama of [
+    "..%2F..%2Fpackage.json",
+    "bukan-foto.txt",
+    "3f2a9b1c-0d4e-4f5a-8b6c-7d8e9f0a1b2c.gif",
+    "3f2a9b1c-0d4e-4f5a-8b6c-7d8e9f0a1b2c.jpeg",
+  ]) {
+    const jawaban = await page.request.get(`/foto-galeri/${nama}`);
+
+    expect(jawaban.status(), nama).toBe(404);
+    expect(await jawaban.text()).toBe(
+      "Foto tidak ditemukan; mungkin sudah dihapus dari galeri. Buka halaman Galeri di /galeri untuk melihat foto yang ada.",
+    );
+  }
 });

@@ -1,14 +1,7 @@
 import Image from "next/image";
 import { formatTanggal } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-/** Isi satu foto galeri: judul, tanggal kegiatan (YYYY-MM-DD), dan nama berkasnya di rute /foto-galeri (PRD §3.4). */
-type FotoDiGaleri = {
-  id: number;
-  judul: string;
-  tanggalKegiatan: string;
-  namaBerkas: string;
-};
+import type { FotoGaleri } from "@/server/foto-galeri";
 
 /** Label bingkai kosong dari docs/design/prototipe/beranda.html, bagian galeri. */
 const LABEL_BINGKAI_KOSONG = [
@@ -52,7 +45,7 @@ export function GaleriFoto({
   sizes,
   className,
 }: {
-  daftar: readonly FotoDiGaleri[];
+  daftar: readonly FotoGaleri[];
   sizes: string;
   className?: string;
 }) {

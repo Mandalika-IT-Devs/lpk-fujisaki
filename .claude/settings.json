@@ -1,7 +1,7 @@
 {
   "extraKnownMarketplaces": {
     "jalankan-tiket": {
-      "source": { "source": "github", "repo": "mandalikadev/jalankan-tiket" },
+      "source": { "source": "github", "repo": "Mandalika-IT-Devs/jalankan-tiket" },
       "autoUpdate": true
     }
   },
@@ -44,6 +44,12 @@
       "Bash(gh api *)",
       "Bash(gh repo edit *)",
       "Bash(gh repo delete *)",
+      "Bash(gh auth login *)",
+      "Bash(gh auth logout *)",
+      "Bash(gh auth switch *)",
+      "Bash(gh auth refresh *)",
+      "Bash(gh auth token *)",
+      "Bash(gh auth setup-git *)",
       "Bash(*disetujui-pemilik*)"
     ]
   }

@@ -32,12 +32,41 @@ export function TombolUtama({
   );
 }
 
+/** Nama dan nilai tombol kirim, yang ikut terkirim bersama formulirnya, untuk formulir dengan lebih dari satu tombol. */
+type PropsTombolKirim = { children: ReactNode; name?: string; value?: string };
+
 /** Tombol utama yang mengirim formulirnya. */
-export function TombolKirim({ children }: { children: ReactNode }) {
+export function TombolKirim({ children, name, value }: PropsTombolKirim) {
   return (
-    <button type="submit" className={cn(GAYA_UTAMA, "cursor-pointer")}>
+    <button
+      type="submit"
+      name={name}
+      value={value}
+      className={cn(GAYA_UTAMA, "cursor-pointer")}
+    >
       {children}
       <IkonPanahKanan />
+    </button>
+  );
+}
+
+const GAYA_KEDUA =
+  "inline-flex h-12.5 items-center justify-center gap-2 rounded-sudut border-2 bg-dasar px-5 font-sans text-tombol-kedua no-underline";
+const GAYA_KEDUA_AKTIF = cn(
+  "border-jalur text-jalur hover:bg-jalur-pucat hover:text-jalur-tua",
+  TRANSISI,
+);
+
+/** Tombol kedua (docs/DESIGN.md, Buttons) yang mengirim formulirnya, di samping tombol utama formulir itu. */
+export function TombolKirimKedua({ children, name, value }: PropsTombolKirim) {
+  return (
+    <button
+      type="submit"
+      name={name}
+      value={value}
+      className={cn(GAYA_KEDUA, GAYA_KEDUA_AKTIF, "cursor-pointer")}
+    >
+      {children}
     </button>
   );
 }
@@ -57,16 +86,13 @@ export function TombolKedua({
   children,
   className,
 }: PropsTombolKedua) {
-  const bentuk =
-    "inline-flex h-12.5 items-center justify-center gap-2 rounded-sudut border-2 bg-dasar px-5 font-sans text-tombol-kedua no-underline";
-
   if (nonaktif) {
     return (
       <a
         role="link"
         aria-disabled="true"
         className={cn(
-          bentuk,
+          GAYA_KEDUA,
           "cursor-not-allowed border-garis text-lewat hover:text-lewat",
           className,
         )}
@@ -77,15 +103,7 @@ export function TombolKedua({
   }
 
   return (
-    <Link
-      href={href}
-      className={cn(
-        bentuk,
-        "border-jalur text-jalur hover:bg-jalur-pucat hover:text-jalur-tua",
-        TRANSISI,
-        className,
-      )}
-    >
+    <Link href={href} className={cn(GAYA_KEDUA, GAYA_KEDUA_AKTIF, className)}>
       {children}
     </Link>
   );

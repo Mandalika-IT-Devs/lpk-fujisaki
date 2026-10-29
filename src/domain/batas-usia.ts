@@ -4,22 +4,7 @@
  */
 
 import type { RentangUsia } from "./program-dan-bidang-kerja";
-
-/** WIB adalah UTC+7 sepanjang tahun, tanpa waktu musim panas (PRD: semua tanggal memakai WIB). */
-const SELISIH_WIB_MILIDETIK = 7 * 60 * 60 * 1000;
-
-/** Tanggal kalender, tanpa jam dan zona waktu. */
-type Tanggal = { tahun: number; bulan: number; hari: number };
-
-/** Tanggal kalender WIB sebuah instan. */
-function tanggalWib(instan: Date): Tanggal {
-  const wib = new Date(instan.getTime() + SELISIH_WIB_MILIDETIK);
-  return {
-    tahun: wib.getUTCFullYear(),
-    bulan: wib.getUTCMonth() + 1,
-    hari: wib.getUTCDate(),
-  };
-}
+import { type Tanggal, tanggalWib } from "./waktu-wib";
 
 function kabisat(tahun: number): boolean {
   return (tahun % 4 === 0 && tahun % 100 !== 0) || tahun % 400 === 0;

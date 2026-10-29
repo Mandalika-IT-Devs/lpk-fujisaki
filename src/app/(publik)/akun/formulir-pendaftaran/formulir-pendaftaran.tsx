@@ -2,7 +2,7 @@
 
 import { type ReactNode, useActionState } from "react";
 import { IkonPanahBawah, IkonSeru } from "@/components/ikon";
-import { TombolKirim } from "@/components/tombol";
+import { TombolKirim, TombolKirimKedua } from "@/components/tombol";
 import {
   BIDANG_KERJA_BELUM_TAHU,
   DAFTAR_PROVINSI,
@@ -14,7 +14,11 @@ import { cn } from "@/lib/utils";
 import type { PilihanFormulirPendaftaran } from "@/server/formulir-pendaftaran";
 import { GAYA_ISIAN, GAYA_LABEL } from "@/app/panel/akses-pegawai";
 import { PesanTindakan } from "@/app/panel/(terjaga)/pesan-tindakan";
-import { type KeadaanFormulirPendaftaran, simpanDraf } from "./aksi";
+import {
+  type KeadaanFormulirPendaftaran,
+  kirimFormulir,
+  simpanDraf,
+} from "./aksi";
 import {
   type GalatIsian,
   type IsianFormulirPendaftaran,
@@ -150,20 +154,28 @@ function Bagian({
   );
 }
 
-/** Keadaan formulir di browser: keadaan dari server, ditambah versi yang naik setiap kali draf disimpan. */
+/** Keadaan formulir di browser: keadaan dari server, ditambah versi yang naik setiap kali formulir diproses. */
 type KeadaanTampil = KeadaanFormulirPendaftaran & { versi: number };
 
-async function simpanDrafLaluNaikkanVersi(
+/** Nama dan nilai tombol yang ikut terkirim bersama formulir, untuk memilih tindakannya. */
+const TINDAKAN = "tindakan";
+const KIRIM = "kirim";
+
+/** Tombol "Kirim formulir" mengirim formulir pendaftaran; tombol "Simpan draf" menyimpannya sebagai draf. */
+async function prosesLaluNaikkanVersi(
   sebelum: KeadaanTampil,
   formulir: FormData,
 ): Promise<KeadaanTampil> {
   const { versi, ...keadaan } = sebelum;
-  return { ...(await simpanDraf(keadaan, formulir)), versi: versi + 1 };
+  const tindakan =
+    formulir.get(TINDAKAN) === KIRIM ? kirimFormulir : simpanDraf;
+  return { ...(await tindakan(keadaan, formulir)), versi: versi + 1 };
 }
 
 /**
  * Formulir pendaftaran pemilik akun dengan semua isian PRD §6.1, dalam urutan tabelnya, dan tanpa isian NIK, tinggi
- * badan, atau berat badan (§12.2). Formulir bisa disimpan sebagai draf kapan saja, juga bila belum lengkap (§6.2).
+ * badan, atau berat badan (§12.2). Formulir bisa disimpan sebagai draf kapan saja, juga bila belum lengkap, dan dikirim
+ * bila syarat kirimnya terpenuhi (§6.2).
  * Semua isian diperiksa di server, jadi pemeriksaan bawaan browser dimatikan supaya setiap isian yang salah ditandai
  * dengan pesan yang sama dalam bahasa Indonesia.
  */
@@ -174,8 +186,8 @@ export function FormulirPendaftaran({
   awal: IsianFormulirPendaftaran;
   pilihan: PilihanFormulirPendaftaran;
 }) {
-  const [keadaan, kirim] = useActionState(simpanDrafLaluNaikkanVersi, {
-    pesan: null,
+  const [keadaan, kirim] = useActionState(prosesLaluNaikkanVersi, {
+    pesan: [],
     isian: awal,
     galat: {},
     versi: 0,
@@ -397,8 +409,18 @@ export function FormulirPendaftaran({
       </div>
 
       <div className="grid gap-4">
-        <PesanTindakan pesan={keadaan.pesan} />
-        <TombolKirim>Simpan draf</TombolKirim>
+        {keadaan.pesan.map((pesan) => (
+          <PesanTindakan key={pesan.teks} pesan={pesan} />
+        ))}
+        {/* "Simpan draf" lebih dulu di urutan halaman, supaya Enter di sebuah isian menyimpan draf, bukan mengirim. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <TombolKirimKedua name={TINDAKAN} value="simpan-draf">
+            Simpan draf
+          </TombolKirimKedua>
+          <TombolKirim name={TINDAKAN} value={KIRIM}>
+            Kirim formulir
+          </TombolKirim>
+        </div>
       </div>
     </form>
   );

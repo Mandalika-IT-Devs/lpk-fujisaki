@@ -31,6 +31,28 @@ export const PILIHAN_KEMAMPUAN_BAHASA_JEPANG = [
 /** Pilihan bidang kerja bagi yang belum menentukan; bukan sebuah bidang kerja (PRD §4.2). */
 export const BIDANG_KERJA_BELUM_TAHU = "Belum tahu";
 
+/**
+ * Isian wajib formulir pendaftaran, dalam urutan PRD §6.1. Jurusan pendidikan terakhir dan pengalaman kerja tidak
+ * wajib. Bidang kerja yang diminati terisi bila berisi sebuah bidang kerja atau "Belum tahu".
+ */
+export const ISIAN_WAJIB = [
+  "namaLengkap",
+  "jenisKelamin",
+  "tempatLahir",
+  "tanggalLahir",
+  "kabupatenKota",
+  "provinsi",
+  "pendidikanTerakhir",
+  "programId",
+  "bidangKerja",
+  "kemampuanBahasaJepang",
+  "namaKontakDarurat",
+  "hubunganKontakDarurat",
+  "nomorHpKontakDarurat",
+] as const;
+
+export type IsianWajib = (typeof ISIAN_WAJIB)[number];
+
 /** 38 provinsi Indonesia, urut abjad supaya mudah dicari di daftar pilihan. */
 export const DAFTAR_PROVINSI = [
   "Aceh",

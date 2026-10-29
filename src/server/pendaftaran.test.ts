@@ -11,10 +11,18 @@ config({ path: ".env.ci", override: true, quiet: true });
 const { db, tutupDatabase } = await import("./db");
 const { akun, bidangKerja, langkahPendaftaran, pendaftaran, program } =
   await import("./db/schema");
-const { bacaDrafFormulirPendaftaran, simpanDrafFormulirPendaftaran } =
-  await import("./formulir-pendaftaran");
-const { bacaDaftarPendaftaran, bacaPendaftaranBerjalan, kirimPendaftaran } =
-  await import("./pendaftaran");
+const {
+  bacaDrafFormulirPendaftaran,
+  bacaPilihanUbahIsian,
+  simpanDrafFormulirPendaftaran,
+} = await import("./formulir-pendaftaran");
+const {
+  bacaDaftarPendaftaran,
+  bacaPendaftaran,
+  bacaPendaftaranBerjalan,
+  kirimPendaftaran,
+  ubahIsianPendaftaran,
+} = await import("./pendaftaran");
 const { ubahProgram } = await import("./program");
 
 /** Saat kirim contoh: 23-10-2026 pukul 10.00 WIB (PRD §6.3). */
@@ -140,8 +148,10 @@ describe("kirimPendaftaran", () => {
     expect(await bacaPendaftaranBerjalan(akunId)).toEqual({
       nomor,
       program: programUji.nama,
+      bidangKerja: "Belum tahu",
       status: "Berjalan",
       tahap: 1,
+      isian: drafLengkap(),
     });
     const [dibuka] = await db
       .select()
@@ -217,12 +227,88 @@ describe("kirimPendaftaran", () => {
       expect(await bacaPendaftaranBerjalan(akunId)).toEqual({
         nomor,
         program: programUji.nama,
+        bidangKerja: "Belum tahu",
         status: "Berjalan",
         tahap: 1,
+        isian: drafLengkap(),
       });
     } finally {
       await ubahProgram(programUji.id, { aktif: true });
     }
+  });
+});
+
+describe("bacaPilihanUbahIsian", () => {
+  it("program yang tercatat pada pendaftaran tetap bisa dipilih pegawai sesudah dinonaktifkan, program nonaktif lain tidak (PRD §4.3)", async () => {
+    const [programLain] = await db
+      .insert(program)
+      .values({
+        nama: `Program Lain Uji ${randomUUID()}`,
+        deskripsi: "Deskripsi uji",
+        syarat: "Syarat uji",
+        lamaPelatihan: "6 bulan",
+        usiaMinimal: 18,
+        usiaMaksimal: 30,
+        aktif: false,
+      })
+      .returning({ id: program.id });
+
+    await ubahProgram(programUji.id, { aktif: false });
+    try {
+      const pilihan = await bacaPilihanUbahIsian({
+        programId: programUji.id,
+        bidangKerjaId: null,
+      });
+      expect(pilihan.program).toContainEqual({
+        id: programUji.id,
+        nama: programUji.nama,
+        aktif: false,
+      });
+      expect(pilihan.program.map(({ id }) => id)).not.toContain(programLain.id);
+      expect(pilihan.program.filter(({ aktif }) => !aktif)).toHaveLength(1);
+      expect(pilihan.bidangKerja.every(({ aktif }) => aktif)).toBe(true);
+    } finally {
+      await ubahProgram(programUji.id, { aktif: true });
+    }
+  });
+});
+
+describe("bacaPendaftaran", () => {
+  it("membaca nomor, status, tahap, nama program, isian, dan status setiap langkah dalam urutan PRD §7.1", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    const [dibuka] = await db
+      .select({ id: pendaftaran.id })
+      .from(pendaftaran)
+      .where(eq(pendaftaran.nomor, nomor));
+    await db
+      .update(langkahPendaftaran)
+      .set({ status: "Tidak berlaku" })
+      .where(
+        and(
+          eq(langkahPendaftaran.pendaftaranId, dibuka.id),
+          eq(langkahPendaftaran.kode, "L1.5"),
+        ),
+      );
+
+    const dibaca = await bacaPendaftaran(nomor);
+
+    expect(dibaca).toMatchObject({
+      nomor,
+      status: "Berjalan",
+      tahap: 1,
+      program: programUji.nama,
+      bidangKerja: "Belum tahu",
+      isian: drafLengkap(),
+    });
+    expect(dibaca?.langkah.slice(0, 6)).toEqual([
+      { kode: "L1.1", status: "Belum" },
+      { kode: "L1.2", status: "Belum" },
+      { kode: "L1.3", status: "Belum" },
+      { kode: "L1.4", status: "Belum" },
+      { kode: "L1.5", status: "Tidak berlaku" },
+      { kode: "L2.1", status: "Belum" },
+    ]);
+    expect(dibaca?.langkah).toHaveLength(22);
   });
 });
 
@@ -356,5 +442,109 @@ describe("bacaDaftarPendaftaran", () => {
         )
       ).baris.map(({ nomor }) => nomor),
     ).toEqual([nomorLama]);
+  });
+});
+
+describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () => {
+  it("pegawai mengubah kabupaten/kota; perubahannya tersimpan dan terbaca di pendaftaran pemilik akun (UAT-F6)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+
+    expect(
+      await ubahIsianPendaftaran(nomor, {
+        ...drafLengkap(),
+        kabupatenKota: "Kota Semarang",
+      }),
+    ).toEqual({ hasil: "tersimpan" });
+
+    expect((await bacaPendaftaranBerjalan(akunId))?.isian).toEqual({
+      ...drafLengkap(),
+      kabupatenKota: "Kota Semarang",
+    });
+    expect((await bacaPendaftaran(nomor))?.isian.kabupatenKota).toBe(
+      "Kota Semarang",
+    );
+  });
+
+  it("isian wajib yang dikosongkan ditolak dengan isian yang belum diisi, dan isian tersimpan tidak berubah (PRD §6.1)", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+
+    expect(
+      await ubahIsianPendaftaran(nomor, {
+        ...drafLengkap(),
+        kabupatenKota: null,
+        namaKontakDarurat: null,
+        namaLengkap: "Nama Tidak Tersimpan",
+      }),
+    ).toEqual({
+      hasil: "ditolak",
+      belumDiisi: ["kabupatenKota", "namaKontakDarurat"],
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+
+  it("isian tidak wajib yang dikosongkan ikut tersimpan kosong, dan bidang kerja bisa diganti dari Belum tahu", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    await ubahIsianPendaftaran(nomor, {
+      ...drafLengkap(),
+      jurusanPendidikan: "Tata Boga",
+      pengalamanKerja: "Dua tahun di rumah makan",
+    });
+    const [bidang] = await db
+      .insert(bidangKerja)
+      .values({ nama: `Bidang Kerja Ubah Uji ${randomUUID()}` })
+      .returning({ id: bidangKerja.id, nama: bidangKerja.nama });
+
+    expect(
+      await ubahIsianPendaftaran(nomor, {
+        ...drafLengkap(),
+        bidangKerjaId: bidang.id,
+        bidangKerjaBelumTahu: false,
+      }),
+    ).toEqual({ hasil: "tersimpan" });
+
+    const sesudah = await bacaPendaftaran(nomor);
+    expect(sesudah?.bidangKerja).toBe(bidang.nama);
+    expect(sesudah?.isian).toEqual({
+      ...drafLengkap(),
+      bidangKerjaId: bidang.id,
+      bidangKerjaBelumTahu: false,
+      jurusanPendidikan: null,
+      pengalamanKerja: null,
+    });
+  });
+
+  it("pemilik akun tidak bisa mengubah isian yang sudah dikirim lewat draf atau pengiriman, juga sesudah pendaftarannya ditutup (PRD §6.5)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+    const diubah = { ...drafLengkap(), kabupatenKota: "Diubah Pemilik Akun" };
+
+    expect(await simpanDrafFormulirPendaftaran(akunId, diubah)).toEqual({
+      hasil: "terkunci",
+      nomorPendaftaran: nomor,
+    });
+    expect(await kirimPendaftaran(akunId, diubah, DIKIRIM_PADA)).toMatchObject({
+      hasil: "ditolak",
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+
+    // Sesudah ditutup, pemilik akun boleh mengirim formulir baru (§6.6); itu membuka pendaftaran baru.
+    await db
+      .update(pendaftaran)
+      .set({ status: "Ditutup" })
+      .where(eq(pendaftaran.nomor, nomor));
+    expect(await simpanDrafFormulirPendaftaran(akunId, diubah)).toEqual({
+      hasil: "tersimpan",
+    });
+    const nomorBaru = await kirimLalu(akunId);
+    expect(nomorBaru).not.toBe(nomor);
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+
+  it("nomor pendaftaran yang tidak ada tidak mengubah apa pun", async () => {
+    expect(await ubahIsianPendaftaran("FGC-1999-0001", drafLengkap())).toEqual({
+      hasil: "tidak-ada",
+    });
+    expect(await bacaPendaftaran("FGC-1999-0001")).toBeUndefined();
   });
 });

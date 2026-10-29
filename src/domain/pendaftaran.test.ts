@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { pendaftaranBaru, periksaSyaratKirim } from "./pendaftaran";
+import {
+  pendaftaranBaru,
+  periksaIsianWajib,
+  periksaSyaratKirim,
+} from "./pendaftaran";
 
 // Ekspektasi dari PRD §6.5 dan tabel §7.1.
 describe("pendaftaranBaru", () => {
@@ -229,6 +233,32 @@ describe("periksaSyaratKirim (PRD §6.2)", () => {
     ).toEqual({
       boleh: false,
       gagal: [{ syarat: "isian-wajib-terisi", belumDiisi: ["tanggalLahir"] }],
+    });
+  });
+});
+
+// Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (issue T15, PRD §2.2, §6.5): isian wajib PRD §6.1
+// tetap harus terisi, sama seperti saat formulir dikirim.
+describe("periksaIsianWajib", () => {
+  it("semua isian wajib terisi: lengkap, dan isian yang tidak wajib boleh kosong", () => {
+    expect(periksaIsianWajib(FORMULIR_LENGKAP)).toEqual({
+      lengkap: true,
+      formulir: FORMULIR_LENGKAP,
+    });
+  });
+
+  it("isian wajib yang dikosongkan disebut dalam urutan formulir (PRD §6.1)", () => {
+    expect(
+      periksaIsianWajib({
+        ...FORMULIR_LENGKAP,
+        nomorHpKontakDarurat: null,
+        kabupatenKota: null,
+        programId: null,
+        pengalamanKerja: null,
+      }),
+    ).toEqual({
+      lengkap: false,
+      belumDiisi: ["kabupatenKota", "programId", "nomorHpKontakDarurat"],
     });
   });
 });

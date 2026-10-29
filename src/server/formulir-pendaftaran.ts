@@ -1,5 +1,8 @@
 import { eq } from "drizzle-orm";
-import { bisaDipilihDiFormulirPendaftaran } from "@/domain/program-dan-bidang-kerja";
+import {
+  bisaDipilihDiFormulirPendaftaran,
+  bisaDipilihSaatPegawaiMengubahIsian,
+} from "@/domain/program-dan-bidang-kerja";
 import { daftarBidangKerja } from "./bidang-kerja";
 import { db } from "./db";
 import { drafFormulirPendaftaran } from "./db/schema";
@@ -34,6 +37,38 @@ export async function bacaPilihanFormulirPendaftaran(): Promise<PilihanFormulirP
     program: bisaDipilihDiFormulirPendaftaran(semuaProgram).map(kePilihan),
     bidangKerja:
       bisaDipilihDiFormulirPendaftaran(semuaBidangKerja).map(kePilihan),
+  };
+}
+
+/** Program atau bidang kerja yang bisa dipilih pegawai, dengan statusnya, supaya yang nonaktif bisa ditandai. */
+type PilihanPegawai = Pilihan & { aktif: boolean };
+
+/**
+ * Program dan bidang kerja yang bisa dipilih pegawai saat mengubah isian formulir sebuah pendaftaran: yang aktif,
+ * ditambah yang tercatat pada pendaftaran itu meski sudah dinonaktifkan (PRD §4.3), dalam urutan ditambahkan.
+ */
+export async function bacaPilihanUbahIsian(tercatat: {
+  programId: number;
+  bidangKerjaId: number | null;
+}): Promise<{ program: PilihanPegawai[]; bidangKerja: PilihanPegawai[] }> {
+  const [semuaProgram, semuaBidangKerja] = await Promise.all([
+    daftarProgram(),
+    daftarBidangKerja(),
+  ]);
+  const kePilihan = ({ id, nama, aktif }: PilihanPegawai) => ({
+    id,
+    nama,
+    aktif,
+  });
+  return {
+    program: bisaDipilihSaatPegawaiMengubahIsian(
+      semuaProgram,
+      tercatat.programId,
+    ).map(kePilihan),
+    bidangKerja: bisaDipilihSaatPegawaiMengubahIsian(
+      semuaBidangKerja,
+      tercatat.bidangKerjaId,
+    ).map(kePilihan),
   };
 }
 

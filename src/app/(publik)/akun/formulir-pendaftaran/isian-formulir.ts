@@ -1,13 +1,20 @@
 import { z } from "zod";
 import {
   DAFTAR_PROVINSI,
+  type IsianWajib,
   PILIHAN_JENIS_KELAMIN,
   PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
   PILIHAN_PENDIDIKAN_TERAKHIR,
 } from "@/domain/formulir-pendaftaran";
 import { normalkanNomorWhatsApp } from "@/domain/nomor-whatsapp";
 import { bacaId } from "@/lib/baca-id";
-import type { DrafFormulirPendaftaran } from "@/server/formulir-pendaftaran";
+import type {
+  DrafFormulirPendaftaran,
+  PilihanFormulirPendaftaran,
+} from "@/server/formulir-pendaftaran";
+
+// Isian formulir pendaftaran dan pemeriksaannya, dipakai formulir pemilik akun (issue T12, T13) dan formulir ubah
+// isian di halaman pendaftaran panel pegawai (issue T15), supaya keduanya memakai aturan dan pesan yang sama.
 
 /**
  * Isian formulir pendaftaran seperti yang diisi pemilik akun, dalam urutan PRD §6.1, supaya isian tetap ada bila
@@ -81,6 +88,44 @@ type IdPilihan = {
   programId: readonly number[];
   bidangKerjaId: readonly number[];
 };
+
+/** Id program dan bidang kerja dari daftar pilihan formulir. */
+export function keIdPilihan(pilihan: PilihanFormulirPendaftaran): IdPilihan {
+  return {
+    programId: pilihan.program.map((p) => p.id),
+    bidangKerjaId: pilihan.bidangKerja.map((b) => b.id),
+  };
+}
+
+/** Isian formulir pendaftaran dari formulir yang dikirim; isian yang tidak ada dibaca kosong. */
+export function bacaIsianFormulir(
+  formulir: FormData,
+): IsianFormulirPendaftaran {
+  const isian = { ...ISIAN_KOSONG };
+  for (const nama of Object.keys(ISIAN_KOSONG) as NamaIsian[]) {
+    const nilai = formulir.get(nama);
+    isian[nama] = typeof nilai === "string" ? nilai : "";
+  }
+  return isian;
+}
+
+/** Label isian yang punya pesan kesalahan, dalam urutan formulir. */
+export function labelIsianSalah(galat: GalatIsian): string {
+  return (Object.keys(LABEL_ISIAN) as NamaIsian[])
+    .filter((nama) => galat[nama])
+    .map((nama) => LABEL_ISIAN[nama])
+    .join(", ");
+}
+
+/** Pesan pada setiap isian wajib yang belum diisi (PRD §6.1). */
+export function galatIsianWajib(belumDiisi: readonly IsianWajib[]): GalatIsian {
+  const galat: GalatIsian = {};
+  for (const nama of belumDiisi) {
+    galat[nama] =
+      `${LABEL_ISIAN[nama]} belum diisi. Isian ini wajib diisi sebelum formulir dikirim.`;
+  }
+  return galat;
+}
 
 /** Teks yang dirapikan; teks kosong berarti isian belum diisi. */
 const rapikan = (teks: string) => teks.trim() || null;

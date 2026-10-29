@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bisaDipilihDiFormulirPendaftaran,
+  bisaDipilihSaatPegawaiMengubahIsian,
   periksaRentangUsia,
   tampilDiSitusPublik,
 } from "./program-dan-bidang-kerja";
@@ -85,5 +86,29 @@ describe("bisaDipilihDiFormulirPendaftaran", () => {
       "Pengolahan makanan dan minuman",
       "Restoran",
     ]);
+  });
+});
+
+// PRD §4.3: yang nonaktif tidak bisa dipilih di formulir pendaftaran, tetapi tetap tercatat pada pendaftaran yang sudah
+// memakainya. Saat pegawai mengubah isian sebuah pendaftaran (issue T15), yang tercatat pada pendaftaran itu tetap bisa
+// dipilih meski sudah dinonaktifkan. Urutan daftar dipertahankan.
+describe("bisaDipilihSaatPegawaiMengubahIsian", () => {
+  const daftar = [
+    { id: 1, nama: "Tokutei Ginou (SSW)", aktif: true },
+    { id: 2, nama: "Pemagangan", aktif: false },
+    { id: 3, nama: "Gijinkoku", aktif: true },
+    { id: 4, nama: "Pelajar", aktif: false },
+  ];
+
+  it("yang aktif, ditambah yang tercatat pada pendaftaran itu meski nonaktif, dalam urutan semula", () => {
+    expect(
+      bisaDipilihSaatPegawaiMengubahIsian(daftar, 4).map((p) => p.nama),
+    ).toEqual(["Tokutei Ginou (SSW)", "Gijinkoku", "Pelajar"]);
+  });
+
+  it('tanpa yang tercatat, misalnya bidang kerja "Belum tahu", hanya yang aktif', () => {
+    expect(
+      bisaDipilihSaatPegawaiMengubahIsian(daftar, null).map((p) => p.nama),
+    ).toEqual(["Tokutei Ginou (SSW)", "Gijinkoku"]);
   });
 });

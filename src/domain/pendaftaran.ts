@@ -14,7 +14,7 @@ export type StatusPendaftaran = (typeof STATUS_PENDAFTARAN)[number];
 
 /** Status setiap langkah (PRD §7.2). */
 export const STATUS_LANGKAH = ["Belum", "Selesai", "Tidak berlaku"] as const;
-type StatusLangkah = (typeof STATUS_LANGKAH)[number];
+export type StatusLangkah = (typeof STATUS_LANGKAH)[number];
 
 /** Kode semua langkah keenam tahap, dalam urutan PRD §7.1, misalnya L1.1. */
 export const KODE_LANGKAH = TAHAP.flatMap(({ langkah }) =>
@@ -63,6 +63,23 @@ export type SyaratKirimGagal =
   | { syarat: "batas-usia"; batasUsia: BatasUsiaTidakMemenuhi }
   | { syarat: "satu-pendaftaran-berjalan"; nomorPendaftaran: string };
 
+export type HasilPeriksaIsianWajib<F> =
+  | { lengkap: true; formulir: FormulirLengkap<F> }
+  | { lengkap: false; belumDiisi: IsianWajib[] };
+
+/**
+ * Semua isian wajib formulir pendaftaran harus terisi (PRD §6.1, §6.2), saat formulir dikirim dan saat pegawai
+ * mengubah isian formulir yang sudah dikirim (§2.2, §6.5). Isian wajib yang kosong disebut dalam urutan formulir.
+ */
+export function periksaIsianWajib<F extends FormulirDiperiksa>(
+  formulir: F,
+): HasilPeriksaIsianWajib<F> {
+  const belumDiisi = ISIAN_WAJIB.filter((nama) => formulir[nama] === null);
+  if (belumDiisi.length > 0) return { lengkap: false, belumDiisi };
+  // Semua isian wajib sudah terbukti terisi di atas.
+  return { lengkap: true, formulir: formulir as FormulirLengkap<F> };
+}
+
 export type HasilPeriksaSyaratKirim<F> =
   | { boleh: true; formulir: FormulirLengkap<F>; batasUsia: BatasUsiaMemenuhi }
   | { boleh: false; gagal: SyaratKirimGagal[] };
@@ -92,9 +109,12 @@ export function periksaSyaratKirim<F extends FormulirDiperiksa>(keadaan: {
   if (!keadaan.emailTerverifikasi)
     gagal.push({ syarat: "email-terverifikasi" });
 
-  const belumDiisi = ISIAN_WAJIB.filter((nama) => formulir[nama] === null);
-  if (belumDiisi.length > 0) {
-    gagal.push({ syarat: "isian-wajib-terisi", belumDiisi });
+  const isianWajib = periksaIsianWajib(formulir);
+  if (!isianWajib.lengkap) {
+    gagal.push({
+      syarat: "isian-wajib-terisi",
+      belumDiisi: isianWajib.belumDiisi,
+    });
   }
 
   let batasUsia: HasilPeriksaBatasUsia | undefined;
@@ -114,7 +134,7 @@ export function periksaSyaratKirim<F extends FormulirDiperiksa>(keadaan: {
     });
   }
 
-  if (gagal.length > 0) return { boleh: false, gagal };
+  if (gagal.length > 0 || !isianWajib.lengkap) return { boleh: false, gagal };
   // Semua isian wajib terisi, jadi tanggal lahir dan program ada; batas usia hanya belum diperiksa bila pemanggil
   // tidak memberikan rentang usia program yang dipilih.
   if (!batasUsia?.memenuhi) {
@@ -122,10 +142,5 @@ export function periksaSyaratKirim<F extends FormulirDiperiksa>(keadaan: {
       "periksaSyaratKirim butuh rentangUsia program yang dipilih bila program sudah diisi. Baca batas usia program itu, lalu panggil lagi.",
     );
   }
-  // Semua isian wajib sudah terbukti terisi di atas.
-  return {
-    boleh: true,
-    formulir: formulir as FormulirLengkap<F>,
-    batasUsia,
-  };
+  return { boleh: true, formulir: isianWajib.formulir, batasUsia };
 }

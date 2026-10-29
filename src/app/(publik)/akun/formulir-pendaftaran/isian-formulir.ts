@@ -117,12 +117,25 @@ export function labelIsianSalah(galat: GalatIsian): string {
     .join(", ");
 }
 
-/** Pesan pada setiap isian wajib yang belum diisi (PRD §6.1). */
-export function galatIsianWajib(belumDiisi: readonly IsianWajib[]): GalatIsian {
+/**
+ * Pesan pada setiap isian yang membuat formulir ditolak sesudah bentuknya benar: isian wajib yang belum diisi (PRD
+ * §6.1), dan tanggal lahir yang jatuh sesudah hari ini (§6.3).
+ */
+export function galatIsianDitolak({
+  belumDiisi,
+  tanggalLahirTidakBenar,
+}: {
+  belumDiisi: readonly IsianWajib[];
+  tanggalLahirTidakBenar: boolean;
+}): GalatIsian {
   const galat: GalatIsian = {};
   for (const nama of belumDiisi) {
     galat[nama] =
       `${LABEL_ISIAN[nama]} belum diisi. Isian ini wajib diisi sebelum formulir dikirim.`;
+  }
+  if (tanggalLahirTidakBenar) {
+    galat.tanggalLahir =
+      "Tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirmu.";
   }
   return galat;
 }

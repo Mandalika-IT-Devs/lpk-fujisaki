@@ -15,7 +15,7 @@ import { pastikanPemilikAkun } from "../../penjaga-akun";
 import {
   bacaIsianFormulir,
   type GalatIsian,
-  galatIsianWajib,
+  galatIsianDitolak,
   type IsianFormulirPendaftaran,
   keIdPilihan,
   keIsianFormulir,
@@ -130,20 +130,16 @@ function pesanSyaratGagal(
 
 /** Tanda pada isian yang menyebabkan syarat kirim gagal. */
 function galatSyaratGagal(daftarGagal: SyaratKirimGagal[]): GalatIsian {
-  let galat: GalatIsian = {};
-  for (const gagal of daftarGagal) {
-    if (gagal.syarat === "isian-wajib-terisi") {
-      galat = { ...galat, ...galatIsianWajib(gagal.belumDiisi) };
-    }
-    if (
-      gagal.syarat === "batas-usia" &&
-      gagal.batasUsia.alasan === "tanggal-lahir-tidak-benar"
-    ) {
-      galat.tanggalLahir =
-        "Tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirmu.";
-    }
-  }
-  return galat;
+  return galatIsianDitolak({
+    belumDiisi: daftarGagal.flatMap((gagal) =>
+      gagal.syarat === "isian-wajib-terisi" ? gagal.belumDiisi : [],
+    ),
+    tanggalLahirTidakBenar: daftarGagal.some(
+      (gagal) =>
+        gagal.syarat === "batas-usia" &&
+        gagal.batasUsia.alasan === "tanggal-lahir-tidak-benar",
+    ),
+  });
 }
 
 /**

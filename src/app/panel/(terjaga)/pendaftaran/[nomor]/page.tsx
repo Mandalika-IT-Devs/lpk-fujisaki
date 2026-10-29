@@ -8,7 +8,7 @@ import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
 import type { StatusLangkah } from "@/domain/pendaftaran";
 import { TAHAP } from "@/domain/tahap";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
-import { bacaPendaftaran } from "@/server/pendaftaran";
+import { bacaLangkahPendaftaran, bacaPendaftaran } from "@/server/pendaftaran";
 import {
   keIdPilihan,
   keIsianFormulir,
@@ -66,7 +66,10 @@ export default async function HalamanPendaftaran({
     : undefined;
   if (!pendaftaran) notFound();
 
-  const pilihan = await bacaPilihanUbahIsian(pendaftaran.isian);
+  const [pilihan, langkah] = await Promise.all([
+    bacaPilihanUbahIsian(pendaftaran.isian),
+    bacaLangkahPendaftaran(pendaftaran.nomor),
+  ]);
   const tandaiNonaktif = ({
     id,
     nama,
@@ -83,7 +86,7 @@ export default async function HalamanPendaftaran({
   const tahap = TAHAP.find(({ nomor }) => nomor === pendaftaran.tahap);
   const [tahap1] = TAHAP;
   const statusLangkah = new Map(
-    pendaftaran.langkah.map(({ kode, status }) => [kode, status]),
+    langkah.map(({ kode, status }) => [kode, status]),
   );
 
   return (
@@ -96,7 +99,7 @@ export default async function HalamanPendaftaran({
           <IkonPanahKiri />
           Daftar pendaftaran
         </Link>
-        <h1 className="font-papan text-headline lg:text-headline-lebar">
+        <h1 className="max-w-[18ch] font-papan text-headline text-balance lg:max-w-none lg:text-headline-lebar">
           {pendaftaran.nomor}
         </h1>
         <section aria-label="Ringkasan pendaftaran" className="mt-4">

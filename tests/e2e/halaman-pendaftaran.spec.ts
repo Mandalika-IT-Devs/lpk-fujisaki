@@ -246,9 +246,28 @@ test("isian tidak sah dari pegawai ditolak dengan pesan yang sama seperti di for
     "Perubahan belum disimpan karena isian wajib berikut belum diisi: Kabupaten/kota domisili. Isi isian yang ditandai, lalu simpan lagi.",
   );
 
+  // Tanggal lahir sesudah hari ini: pesan yang sama seperti di formulir pemilik akun (PRD §6.3).
+  const tanggalLahir = isian.getByLabel("Tanggal lahir");
+  await kabupatenKota.fill("Kab. Purworejo");
+  await tanggalLahir.fill("2099-12-31");
+  await simpanPerubahan(page);
+
+  await expect(tanggalLahir).toHaveAttribute("aria-invalid", "true");
+  await expect(tanggalLahir).toHaveAccessibleDescription(
+    polaTeks(
+      "Tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirmu.",
+    ),
+  );
+  await expect(kabupatenKota).not.toHaveAttribute("aria-invalid", "true");
+  await expect(isian.getByRole("alert")).toHaveText(
+    "Perubahan belum disimpan karena tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirnya, lalu simpan lagi.",
+  );
+  await expect(tanggalLahir).toHaveValue("2099-12-31");
+
   await page.reload();
   await expect(kabupatenKota).toHaveValue(WATI.kabupatenKota);
   await expect(nomorHp).toHaveValue("6281234567890");
+  await expect(tanggalLahir).toHaveValue("2004-05-17");
 });
 
 test("pemilik akun tidak bisa mengubah isian yang sudah dikirim, juga lewat permintaan langsung ke server", async ({
@@ -261,6 +280,15 @@ test("pemilik akun tidak bisa mengubah isian yang sudah dikirim, juga lewat perm
   await staf.goto(alamat(YANTI));
   const isian = await isianTerkirim(formulirIsian(staf));
   expect(isian.kabupatenKota).toBe(YANTI.kabupatenKota);
+  // Keadaan Server Action di isian tersembunyi tidak memuat isian pendaftaran; isiannya hanya ada di isian formulir.
+  const tersembunyi = await formulirIsian(staf)
+    .locator('input[type="hidden"]')
+    .evaluateAll((daftar) =>
+      daftar.map((i) => i.getAttribute("value") ?? "").join("\n"),
+    );
+  expect(tersembunyi).toContain(YANTI.nomor);
+  expect(tersembunyi).not.toContain(YANTI.kabupatenKota);
+  expect(tersembunyi).not.toContain(YANTI.namaLengkap);
 
   const konteksPemilik = await browser.newContext();
   const pemilik = await konteksPemilik.newPage();

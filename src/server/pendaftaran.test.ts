@@ -18,6 +18,7 @@ const {
 } = await import("./formulir-pendaftaran");
 const {
   bacaDaftarPendaftaran,
+  bacaLangkahPendaftaran,
   bacaPendaftaran,
   bacaPendaftaranBerjalan,
   kirimPendaftaran,
@@ -27,6 +28,9 @@ const { ubahProgram } = await import("./program");
 
 /** Saat kirim contoh: 23-10-2026 pukul 10.00 WIB (PRD §6.3). */
 const DIKIRIM_PADA = new Date("2026-10-23T03:00:00Z");
+
+/** Saat pegawai mengubah isian pada contoh: 28-10-2026 pukul 10.00 WIB, sesudah formulirnya dikirim. */
+const DIUBAH_PADA = new Date("2026-10-28T03:00:00Z");
 
 let programUji: { id: number; nama: string };
 
@@ -273,7 +277,7 @@ describe("bacaPilihanUbahIsian", () => {
   });
 });
 
-describe("bacaPendaftaran", () => {
+describe("bacaPendaftaran dan bacaLangkahPendaftaran", () => {
   it("membaca nomor, status, tahap, nama program, isian, dan status setiap langkah dalam urutan PRD §7.1", async () => {
     const nomor = await kirimLalu(await buatPemilikAkun());
     const [dibuka] = await db
@@ -290,9 +294,7 @@ describe("bacaPendaftaran", () => {
         ),
       );
 
-    const dibaca = await bacaPendaftaran(nomor);
-
-    expect(dibaca).toMatchObject({
+    expect(await bacaPendaftaran(nomor)).toEqual({
       nomor,
       status: "Berjalan",
       tahap: 1,
@@ -300,7 +302,8 @@ describe("bacaPendaftaran", () => {
       bidangKerja: "Belum tahu",
       isian: drafLengkap(),
     });
-    expect(dibaca?.langkah.slice(0, 6)).toEqual([
+    const langkah = await bacaLangkahPendaftaran(nomor);
+    expect(langkah.slice(0, 6)).toEqual([
       { kode: "L1.1", status: "Belum" },
       { kode: "L1.2", status: "Belum" },
       { kode: "L1.3", status: "Belum" },
@@ -308,7 +311,7 @@ describe("bacaPendaftaran", () => {
       { kode: "L1.5", status: "Tidak berlaku" },
       { kode: "L2.1", status: "Belum" },
     ]);
-    expect(dibaca?.langkah).toHaveLength(22);
+    expect(langkah).toHaveLength(22);
   });
 });
 
@@ -451,10 +454,14 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
     const nomor = await kirimLalu(akunId);
 
     expect(
-      await ubahIsianPendaftaran(nomor, {
-        ...drafLengkap(),
-        kabupatenKota: "Kota Semarang",
-      }),
+      await ubahIsianPendaftaran(
+        nomor,
+        {
+          ...drafLengkap(),
+          kabupatenKota: "Kota Semarang",
+        },
+        DIUBAH_PADA,
+      ),
     ).toEqual({ hasil: "tersimpan" });
 
     expect((await bacaPendaftaranBerjalan(akunId))?.isian).toEqual({
@@ -470,37 +477,67 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
     const nomor = await kirimLalu(await buatPemilikAkun());
 
     expect(
-      await ubahIsianPendaftaran(nomor, {
-        ...drafLengkap(),
-        kabupatenKota: null,
-        namaKontakDarurat: null,
-        namaLengkap: "Nama Tidak Tersimpan",
-      }),
+      await ubahIsianPendaftaran(
+        nomor,
+        {
+          ...drafLengkap(),
+          kabupatenKota: null,
+          namaKontakDarurat: null,
+          namaLengkap: "Nama Tidak Tersimpan",
+        },
+        DIUBAH_PADA,
+      ),
     ).toEqual({
       hasil: "ditolak",
       belumDiisi: ["kabupatenKota", "namaKontakDarurat"],
+      tanggalLahirTidakBenar: false,
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+
+  it("tanggal lahir sesudah hari ini ditolak, dan isian tersimpan tidak berubah (PRD §6.3)", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+
+    expect(
+      await ubahIsianPendaftaran(
+        nomor,
+        { ...drafLengkap(), tanggalLahir: "2026-10-29" },
+        DIUBAH_PADA,
+      ),
+    ).toEqual({
+      hasil: "ditolak",
+      belumDiisi: [],
+      tanggalLahirTidakBenar: true,
     });
     expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
   });
 
   it("isian tidak wajib yang dikosongkan ikut tersimpan kosong, dan bidang kerja bisa diganti dari Belum tahu", async () => {
     const nomor = await kirimLalu(await buatPemilikAkun());
-    await ubahIsianPendaftaran(nomor, {
-      ...drafLengkap(),
-      jurusanPendidikan: "Tata Boga",
-      pengalamanKerja: "Dua tahun di rumah makan",
-    });
+    await ubahIsianPendaftaran(
+      nomor,
+      {
+        ...drafLengkap(),
+        jurusanPendidikan: "Tata Boga",
+        pengalamanKerja: "Dua tahun di rumah makan",
+      },
+      DIUBAH_PADA,
+    );
     const [bidang] = await db
       .insert(bidangKerja)
       .values({ nama: `Bidang Kerja Ubah Uji ${randomUUID()}` })
       .returning({ id: bidangKerja.id, nama: bidangKerja.nama });
 
     expect(
-      await ubahIsianPendaftaran(nomor, {
-        ...drafLengkap(),
-        bidangKerjaId: bidang.id,
-        bidangKerjaBelumTahu: false,
-      }),
+      await ubahIsianPendaftaran(
+        nomor,
+        {
+          ...drafLengkap(),
+          bidangKerjaId: bidang.id,
+          bidangKerjaBelumTahu: false,
+        },
+        DIUBAH_PADA,
+      ),
     ).toEqual({ hasil: "tersimpan" });
 
     const sesudah = await bacaPendaftaran(nomor);
@@ -542,7 +579,9 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
   });
 
   it("nomor pendaftaran yang tidak ada tidak mengubah apa pun", async () => {
-    expect(await ubahIsianPendaftaran("FGC-1999-0001", drafLengkap())).toEqual({
+    expect(
+      await ubahIsianPendaftaran("FGC-1999-0001", drafLengkap(), DIUBAH_PADA),
+    ).toEqual({
       hasil: "tidak-ada",
     });
     expect(await bacaPendaftaran("FGC-1999-0001")).toBeUndefined();

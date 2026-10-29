@@ -16,8 +16,8 @@ import {
 import {
   KODE_LANGKAH,
   pendaftaranBaru,
-  periksaIsianWajib,
   periksaSyaratKirim,
+  periksaUbahIsian,
   type StatusLangkah,
   type StatusPendaftaran,
   type SyaratKirimGagal,
@@ -254,17 +254,20 @@ export async function bacaPendaftaranBerjalan(
   return baris && { ...baris, status: "Berjalan" };
 }
 
-/** Pendaftaran di halaman pendaftaran panel pegawai (§11.2), beserta status setiap langkahnya dalam urutan §7.1. */
-export type PendaftaranBesertaLangkah = Pendaftaran & {
-  langkah: { kode: string; status: StatusLangkah }[];
-};
-
 /** Pendaftaran dengan nomor pendaftaran tertentu, atau undefined bila tidak ada. */
 export async function bacaPendaftaran(
   nomor: string,
-): Promise<PendaftaranBesertaLangkah | undefined> {
-  const isi = await bacaSatuPendaftaran(eq(pendaftaran.nomor, nomor));
-  if (!isi) return undefined;
+): Promise<Pendaftaran | undefined> {
+  return bacaSatuPendaftaran(eq(pendaftaran.nomor, nomor));
+}
+
+/**
+ * Status setiap langkah sebuah pendaftaran, dalam urutan PRD §7.1, untuk halaman pendaftaran di panel pegawai (§11.2).
+ * Kosong bila nomor pendaftaran itu tidak ada.
+ */
+export async function bacaLangkahPendaftaran(
+  nomor: string,
+): Promise<{ kode: string; status: StatusLangkah }[]> {
   const langkah = await db
     .select({
       kode: langkahPendaftaran.kode,
@@ -277,29 +280,36 @@ export async function bacaPendaftaran(
     )
     .where(eq(pendaftaran.nomor, nomor));
   const urutan = (kode: string) => KODE_LANGKAH.indexOf(kode);
-  return {
-    ...isi,
-    langkah: langkah.toSorted((a, b) => urutan(a.kode) - urutan(b.kode)),
-  };
+  return langkah.toSorted((a, b) => urutan(a.kode) - urutan(b.kode));
 }
 
 export type HasilUbahIsianPendaftaran =
   | { hasil: "tersimpan" }
-  | { hasil: "ditolak"; belumDiisi: IsianWajib[] }
+  | {
+      hasil: "ditolak";
+      belumDiisi: IsianWajib[];
+      tanggalLahirTidakBenar: boolean;
+    }
   | { hasil: "tidak-ada" };
 
 /**
- * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5). `draf` adalah isian yang bentuknya
- * sudah diperiksa, dengan aturan yang sama seperti formulir pemilik akun. Isian wajib tetap harus terisi (§6.1); bila
- * ada yang kosong, tidak ada yang disimpan. Isian diganti seluruhnya, termasuk isian tidak wajib yang dikosongkan.
+ * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5) pada saat `sekarang`. `draf` adalah
+ * isian yang bentuknya sudah diperiksa, dengan aturan yang sama seperti formulir pemilik akun. Isian wajib tetap harus
+ * terisi (§6.1) dan tanggal lahir tidak boleh jatuh sesudah hari ini (§6.3); bila tidak, tidak ada yang disimpan.
+ * Isian diganti seluruhnya, termasuk isian tidak wajib yang dikosongkan.
  */
 export async function ubahIsianPendaftaran(
   nomor: string,
   draf: DrafFormulirPendaftaran,
+  sekarang: Date,
 ): Promise<HasilUbahIsianPendaftaran> {
-  const periksa = periksaIsianWajib(keFormulirDiperiksa(draf));
-  if (!periksa.lengkap) {
-    return { hasil: "ditolak", belumDiisi: periksa.belumDiisi };
+  const periksa = periksaUbahIsian(keFormulirDiperiksa(draf), sekarang);
+  if (!periksa.sah) {
+    return {
+      hasil: "ditolak",
+      belumDiisi: periksa.belumDiisi,
+      tanggalLahirTidakBenar: periksa.tanggalLahirTidakBenar,
+    };
   }
   const { bidangKerja, ...isian } = periksa.formulir;
   const [diubah] = await db

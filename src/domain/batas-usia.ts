@@ -79,6 +79,23 @@ export type HasilPeriksaBatasUsia =
     };
 
 /**
+ * Tanggal lahir yang benar: tanggal kalender yang tidak jatuh sesudah tanggal WIB `pada`. Hasilnya tanggal itu, atau
+ * undefined bila tidak benar.
+ */
+function bacaTanggalLahir(teks: string, pada: Tanggal): Tanggal | undefined {
+  const lahir = bacaTanggal(teks);
+  return lahir && !sebelum(pada, lahir) ? lahir : undefined;
+}
+
+/**
+ * Tanggal lahir YYYY-MM-DD benar bila berupa tanggal kalender dan tidak jatuh sesudah tanggal WIB `pada`, misalnya
+ * tanggal formulir dikirim (§6.3), atau hari ini saat pegawai mengubah isian formulir yang sudah dikirim.
+ */
+export function tanggalLahirBenar(tanggalLahir: string, pada: Date): boolean {
+  return bacaTanggalLahir(tanggalLahir, tanggalWib(pada)) !== undefined;
+}
+
+/**
  * Usia dihitung dalam tahun penuh pada tanggal kirim WIB, dan memenuhi syarat bila
  * usia minimal ≤ usia ≤ usia maksimal; kedua batas termasuk (PRD §6.3).
  * Bila terlalu muda, hasilnya membawa tanggal mulai boleh mendaftar: ulang tahun ke-(usia minimal).
@@ -90,8 +107,8 @@ export function periksaBatasUsia(
   const { usiaMinimal, usiaMaksimal } = isian;
   const tanggalKirim = tanggalWib(isian.dikirimPada);
   const tanggalKirimWib = tulisTanggal(tanggalKirim);
-  const lahir = bacaTanggal(isian.tanggalLahir);
-  if (!lahir || sebelum(tanggalKirim, lahir)) {
+  const lahir = bacaTanggalLahir(isian.tanggalLahir, tanggalKirim);
+  if (!lahir) {
     return {
       memenuhi: false,
       alasan: "tanggal-lahir-tidak-benar",

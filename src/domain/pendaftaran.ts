@@ -3,7 +3,11 @@
  * §7.1–§7.2, §7.6).
  */
 
-import { type HasilPeriksaBatasUsia, periksaBatasUsia } from "./batas-usia";
+import {
+  type HasilPeriksaBatasUsia,
+  periksaBatasUsia,
+  tanggalLahirBenar,
+} from "./batas-usia";
 import { ISIAN_WAJIB, type IsianWajib } from "./formulir-pendaftaran";
 import type { RentangUsia } from "./program-dan-bidang-kerja";
 import { TAHAP } from "./tahap";
@@ -78,6 +82,34 @@ export function periksaIsianWajib<F extends FormulirDiperiksa>(
   if (belumDiisi.length > 0) return { lengkap: false, belumDiisi };
   // Semua isian wajib sudah terbukti terisi di atas.
   return { lengkap: true, formulir: formulir as FormulirLengkap<F> };
+}
+
+export type HasilPeriksaUbahIsian<F> =
+  | { sah: true; formulir: FormulirLengkap<F> }
+  | { sah: false; belumDiisi: IsianWajib[]; tanggalLahirTidakBenar: boolean };
+
+/**
+ * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5) dengan pemeriksaan yang sama seperti
+ * formulir pemilik akun: semua isian wajib terisi (§6.1), dan tanggal lahir tidak jatuh sesudah hari ini (WIB), sama
+ * seperti tanggal lahir yang tidak benar saat formulir dikirim (§6.3). Rentang batas usia program tidak diperiksa ulang.
+ * Bila ditolak, hasilnya menyebut isian wajib yang belum diisi dan apakah tanggal lahirnya tidak benar.
+ */
+export function periksaUbahIsian<F extends FormulirDiperiksa>(
+  formulir: F,
+  sekarang: Date,
+): HasilPeriksaUbahIsian<F> {
+  const isianWajib = periksaIsianWajib(formulir);
+  const tanggalLahirTidakBenar =
+    formulir.tanggalLahir !== null &&
+    !tanggalLahirBenar(formulir.tanggalLahir, sekarang);
+  if (isianWajib.lengkap && !tanggalLahirTidakBenar) {
+    return { sah: true, formulir: isianWajib.formulir };
+  }
+  return {
+    sah: false,
+    belumDiisi: isianWajib.lengkap ? [] : isianWajib.belumDiisi,
+    tanggalLahirTidakBenar,
+  };
 }
 
 export type HasilPeriksaSyaratKirim<F> =

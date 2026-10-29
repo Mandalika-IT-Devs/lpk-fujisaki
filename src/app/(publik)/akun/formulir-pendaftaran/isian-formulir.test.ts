@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import golden from "../../../../../tests/golden/nomor-whatsapp.json";
 import {
+  galatIsianDitolak,
   ISIAN_KOSONG,
   type IsianFormulirPendaftaran,
   keIsianFormulir,
@@ -181,5 +182,31 @@ describe("keIsianFormulir", () => {
 
   it("akun yang belum pernah menyimpan draf mendapat formulir kosong", () => {
     expect(keIsianFormulir(undefined, PILIHAN)).toEqual(ISIAN_KOSONG);
+  });
+});
+
+// Pesan pada isian yang membuat formulir ditolak sesudah bentuknya benar. Formulir pemilik akun (saat dikirim, issue
+// T13) dan formulir ubah isian pegawai (issue T15) memakai pesan yang sama.
+describe("galatIsianDitolak", () => {
+  it("menandai setiap isian wajib yang belum diisi dan tanggal lahir sesudah hari ini", () => {
+    expect(
+      galatIsianDitolak({
+        belumDiisi: ["kabupatenKota", "programId"],
+        tanggalLahirTidakBenar: true,
+      }),
+    ).toEqual({
+      kabupatenKota:
+        "Kabupaten/kota domisili belum diisi. Isian ini wajib diisi sebelum formulir dikirim.",
+      programId:
+        "Program belum diisi. Isian ini wajib diisi sebelum formulir dikirim.",
+      tanggalLahir:
+        "Tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirmu.",
+    });
+  });
+
+  it("tanpa isian yang ditolak, tidak ada isian yang ditandai", () => {
+    expect(
+      galatIsianDitolak({ belumDiisi: [], tanggalLahirTidakBenar: false }),
+    ).toEqual({});
   });
 });

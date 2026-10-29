@@ -25,11 +25,13 @@ export function FormulirUbahIsian({
   /** Id judul bagian yang menamai formulir ini. */
   idJudul: string;
 }) {
+  // Keadaan awal tidak memuat isian, karena keadaan ini ikut tertulis di halaman sebagai isian tersembunyi Server
+  // Action; isian awal datang dari halaman.
   const [keadaan, kirim] = useActionState(simpanIsianPendaftaran, {
-    pesan: null,
-    isian: awal,
+    pesan: [],
+    isian: null,
     galat: {},
-    versi: 0,
+    versi: "awal",
   });
 
   return (
@@ -44,14 +46,16 @@ export function FormulirUbahIsian({
           Isian dipasang ulang dengan kunci versi, supaya setiap isian berangkat dari isian hasil proses terakhir. */}
       <div key={keadaan.versi} className="grid gap-8">
         <BagianIsianFormulir
-          isian={keadaan.isian}
+          isian={keadaan.isian ?? awal}
           galat={keadaan.galat}
           pilihan={pilihan}
           tingkatJudul="h3"
         />
       </div>
       <div className="grid gap-4">
-        <PesanTindakan pesan={keadaan.pesan} />
+        {keadaan.pesan.map((pesan) => (
+          <PesanTindakan key={pesan.teks} pesan={pesan} />
+        ))}
         <div>
           <TombolKirim>Simpan perubahan</TombolKirim>
         </div>

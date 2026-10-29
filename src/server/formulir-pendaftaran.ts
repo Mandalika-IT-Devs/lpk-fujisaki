@@ -3,6 +3,7 @@ import { bisaDipilihDiFormulirPendaftaran } from "@/domain/program-dan-bidang-ke
 import { daftarBidangKerja } from "./bidang-kerja";
 import { db } from "./db";
 import { drafFormulirPendaftaran } from "./db/schema";
+import { kunciAkun, nomorPendaftaranBerjalan } from "./pendaftaran";
 import { daftarProgram } from "./program";
 
 // Draf formulir pendaftaran pemilik akun (PRD §6.1, §6.2): satu draf per akun, disimpan kapan saja meski belum
@@ -47,16 +48,29 @@ export async function bacaDrafFormulirPendaftaran(
   return baris;
 }
 
-/** Menyimpan draf sebuah akun; draf yang sudah ada diganti seluruhnya, termasuk isian yang dikosongkan. */
+export type HasilSimpanDraf =
+  { hasil: "tersimpan" } | { hasil: "terkunci"; nomorPendaftaran: string };
+
+/**
+ * Menyimpan draf sebuah akun; draf yang sudah ada diganti seluruhnya, termasuk isian yang dikosongkan. Selama akun itu
+ * punya pendaftaran Berjalan, isian formulirnya terkunci (PRD §6.5), jadi draf tidak disimpan.
+ */
 export async function simpanDrafFormulirPendaftaran(
   akunId: string,
   draf: DrafFormulirPendaftaran,
-): Promise<void> {
-  await db
-    .insert(drafFormulirPendaftaran)
-    .values({ akunId, ...draf })
-    .onConflictDoUpdate({
-      target: drafFormulirPendaftaran.akunId,
-      set: draf,
-    });
+): Promise<HasilSimpanDraf> {
+  return db.transaction(async (tx) => {
+    await kunciAkun(tx, akunId);
+    const nomorPendaftaran = await nomorPendaftaranBerjalan(tx, akunId);
+    if (nomorPendaftaran !== null)
+      return { hasil: "terkunci", nomorPendaftaran };
+    await tx
+      .insert(drafFormulirPendaftaran)
+      .values({ akunId, ...draf })
+      .onConflictDoUpdate({
+        target: drafFormulirPendaftaran.akunId,
+        set: draf,
+      });
+    return { hasil: "tersimpan" };
+  });
 }

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { ALAMAT_FORMULIR_PENDAFTARAN } from "@/components/tautan-situs";
 import { TombolUtama } from "@/components/tombol";
+import { TAHAP } from "@/domain/tahap";
+import {
+  bacaPendaftaranBerjalan,
+  type PendaftaranBerjalan,
+} from "@/server/pendaftaran";
 import { pastikanPemilikAkun } from "../penjaga-akun";
 import { keluarAkun } from "./aksi";
 import { PengingatVerifikasiEmail } from "./pengingat-verifikasi-email";
@@ -8,11 +15,13 @@ import { PengingatVerifikasiEmail } from "./pengingat-verifikasi-email";
 export const metadata: Metadata = { title: "Akunmu" };
 
 /**
- * Halaman akun awal pemilik akun (issue T11): ajakan mengisi formulir pendaftaran, dan pengingat verifikasi email
- * selama emailnya belum terverifikasi (PRD §5.3). Halaman ini hanya untuk pemilik akun (§2.2).
+ * Halaman akun pemilik akun (issue T11, T13): pendaftaran Berjalan miliknya, atau ajakan mengisi formulir pendaftaran
+ * bila belum ada; dan pengingat verifikasi email selama emailnya belum terverifikasi (PRD §5.3). Halaman ini hanya
+ * untuk pemilik akun (§2.2).
  */
 export default async function HalamanAkun() {
   const pemilikAkun = await pastikanPemilikAkun();
+  const pendaftaran = await bacaPendaftaranBerjalan(pemilikAkun.id);
 
   return (
     <main className="wadah pt-8 pb-pad lg:pt-12 lg:pb-pad-lebar">
@@ -38,30 +47,79 @@ export default async function HalamanAkun() {
           <PengingatVerifikasiEmail email={pemilikAkun.email} />
         )}
 
-        <section
-          aria-labelledby="judul-formulir-pendaftaran"
-          className="grid gap-4 rounded-sudut bg-dasar p-4 shadow-papan lg:p-6"
-        >
-          <div className="grid gap-1">
-            <h2
-              id="judul-formulir-pendaftaran"
-              className="font-papan text-title-kecil"
+        {pendaftaran ? (
+          <KartuPendaftaran pendaftaran={pendaftaran} />
+        ) : (
+          <section
+            aria-labelledby="judul-formulir-pendaftaran"
+            className="grid gap-4 rounded-sudut bg-dasar p-4 shadow-papan lg:p-6"
+          >
+            <div className="grid gap-1">
+              <h2
+                id="judul-formulir-pendaftaran"
+                className="font-papan text-title-kecil"
+              >
+                Isi formulir pendaftaran
+              </h2>
+              <p className="max-w-[60ch]">
+                Pilih program dan isi data dirimu. Formulir bisa disimpan
+                sebagai draf dan dilanjutkan kapan saja, lalu dikirim bila sudah
+                lengkap.
+              </p>
+            </div>
+            <TombolUtama
+              href={ALAMAT_FORMULIR_PENDAFTARAN}
+              className="justify-self-start"
             >
               Isi formulir pendaftaran
-            </h2>
-            <p className="max-w-[60ch]">
-              Pilih program dan isi data dirimu. Formulir bisa disimpan sebagai
-              draf dan dilanjutkan kapan saja, lalu dikirim bila sudah lengkap.
-            </p>
-          </div>
-          <TombolUtama
-            href={ALAMAT_FORMULIR_PENDAFTARAN}
-            className="justify-self-start"
-          >
-            Isi formulir pendaftaran
-          </TombolUtama>
-        </section>
+            </TombolUtama>
+          </section>
+        )}
       </div>
     </main>
+  );
+}
+
+/**
+ * Kartu akun (docs/DESIGN.md, Cards / Containers) untuk pendaftaran Berjalan (PRD §2.3): nomor pendaftaran, program,
+ * chip status Berjalan, dan tahap saat ini dengan lencana kode stasiun. Langkah-langkah tahap itu tampil di M2.
+ */
+function KartuPendaftaran({
+  pendaftaran,
+}: {
+  pendaftaran: PendaftaranBerjalan;
+}) {
+  const tahap = TAHAP.find(({ nomor }) => nomor === pendaftaran.tahap);
+  return (
+    <section
+      aria-labelledby="judul-pendaftaran"
+      className="grid gap-4 rounded-sudut bg-dasar p-4 shadow-papan lg:p-6"
+    >
+      <h2 id="judul-pendaftaran" className="sr-only">
+        Pendaftaranmu
+      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="font-papan text-nomor">{pendaftaran.nomor}</p>
+          <p className="mt-1 text-body-kecil text-teks-2">
+            {pendaftaran.program}
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-pil border-2 border-jalur px-2.5 py-1.5 text-label text-jalur before:size-2 before:rounded-bulat before:bg-current">
+          {pendaftaran.status}
+        </span>
+      </div>
+      {tahap && (
+        <p className="flex flex-wrap items-center gap-2 font-papan text-title-kecil">
+          <KodeStasiun nomor={nomorStasiun(tahap.nomor)} ukuran="kecil" />
+          {tahap.nama}
+        </p>
+      )}
+      <p className="max-w-[60ch] text-body-kecil text-teks-2">
+        Isian formulir pendaftaranmu terkunci sejak dikirim. Bila ada yang perlu
+        diubah, hubungi lembaga lewat halaman <Link href="/kontak">Kontak</Link>
+        .
+      </p>
+    </section>
   );
 }

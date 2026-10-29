@@ -17,6 +17,15 @@ function folderKotakKeluar(): string {
   return folder;
 }
 
+/** Isi berkas email nodemailer, atau undefined bila berkasnya belum utuh. */
+function bacaJson(teks: string) {
+  try {
+    return JSON.parse(teks);
+  } catch {
+    return undefined;
+  }
+}
+
 /** Email untuk sebuah alamat yang ditulis sejak waktu tertentu, terlama lebih dulu. */
 export async function emailUntuk(
   kepada: string,
@@ -26,7 +35,10 @@ export async function emailUntuk(
   const berkas = await readdir(folder).catch(() => []);
   const daftar: EmailTerkirim[] = [];
   for (const nama of berkas.filter((n) => parseInt(n, 10) >= sejak).sort()) {
-    const isi = JSON.parse(await readFile(path.join(folder, nama), "utf8"));
+    const isi = bacaJson(await readFile(path.join(folder, nama), "utf8"));
+    // Berkas yang masih ditulis server, misalnya email untuk test lain yang berjalan bersamaan, belum utuh. Berkas itu
+    // dibaca lagi pada putaran berikutnya di tungguEmail.
+    if (isi === undefined) continue;
     const penerima: string[] = isi.to.map(
       (alamat: { address: string }) => alamat.address,
     );

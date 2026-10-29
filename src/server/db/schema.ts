@@ -9,8 +9,10 @@ import {
   index,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 // Impor relatif, karena drizzle-kit membaca berkas ini tanpa alias impor `@/…` dari tsconfig.json.
@@ -20,6 +22,12 @@ import {
   PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
   PILIHAN_PENDIDIKAN_TERAKHIR,
 } from "../../domain/formulir-pendaftaran";
+import {
+  KODE_LANGKAH,
+  STATUS_LANGKAH,
+  STATUS_PENDAFTARAN,
+} from "../../domain/pendaftaran";
+import { TAHAP } from "../../domain/tahap";
 
 // Empat tabel Better Auth (src/server/auth.ts) dengan nama tabel berbahasa Indonesia:
 // akun (model "user"), sesi ("session"), kredensial ("account"), dan verifikasi ("verification").
@@ -301,5 +309,136 @@ export const drafFormulirPendaftaran = pgTable(
       "draf_formulir_pendaftaran_satu_pilihan_bidang_kerja",
       sql`not (${t.bidangKerjaBelumTahu} and ${t.bidangKerjaId} is not null)`,
     ),
+  ],
+);
+
+// Pendaftaran (PRD §6.4–§6.6, §7.1, §7.6): dibuka saat pemilik akun mengirim formulir pendaftarannya. Isian formulir
+// disimpan sebagai bagian dari pendaftaran itu, dengan bentuk yang sama seperti draf, tetapi isian wajib tidak boleh
+// kosong. Sesudah dikirim, isiannya terkunci bagi pemilik akun (§6.5) dan draf akun itu dihapus. Pendaftaran ikut
+// terhapus bersama akunnya (§12.4, §12.5); nomor pendaftarannya tetap tidak dipakai ulang (nomor_urut_pendaftaran).
+
+/**
+ * Satu pendaftaran: nomor pendaftaran, saat dikirim, status (Berjalan, Ditutup, Selesai), tahap saat ini (1–6), dan
+ * isian formulir pendaftaran yang dikirim. Program dan bidang kerja yang dinonaktifkan sesudahnya tetap tercatat
+ * (§4.3). Satu akun hanya punya satu pendaftaran Berjalan (§6.6), dijaga indeks unik sebagian.
+ */
+export const pendaftaran = pgTable(
+  "pendaftaran",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    akunId: uuid("akun_id")
+      .notNull()
+      .references(() => akun.id, { onDelete: "cascade" }),
+    nomor: text("nomor").notNull().unique(),
+    dikirimPada: waktu("dikirim_pada").notNull(),
+    status: text("status", { enum: STATUS_PENDAFTARAN }).notNull(),
+    tahap: integer("tahap").notNull(),
+    namaLengkap: text("nama_lengkap").notNull(),
+    jenisKelamin: text("jenis_kelamin", {
+      enum: PILIHAN_JENIS_KELAMIN,
+    }).notNull(),
+    tempatLahir: text("tempat_lahir").notNull(),
+    // Tanggal kalender tanpa jam, jadi disimpan sebagai date, bukan timestamptz.
+    tanggalLahir: date("tanggal_lahir", { mode: "string" }).notNull(),
+    kabupatenKota: text("kabupaten_kota").notNull(),
+    provinsi: text("provinsi", { enum: DAFTAR_PROVINSI }).notNull(),
+    pendidikanTerakhir: text("pendidikan_terakhir", {
+      enum: PILIHAN_PENDIDIKAN_TERAKHIR,
+    }).notNull(),
+    jurusanPendidikan: text("jurusan_pendidikan"),
+    programId: integer("program_id")
+      .notNull()
+      .references(() => program.id),
+    bidangKerjaId: integer("bidang_kerja_id").references(() => bidangKerja.id),
+    bidangKerjaBelumTahu: boolean("bidang_kerja_belum_tahu")
+      .notNull()
+      .default(false),
+    kemampuanBahasaJepang: text("kemampuan_bahasa_jepang", {
+      enum: PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
+    }).notNull(),
+    pengalamanKerja: text("pengalaman_kerja"),
+    namaKontakDarurat: text("nama_kontak_darurat").notNull(),
+    hubunganKontakDarurat: text("hubungan_kontak_darurat").notNull(),
+    nomorHpKontakDarurat: text("nomor_hp_kontak_darurat").notNull(),
+  },
+  (t) => [
+    index("pendaftaran_akun_id_idx").on(t.akunId),
+    uniqueIndex("pendaftaran_satu_berjalan_per_akun")
+      .on(t.akunId)
+      .where(sql`${t.status} = 'Berjalan'`),
+    check(
+      "pendaftaran_status_sah",
+      salahSatuPilihan(t.status, STATUS_PENDAFTARAN),
+    ),
+    check(
+      "pendaftaran_tahap_sah",
+      sql`${t.tahap} between 1 and ${sql.raw(String(TAHAP.length))}`,
+    ),
+    check(
+      "pendaftaran_jenis_kelamin_sah",
+      salahSatuPilihan(t.jenisKelamin, PILIHAN_JENIS_KELAMIN),
+    ),
+    check(
+      "pendaftaran_provinsi_sah",
+      salahSatuPilihan(t.provinsi, DAFTAR_PROVINSI),
+    ),
+    check(
+      "pendaftaran_pendidikan_terakhir_sah",
+      salahSatuPilihan(t.pendidikanTerakhir, PILIHAN_PENDIDIKAN_TERAKHIR),
+    ),
+    check(
+      "pendaftaran_kemampuan_bahasa_jepang_sah",
+      salahSatuPilihan(
+        t.kemampuanBahasaJepang,
+        PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
+      ),
+    ),
+    // Bidang kerja yang diminati wajib: sebuah bidang kerja, atau "Belum tahu", tidak keduanya (§6.1).
+    check(
+      "pendaftaran_tepat_satu_pilihan_bidang_kerja",
+      sql`(${t.bidangKerjaId} is not null) <> ${t.bidangKerjaBelumTahu}`,
+    ),
+  ],
+);
+
+/**
+ * Status setiap langkah keenam tahap pada sebuah pendaftaran (PRD §7.1, §7.2). Langkahnya tetap dan sama untuk semua
+ * program (ADR-0003): semua dibuat berstatus Belum saat pendaftaran dibuka (§6.5).
+ */
+export const langkahPendaftaran = pgTable(
+  "langkah_pendaftaran",
+  {
+    pendaftaranId: uuid("pendaftaran_id")
+      .notNull()
+      .references(() => pendaftaran.id, { onDelete: "cascade" }),
+    kode: text("kode").notNull(),
+    status: text("status", { enum: STATUS_LANGKAH }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.pendaftaranId, t.kode] }),
+    check(
+      "langkah_pendaftaran_kode_sah",
+      salahSatuPilihan(t.kode, KODE_LANGKAH),
+    ),
+    check(
+      "langkah_pendaftaran_status_sah",
+      salahSatuPilihan(t.status, STATUS_LANGKAH),
+    ),
+  ],
+);
+
+/**
+ * Nomor urut pendaftaran terakhir yang sudah diberikan dalam setiap tahun WIB (PRD §6.4). Nomor urut diambil dengan
+ * menaikkan baris tahunnya secara atomik, jadi dua pengiriman bersamaan tidak pernah mendapat nomor yang sama. Baris
+ * ini tidak pernah turun, juga sesudah pendaftarannya ditutup atau dihapus, jadi nomor tidak pernah dipakai ulang.
+ */
+export const nomorUrutPendaftaran = pgTable(
+  "nomor_urut_pendaftaran",
+  {
+    tahun: integer("tahun").primaryKey(),
+    nomorUrutTerakhir: integer("nomor_urut_terakhir").notNull(),
+  },
+  (t) => [
+    check("nomor_urut_pendaftaran_positif", sql`${t.nomorUrutTerakhir} >= 1`),
   ],
 );

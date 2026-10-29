@@ -31,5 +31,8 @@ export const ALAMAT_AKUN = "/akun";
 /** Halaman formulir pendaftaran (PRD §6), tujuan ajakan di halaman akun. */
 export const ALAMAT_FORMULIR_PENDAFTARAN = "/akun/formulir-pendaftaran";
 
+/** Halaman konfirmasi sesudah formulir pendaftaran dikirim, berisi nomor pendaftaran (PRD §6.5). */
+export const ALAMAT_KONFIRMASI_PENDAFTARAN = "/akun/konfirmasi-pendaftaran";
+
 /** Halaman daftar akun calon peserta (PRD §5.1), tujuan tombol utama "Daftar sekarang". */
 export const ALAMAT_DAFTAR = "/daftar";

@@ -20,7 +20,7 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       testIgnore:
-        /(statistik-lembaga|kontak|galeri|konter-cek-usia)\.spec\.ts$/,
+        /(statistik-lembaga|kontak|galeri|konter-cek-usia|formulir-pendaftaran)\.spec\.ts$/,
     },
     // Statistik lembaga berisi satu angka per bidang kerja aktif. Test program dan bidang kerja menambah dan
     // menonaktifkan bidang kerja, jadi test statistik baru berjalan sesudah semua test lain selesai.
@@ -44,6 +44,14 @@ export default defineConfig({
       name: "galeri",
       use: { ...devices["Desktop Chrome"] },
       testMatch: /galeri\.spec\.ts$/,
+      dependencies: ["chromium"],
+    },
+    // Test formulir pendaftaran menambah program dan bidang kerja nonaktif untuk memeriksa pilihan formulir, jadi
+    // berjalan sesudah test program dan bidang kerja, yang memeriksa daftar lengkap keduanya di panel pegawai.
+    {
+      name: "formulir-pendaftaran",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /formulir-pendaftaran\.spec\.ts$/,
       dependencies: ["chromium"],
     },
     // Test konter cek usia menonaktifkan program Pelajar sebentar untuk memeriksa pilihan program di Beranda, jadi

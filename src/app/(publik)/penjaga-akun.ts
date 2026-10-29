@@ -12,6 +12,7 @@ import { auth, keAkun } from "@/server/auth";
 const ALAMAT_PANEL_PEGAWAI = "/panel";
 
 export type PemilikAkunMasuk = {
+  id: string;
   nama: string;
   email: string;
   emailTerverifikasi: boolean;
@@ -24,6 +25,7 @@ export const bacaAkunMasuk = cache(async () => {
   const akun: Akun = keAkun(sesi.user);
   return {
     akun,
+    id: sesi.user.id,
     nama: sesi.user.name,
     email: sesi.user.email,
     emailTerverifikasi: sesi.user.emailVerified,
@@ -38,6 +40,6 @@ export async function pastikanPemilikAkun(): Promise<PemilikAkunMasuk> {
   const masuk = await bacaAkunMasuk();
   if (!masuk) redirect(ALAMAT_MASUK);
   if (!bolehMembukaHalamanAkun(masuk.akun)) redirect(ALAMAT_PANEL_PEGAWAI);
-  const { nama, email, emailTerverifikasi } = masuk;
-  return { nama, email, emailTerverifikasi };
+  const { id, nama, email, emailTerverifikasi } = masuk;
+  return { id, nama, email, emailTerverifikasi };
 }

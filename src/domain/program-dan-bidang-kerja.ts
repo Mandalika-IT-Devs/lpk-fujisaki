@@ -42,3 +42,13 @@ export function tampilDiSitusPublik<T extends { aktif: boolean }>(
 ): T[] {
   return daftar.filter((isi) => isi.aktif);
 }
+
+/**
+ * Program dan bidang kerja yang nonaktif tidak bisa dipilih di formulir pendaftaran, dan bisa dipilih lagi setelah
+ * Admin mengaktifkannya kembali (PRD §4.3). Urutan daftar dipertahankan.
+ */
+export function bisaDipilihDiFormulirPendaftaran<T extends { aktif: boolean }>(
+  daftar: readonly T[],
+): T[] {
+  return daftar.filter((isi) => isi.aktif);
+}

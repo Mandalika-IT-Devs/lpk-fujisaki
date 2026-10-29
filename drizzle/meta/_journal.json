@@ -71,6 +71,13 @@
       "when": 1793290351369,
       "tag": "0009_akun_calon_peserta",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793292671299,
+      "tag": "0010_draf_formulir_pendaftaran",
+      "breakpoints": true
     }
   ]
 }

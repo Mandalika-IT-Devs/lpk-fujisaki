@@ -2,6 +2,7 @@
 // lalu migrasinya dibuat dengan `pnpm exec drizzle-kit generate`.
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -12,6 +13,13 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+// Impor relatif, karena drizzle-kit membaca berkas ini tanpa alias impor `@/…` dari tsconfig.json.
+import {
+  DAFTAR_PROVINSI,
+  PILIHAN_JENIS_KELAMIN,
+  PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
+  PILIHAN_PENDIDIKAN_TERAKHIR,
+} from "../../domain/formulir-pendaftaran";
 
 // Empat tabel Better Auth (src/server/auth.ts) dengan nama tabel berbahasa Indonesia:
 // akun (model "user"), sesi ("session"), kredensial ("account"), dan verifikasi ("verification").
@@ -224,3 +232,74 @@ export const fotoGaleri = pgTable("foto_galeri", {
   namaBerkas: text("nama_berkas").notNull().unique(),
   diunggahPada: waktu("diunggah_pada").notNull().defaultNow(),
 });
+
+// Draf formulir pendaftaran pemilik akun (PRD §6.1, §6.2). Satu akun punya paling banyak satu draf, yang disimpan
+// kapan saja meski belum lengkap, jadi semua isian boleh kosong. Isian yang terisi sudah diperiksa bentuknya sebelum
+// disimpan. Formulir tidak menanyakan NIK, tinggi badan, atau berat badan (§12.2, ADR-0004). Draf ikut terhapus bersama
+// akunnya (§12.4, §12.5).
+
+/** CHECK: kolom kosong, atau berisi salah satu pilihan isian formulir pendaftaran (PRD §6.1). */
+const salahSatuPilihan = (kolom: AnyPgColumn, pilihan: readonly string[]) =>
+  sql`${kolom} in (${sql.raw(pilihan.map((isi) => `'${isi}'`).join(", "))})`;
+
+/**
+ * Isian formulir pendaftaran yang belum dikirim. Pilihan disimpan sebagai teks pilihannya, misalnya "Paket C".
+ * Bidang kerja berisi sebuah bidang kerja, atau "Belum tahu" (bidang_kerja_belum_tahu), yang bukan bidang kerja
+ * (PRD §4.2). Nomor HP kontak darurat disimpan dalam bentuk ternormalisasi (§5.2), misalnya 6281234567890.
+ */
+export const drafFormulirPendaftaran = pgTable(
+  "draf_formulir_pendaftaran",
+  {
+    akunId: uuid("akun_id")
+      .primaryKey()
+      .references(() => akun.id, { onDelete: "cascade" }),
+    namaLengkap: text("nama_lengkap"),
+    jenisKelamin: text("jenis_kelamin", { enum: PILIHAN_JENIS_KELAMIN }),
+    tempatLahir: text("tempat_lahir"),
+    // Tanggal kalender tanpa jam, jadi disimpan sebagai date, bukan timestamptz.
+    tanggalLahir: date("tanggal_lahir", { mode: "string" }),
+    kabupatenKota: text("kabupaten_kota"),
+    provinsi: text("provinsi", { enum: DAFTAR_PROVINSI }),
+    pendidikanTerakhir: text("pendidikan_terakhir", {
+      enum: PILIHAN_PENDIDIKAN_TERAKHIR,
+    }),
+    jurusanPendidikan: text("jurusan_pendidikan"),
+    programId: integer("program_id").references(() => program.id),
+    bidangKerjaId: integer("bidang_kerja_id").references(() => bidangKerja.id),
+    bidangKerjaBelumTahu: boolean("bidang_kerja_belum_tahu")
+      .notNull()
+      .default(false),
+    kemampuanBahasaJepang: text("kemampuan_bahasa_jepang", {
+      enum: PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
+    }),
+    pengalamanKerja: text("pengalaman_kerja"),
+    namaKontakDarurat: text("nama_kontak_darurat"),
+    hubunganKontakDarurat: text("hubungan_kontak_darurat"),
+    nomorHpKontakDarurat: text("nomor_hp_kontak_darurat"),
+  },
+  (t) => [
+    check(
+      "draf_formulir_pendaftaran_jenis_kelamin_sah",
+      salahSatuPilihan(t.jenisKelamin, PILIHAN_JENIS_KELAMIN),
+    ),
+    check(
+      "draf_formulir_pendaftaran_provinsi_sah",
+      salahSatuPilihan(t.provinsi, DAFTAR_PROVINSI),
+    ),
+    check(
+      "draf_formulir_pendaftaran_pendidikan_terakhir_sah",
+      salahSatuPilihan(t.pendidikanTerakhir, PILIHAN_PENDIDIKAN_TERAKHIR),
+    ),
+    check(
+      "draf_formulir_pendaftaran_kemampuan_bahasa_jepang_sah",
+      salahSatuPilihan(
+        t.kemampuanBahasaJepang,
+        PILIHAN_KEMAMPUAN_BAHASA_JEPANG,
+      ),
+    ),
+    check(
+      "draf_formulir_pendaftaran_satu_pilihan_bidang_kerja",
+      sql`not (${t.bidangKerjaBelumTahu} and ${t.bidangKerjaId} is not null)`,
+    ),
+  ],
+);

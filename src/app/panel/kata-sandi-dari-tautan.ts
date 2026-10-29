@@ -2,6 +2,7 @@ import { isAPIError } from "better-auth/api";
 import { z } from "zod";
 import {
   kataSandiCukupPanjang,
+  MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM,
   PANJANG_MINIMAL_KATA_SANDI,
 } from "@/domain/akun";
 import { auth } from "@/server/auth";
@@ -18,16 +19,20 @@ export type KeadaanAturKataSandi =
 const PESAN_KATA_SANDI_PENDEK = `Kata sandi baru kurang dari ${PANJANG_MINIMAL_KATA_SANDI} karakter. Pakai kata sandi minimal ${PANJANG_MINIMAL_KATA_SANDI} karakter.`;
 const PESAN_KATA_SANDI_PANJANG =
   "Kata sandi baru terlalu panjang. Pakai kata sandi yang lebih pendek.";
+/** Pesan tautan atur ulang kata sandi (PRD §5.4) yang ditolak, untuk halaman atur ulang pegawai dan pemilik akun. */
+export const PESAN_TAUTAN_ATUR_ULANG_TIDAK_BERLAKU = `Tautan atur ulang kata sandi ini tidak berlaku lagi, karena sudah lewat ${MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM} jam, sudah pernah dipakai, atau tidak lengkap. Minta tautan baru di halaman Lupa kata sandi, lalu buka tautan dari email terbaru.`;
 const PESAN_GANGGUAN =
   "Kata sandi baru belum tersimpan karena gangguan di server. Coba lagi beberapa saat lagi; bila tetap gagal, hubungi Admin lembaga.";
 
 /**
- * Pegawai menyimpan kata sandi dari tautan di email; kata sandi lama, bila ada, tidak berlaku lagi.
- * `pesanTautanTidakBerlaku` menyebut masa berlaku tautan halaman pemakainya.
+ * Pegawai atau pemilik akun menyimpan kata sandi dari tautan di email; kata sandi lama, bila ada, tidak berlaku lagi.
+ * `pesanTautanTidakBerlaku` menyebut masa berlaku tautan halaman pemakainya. `pesanGangguan` menyebut ke mana
+ * meminta bantuan bila server gangguan; bawaannya untuk pegawai.
  */
 export async function simpanKataSandiDariTautan(
   formulir: FormData,
   pesanTautanTidakBerlaku: string,
+  pesanGangguan: string = PESAN_GANGGUAN,
 ): Promise<KeadaanAturKataSandi> {
   const isian = z
     .object({
@@ -70,7 +75,7 @@ export async function simpanKataSandiDariTautan(
       };
     }
     console.error(galat);
-    return { hasil: "galat", pesan: PESAN_GANGGUAN, perluTautanBaru: false };
+    return { hasil: "galat", pesan: pesanGangguan, perluTautanBaru: false };
   }
   return { hasil: "berhasil" };
 }

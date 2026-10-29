@@ -20,7 +20,10 @@ import {
 
 const waktu = (nama: string) => timestamp(nama, { withTimezone: true });
 
-/** Akun pegawai dan pemilik akun. Satu email untuk satu akun (PRD §5.1); Better Auth menyimpannya huruf kecil. */
+/**
+ * Akun pegawai dan pemilik akun. Satu email untuk satu akun (PRD §5.1), disimpan dalam huruf kecil.
+ * Satu nomor WhatsApp untuk satu akun, disimpan dalam bentuk ternormalisasi (§5.2), misalnya 6281234567890.
+ */
 export const akun = pgTable(
   "akun",
   {
@@ -34,6 +37,9 @@ export const akun = pgTable(
     peran: text("peran", { enum: ["admin", "staf"] }),
     // Pegawai nonaktif tidak bisa masuk (PRD §5.5).
     aktif: boolean("aktif").notNull().default(true),
+    // Nomor WhatsApp dan waktu persetujuan pemrosesan data hanya diisi untuk pemilik akun (PRD §5.1, §12.1).
+    nomorWhatsApp: text("nomor_whatsapp").unique(),
+    waktuPersetujuan: waktu("waktu_persetujuan"),
     createdAt: waktu("created_at").notNull().defaultNow(),
     updatedAt: waktu("updated_at")
       .notNull()
@@ -46,6 +52,10 @@ export const akun = pgTable(
     check(
       "akun_peran_hanya_untuk_pegawai",
       sql`(${t.jenis} = 'pegawai') = (${t.peran} is not null)`,
+    ),
+    check(
+      "akun_pemilik_akun_punya_nomor_dan_persetujuan",
+      sql`${t.jenis} <> 'pemilik_akun' or (${t.nomorWhatsApp} is not null and ${t.waktuPersetujuan} is not null)`,
     ),
   ],
 );

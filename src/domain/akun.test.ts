@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   bolehMasuk,
+  bolehMembuatAkunCalonPeserta,
+  bolehMembukaHalamanAkun,
   kataSandiCukupPanjang,
   normalkanEmail,
   type Pegawai,
@@ -40,6 +42,48 @@ describe("bolehMasuk", () => {
 
   it("pemilik akun boleh masuk", () => {
     expect(bolehMasuk({ jenis: "pemilik_akun" })).toBe(true);
+  });
+});
+
+// PRD §2.2: hanya pemilik akun yang melihat akunnya sendiri; pegawai tidak punya pendaftaran.
+describe("bolehMembukaHalamanAkun", () => {
+  it("pemilik akun boleh membuka halaman akun", () => {
+    expect(bolehMembukaHalamanAkun({ jenis: "pemilik_akun" })).toBe(true);
+  });
+
+  it("pegawai tidak membuka halaman akun, apa pun peran dan statusnya", () => {
+    expect(
+      bolehMembukaHalamanAkun({
+        jenis: "pegawai",
+        peran: "admin",
+        aktif: true,
+      }),
+    ).toBe(false);
+    expect(
+      bolehMembukaHalamanAkun({
+        jenis: "pegawai",
+        peran: "staf",
+        aktif: false,
+      }),
+    ).toBe(false);
+  });
+});
+
+// PRD §2.2: membuat akun calon peserta hanya untuk pengunjung, yaitu orang yang belum masuk ke akun mana pun.
+describe("bolehMembuatAkunCalonPeserta", () => {
+  it("pengunjung boleh membuat akun calon peserta", () => {
+    expect(bolehMembuatAkunCalonPeserta(null)).toBe(true);
+  });
+
+  it("pemilik akun dan pegawai yang sedang masuk tidak membuat akun calon peserta", () => {
+    expect(bolehMembuatAkunCalonPeserta({ jenis: "pemilik_akun" })).toBe(false);
+    expect(
+      bolehMembuatAkunCalonPeserta({
+        jenis: "pegawai",
+        peran: "admin",
+        aktif: true,
+      }),
+    ).toBe(false);
   });
 });
 

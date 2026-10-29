@@ -3,10 +3,18 @@
 import { useActionState } from "react";
 import { TombolKirim } from "@/components/tombol";
 import { GAYA_ISIAN, GAYA_LABEL, Peringatan } from "../akses-pegawai";
-import { masukPegawai } from "./aksi";
+import type { KeadaanMasuk } from "./aksi";
 
-export function FormulirMasuk() {
-  const [keadaan, kirim] = useActionState(masukPegawai, {
+/**
+ * Formulir masuk dengan email dan kata sandi, untuk pegawai (halaman ini) dan pemilik akun (src/app/(publik)/masuk).
+ * `aksi` adalah Server Action halaman pemakainya.
+ */
+export function FormulirMasuk({
+  aksi,
+}: {
+  aksi: (keadaan: KeadaanMasuk, formulir: FormData) => Promise<KeadaanMasuk>;
+}) {
+  const [keadaan, kirim] = useActionState(aksi, {
     pesan: null,
     email: "",
   });

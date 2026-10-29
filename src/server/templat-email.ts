@@ -1,6 +1,7 @@
 import {
   MASA_BERLAKU_TAUTAN_ATUR_KATA_SANDI_PEGAWAI_BARU_JAM,
   MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM,
+  MASA_BERLAKU_TAUTAN_VERIFIKASI_EMAIL_JAM,
 } from "@/domain/akun";
 import type { Email } from "./email";
 
@@ -50,6 +51,34 @@ export function templatAturKataSandiPegawaiBaru({
       `Tautan ini berlaku ${MASA_BERLAKU_TAUTAN_ATUR_KATA_SANDI_PEGAWAI_BARU_JAM} jam. Sesudah itu, minta tautan baru lewat halaman Lupa kata sandi.`,
       "",
       "Sesudah kata sandi diatur, masuk ke panel pegawai dengan email ini dan kata sandimu.",
+      "",
+      "LPKS Fujisaki Gakuin Center",
+    ].join("\n"),
+  };
+}
+
+/** Email verifikasi untuk pemilik akun (PRD §5.3), berisi tautan yang berlaku 24 jam. */
+export function templatVerifikasiEmail({
+  nama,
+  tautan,
+}: {
+  nama: string;
+  tautan: string;
+}): Omit<Email, "kepada"> {
+  return {
+    subjek: "Verifikasi email akunmu",
+    teks: [
+      `Halo ${nama},`,
+      "",
+      "Buka tautan berikut untuk memverifikasi email akunmu di LPKS Fujisaki Gakuin Center:",
+      "",
+      tautan,
+      "",
+      `Tautan ini berlaku ${MASA_BERLAKU_TAUTAN_VERIFIKASI_EMAIL_JAM} jam. Sesudah itu, masuk ke akunmu dan minta tautan baru.`,
+      "",
+      "Sebelum emailmu terverifikasi, kamu sudah bisa masuk dan menyusun formulir pendaftaran, tetapi belum bisa mengirimnya.",
+      "",
+      "Bila kamu tidak membuat akun di LPKS Fujisaki Gakuin Center, abaikan email ini.",
       "",
       "LPKS Fujisaki Gakuin Center",
     ].join("\n"),

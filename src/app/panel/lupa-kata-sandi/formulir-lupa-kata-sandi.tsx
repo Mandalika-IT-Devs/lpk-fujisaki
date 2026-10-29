@@ -3,10 +3,21 @@
 import { useActionState } from "react";
 import { TombolKirim } from "@/components/tombol";
 import { GAYA_ISIAN, GAYA_LABEL, Kabar, Peringatan } from "../akses-pegawai";
-import { mintaTautanAturUlang } from "./aksi";
+import type { KeadaanLupaKataSandi } from "./aksi";
 
-export function FormulirLupaKataSandi() {
-  const [keadaan, kirim] = useActionState(mintaTautanAturUlang, {
+/**
+ * Formulir permintaan tautan atur ulang kata sandi, untuk pegawai (halaman ini) dan pemilik akun
+ * (src/app/(publik)/lupa-kata-sandi). `aksi` adalah Server Action halaman pemakainya.
+ */
+export function FormulirLupaKataSandi({
+  aksi,
+}: {
+  aksi: (
+    keadaan: KeadaanLupaKataSandi,
+    formulir: FormData,
+  ) => Promise<KeadaanLupaKataSandi>;
+}) {
+  const [keadaan, kirim] = useActionState(aksi, {
     hasil: "belum",
     email: "",
   });

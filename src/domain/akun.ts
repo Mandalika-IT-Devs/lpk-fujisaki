@@ -5,6 +5,9 @@
 /** Panjang kata sandi paling sedikit, untuk semua akun (PRD §5.1). */
 export const PANJANG_MINIMAL_KATA_SANDI = 8;
 
+/** Lama tautan verifikasi email berlaku sejak dikirim, dalam jam (PRD §5.3). */
+export const MASA_BERLAKU_TAUTAN_VERIFIKASI_EMAIL_JAM = 24;
+
 /** Lama tautan atur ulang kata sandi berlaku sejak diminta, dalam jam (PRD §5.4). */
 export const MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM = 1;
 
@@ -26,6 +29,22 @@ export function kataSandiCukupPanjang(kataSandi: string): boolean {
 /** Pegawai nonaktif tidak bisa masuk (PRD §5.5). */
 export function bolehMasuk(akun: Akun): boolean {
   return akun.jenis === "pemilik_akun" || akun.aktif;
+}
+
+/**
+ * Akun calon peserta dibuat oleh pengunjung, yaitu orang yang belum masuk ke akun mana pun (PRD §2.2).
+ * `akunMasuk` adalah akun yang sedang masuk, atau null bila belum ada.
+ */
+export function bolehMembuatAkunCalonPeserta(akunMasuk: Akun | null): boolean {
+  return akunMasuk === null;
+}
+
+/**
+ * Halaman akun hanya untuk pemilik akun, yang melihat pendaftarannya sendiri (PRD §2.2). Pegawai tidak punya
+ * pendaftaran; mereka bekerja di panel pegawai.
+ */
+export function bolehMembukaHalamanAkun(akun: Akun): boolean {
+  return akun.jenis === "pemilik_akun";
 }
 
 /**

@@ -28,7 +28,7 @@ export const ALAMAT_LUPA_KATA_SANDI = "/lupa-kata-sandi";
 /** Halaman akun pemilik akun, tujuan sesudah membuat akun dan sesudah masuk (issue T11). */
 export const ALAMAT_AKUN = "/akun";
 
-/** Halaman formulir pendaftaran (PRD §6), tujuan ajakan di halaman akun. Formulirnya dibangun di T12. */
+/** Halaman formulir pendaftaran (PRD §6), tujuan ajakan di halaman akun. */
 export const ALAMAT_FORMULIR_PENDAFTARAN = "/akun/formulir-pendaftaran";
 
 /** Halaman daftar akun calon peserta (PRD §5.1), tujuan tombol utama "Daftar sekarang". */

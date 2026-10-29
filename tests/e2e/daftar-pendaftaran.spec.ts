@@ -42,7 +42,7 @@ const AGUS: PendaftaranUji = {
   nomor: "FGC-2025-0903",
   namaLengkap: "Agus Setiawan",
   program: "Pemagangan",
-  bidangKerja: "Pembersihan gedung",
+  bidangKerja: "Perawat lansia (kaigo)",
   tahap: 1,
   status: "Ditutup",
   dikirimPada: "2025-03-08T02:00:00Z",
@@ -51,7 +51,7 @@ const AHMAD: PendaftaranUji = {
   nomor: "FGC-2025-0902",
   namaLengkap: "Ahmad Fauzi",
   program: "Tokutei Ginou (SSW)",
-  bidangKerja: "Pembersihan gedung",
+  bidangKerja: "Perawat lansia (kaigo)",
   tahap: 2,
   status: "Berjalan",
   dikirimPada: "2025-03-07T02:00:00Z",
@@ -67,7 +67,10 @@ const BUDI: PendaftaranUji = {
 };
 const PENDAFTARAN_UJI = [SITI, DEWI, AGUS, AHMAD, BUDI];
 
-/** 30 pendaftaran untuk pembagian halaman, dikirim satu jam sekali sejak 01-01-2025, di tahap 3. */
+/**
+ * 30 pendaftaran untuk pembagian halaman, dikirim satu jam sekali sejak 01-01-2025, di tahap 3. Bidang kerjanya bukan
+ * Pembersihan gedung, supaya tidak mendesak pendaftaran uji di atas ke halaman 2 saat disaring menurut bidang kerja itu.
+ */
 const NAMA_HALAMAN = "Peserta Halaman Uji";
 const PENDAFTARAN_HALAMAN: PendaftaranUji[] = Array.from(
   { length: 30 },
@@ -77,7 +80,7 @@ const PENDAFTARAN_HALAMAN: PendaftaranUji[] = Array.from(
       nomor: `FGC-2025-08${urutan}`,
       namaLengkap: `${NAMA_HALAMAN} ${urutan}`,
       program: "Pemagangan",
-      bidangKerja: "Pembersihan gedung",
+      bidangKerja: "Perawat lansia (kaigo)",
       tahap: 3,
       status: "Berjalan",
       dikirimPada: new Date(Date.UTC(2025, 0, 1, i)).toISOString(),
@@ -281,13 +284,24 @@ test("saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang ke
   page,
 }) => {
   await masukKePanel(page, STAF);
+  const pilihan = await saringan(page)
+    .getByLabel("Bidang kerja")
+    .locator("option")
+    .allTextContents();
+  expect(pilihan).not.toContain("Belum tahu");
 
-  await saringan(page).getByLabel("Bidang kerja").selectOption("Belum tahu");
+  await saringan(page)
+    .getByLabel("Bidang kerja")
+    .selectOption({ label: "Pembersihan gedung" });
   await terapkan(page);
+  await expect(page).toHaveURL(/bidang-kerja=/);
 
-  await periksaDaftar(page, (baris) => baris.bidangKerja === "Belum tahu", [
-    DEWI,
-  ]);
+  // Dewi memilih "Belum tahu", Agus dan Ahmad memilih Perawat lansia (kaigo).
+  await periksaDaftar(
+    page,
+    (baris) => baris.bidangKerja === "Pembersihan gedung",
+    [SITI, BUDI],
+  );
 });
 
 test('pencarian "siti" menemukan "Siti Aminah", lalu pencarian nomor pendaftaran hanya menemukan pendaftaran itu (UAT-K1 langkah 2)', async ({

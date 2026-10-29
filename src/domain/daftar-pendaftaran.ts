@@ -2,7 +2,6 @@
  * Daftar pendaftaran di panel pegawai (PRD §11.1): semua pendaftaran, dari yang paling baru dikirim.
  */
 
-import { BIDANG_KERJA_BELUM_TAHU } from "./formulir-pendaftaran";
 import type { StatusPendaftaran } from "./pendaftaran";
 
 /** Bagian sebuah pendaftaran yang dibutuhkan untuk menyaring dan mengurutkan daftar. */
@@ -22,8 +21,8 @@ type PendaftaranDiDaftar = {
 export type SaringanPendaftaran = {
   tahap?: number;
   programId?: number;
-  /** Sebuah bidang kerja, atau "Belum tahu" untuk pendaftaran yang belum memilih bidang kerja. */
-  bidangKerja?: number | typeof BIDANG_KERJA_BELUM_TAHU;
+  /** Sebuah bidang kerja; pendaftaran yang memilih "Belum tahu" tidak cocok dengan bidang kerja mana pun. */
+  bidangKerjaId?: number;
   status?: StatusPendaftaran;
   /** Sebagian nama lengkap atau nomor pendaftaran, tanpa membedakan huruf besar dan kecil. */
   cari?: string;
@@ -55,10 +54,7 @@ export function saringPendaftaran<P extends PendaftaranDiDaftar>(
       (pendaftaran) =>
         cocok(saringan.tahap, pendaftaran.tahap) &&
         cocok(saringan.programId, pendaftaran.programId) &&
-        cocok(
-          saringan.bidangKerja,
-          pendaftaran.bidangKerjaId ?? BIDANG_KERJA_BELUM_TAHU,
-        ) &&
+        cocok(saringan.bidangKerjaId, pendaftaran.bidangKerjaId) &&
         cocok(saringan.status, pendaftaran.status) &&
         cocokPencarian(saringan.cari, pendaftaran),
     )

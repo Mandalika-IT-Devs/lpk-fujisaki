@@ -96,17 +96,11 @@ describe("saringPendaftaran", () => {
     ]);
   });
 
-  it("saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang kerja itu", () => {
-    expect(nomor(saringPendaftaran(SEMUA, { bidangKerja: 3 }))).toEqual([
+  it('saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang kerja itu, bukan yang memilih "Belum tahu"', () => {
+    expect(nomor(saringPendaftaran(SEMUA, { bidangKerjaId: 3 }))).toEqual([
       "FGC-2026-0005",
       "FGC-2026-0003",
     ]);
-  });
-
-  it('saringan bidang kerja "Belum tahu" menampilkan pendaftaran yang belum memilih bidang kerja', () => {
-    expect(
-      nomor(saringPendaftaran(SEMUA, { bidangKerja: "Belum tahu" })),
-    ).toEqual(["FGC-2026-0004"]);
   });
 
   it('pencarian "siti" menemukan "Siti Aminah", tanpa membedakan huruf besar dan kecil (UAT-K1 langkah 2)', () => {

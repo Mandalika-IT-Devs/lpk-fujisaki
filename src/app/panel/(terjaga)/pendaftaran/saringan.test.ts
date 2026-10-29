@@ -24,16 +24,10 @@ describe("bacaSaringan", () => {
         cari: "siti",
         tahap: 1,
         programId: 2,
-        bidangKerja: 3,
+        bidangKerjaId: 3,
         status: "Ditutup",
       },
       halaman: 2,
-    });
-  });
-
-  it('membaca saringan bidang kerja "Belum tahu"', () => {
-    expect(bacaSaringan({ "bidang-kerja": "belum-tahu" }).saringan).toEqual({
-      bidangKerja: "Belum tahu",
     });
   });
 
@@ -75,14 +69,14 @@ describe("alamatDaftar", () => {
         cari: "Siti Aminah",
         tahap: 1,
         programId: 2,
-        bidangKerja: "Belum tahu",
+        bidangKerjaId: 3,
         status: "Ditutup",
       },
       2,
     );
 
     expect(alamat).toBe(
-      "/panel/pendaftaran?cari=Siti+Aminah&tahap=1&program=2&bidang-kerja=belum-tahu&status=Ditutup&halaman=2",
+      "/panel/pendaftaran?cari=Siti+Aminah&tahap=1&program=2&bidang-kerja=3&status=Ditutup&halaman=2",
     );
   });
 });

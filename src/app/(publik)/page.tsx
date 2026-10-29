@@ -22,6 +22,7 @@ import {
   bacaStatistikLembagaDiSitusPublik,
   type StatistikLembagaDiSitusPublik,
 } from "@/server/statistik-lembaga";
+import { KonterCekUsia } from "./konter-cek-usia";
 
 export const metadata: Metadata = {
   title: { absolute: "LPKS Fujisaki Gakuin Center – Dari Cilacap ke Jepang" },
@@ -40,9 +41,10 @@ const JUDUL_BAGIAN =
 /**
  * Beranda (docs/design/prototipe/beranda.html). Garis jalur 12px menjadi tulang halaman:
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
- * Program aktif, statistik lembaga, tiga foto galeri terbaru, dan kontak dibaca dari database pada setiap permintaan,
- * jadi perubahan Admin langsung terlihat (PRD §3.1, §3.3, §3.4, §3.5, §4.3). Angka statistik tampil di stasiun yang
- * relevan: FG 02, FG 03, dan FG 06. Garis berakhir di lingkaran ujung pada loket kontak.
+ * Program aktif (untuk konter cek usia dan bagian program), statistik lembaga, tiga foto galeri terbaru, dan kontak
+ * dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung terlihat (PRD §3.1, §3.3, §3.4, §3.5,
+ * §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan FG 06. Garis berakhir di lingkaran ujung
+ * pada loket kontak.
  */
 export default async function HalamanBeranda() {
   await connection();
@@ -55,7 +57,7 @@ export default async function HalamanBeranda() {
 
   return (
     <main>
-      <Pembuka />
+      <Pembuka daftarProgram={daftarProgram} />
       <section
         id="alur"
         aria-labelledby="judul-alur"
@@ -98,10 +100,13 @@ export default async function HalamanBeranda() {
   );
 }
 
-function Pembuka() {
+/**
+ * Pembuka: judul, papan stasiun FG 01, lalu konter cek usia dengan tombol utama, semuanya terlihat di 390×844 tanpa
+ * menggulir. Di layar lebar papan di kolom kiri dan konter di kolom kanan (docs/DESIGN.md, Layout).
+ */
+function Pembuka({ daftarProgram }: { daftarProgram: readonly Program[] }) {
   return (
     <section aria-labelledby="judul" className="pt-3.5 pb-2 lg:pt-6">
-      {/* Kolom kanan di layar lebar disediakan untuk konter cek usia (T10). */}
       <div className="wadah grid gap-3.5 lg:grid-cols-[7fr_5fr] lg:items-end lg:gap-10">
         <div className="grid gap-3.5 lg:gap-5">
           <h1
@@ -121,6 +126,16 @@ function Pembuka() {
             }}
           />
         </div>
+        <KonterCekUsia
+          daftarProgram={daftarProgram.map(
+            ({ id, nama, usiaMinimal, usiaMaksimal }) => ({
+              id,
+              nama,
+              usiaMinimal,
+              usiaMaksimal,
+            }),
+          )}
+        />
       </div>
     </section>
   );

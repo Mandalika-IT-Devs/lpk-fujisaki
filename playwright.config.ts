@@ -19,7 +19,8 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /(statistik-lembaga|kontak|galeri)\.spec\.ts$/,
+      testIgnore:
+        /(statistik-lembaga|kontak|galeri|konter-cek-usia)\.spec\.ts$/,
     },
     // Statistik lembaga berisi satu angka per bidang kerja aktif. Test program dan bidang kerja menambah dan
     // menonaktifkan bidang kerja, jadi test statistik baru berjalan sesudah semua test lain selesai.
@@ -43,6 +44,14 @@ export default defineConfig({
       name: "galeri",
       use: { ...devices["Desktop Chrome"] },
       testMatch: /galeri\.spec\.ts$/,
+      dependencies: ["chromium"],
+    },
+    // Test konter cek usia menonaktifkan program Pelajar sebentar untuk memeriksa pilihan program di Beranda, jadi
+    // berjalan sesudah test program dan test lain yang membaca daftar program aktif selesai.
+    {
+      name: "konter-cek-usia",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /konter-cek-usia\.spec\.ts$/,
       dependencies: ["chromium"],
     },
   ],

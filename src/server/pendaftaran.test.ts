@@ -9,8 +9,18 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // Modul database dimuat sesudah .env.ci dibaca, karena koneksinya memakai DATABASE_URL.
 config({ path: ".env.ci", override: true, quiet: true });
 const { db, tutupDatabase } = await import("./db");
-const { akun, bidangKerja, langkahPendaftaran, pendaftaran, program } =
-  await import("./db/schema");
+const {
+  akun,
+  bidangKerja,
+  drafFormulirPendaftaran,
+  kredensial,
+  langkahPendaftaran,
+  nomorUrutPendaftaran,
+  pendaftaran,
+  program,
+  sesi,
+  verifikasi,
+} = await import("./db/schema");
 const {
   bacaDrafFormulirPendaftaran,
   bacaIsianAwalFormulirPendaftaran,
@@ -23,6 +33,7 @@ const {
   bacaPendaftaran,
   bacaPendaftaranBerjalan,
   bacaPendaftaranDitutup,
+  hapusPermanen,
   kirimPendaftaran,
   tutupPendaftaran,
   ubahIsianPendaftaran,
@@ -760,5 +771,197 @@ describe("pendaftaran ulang sesudah penutupan (issue T16, PRD §6.6, UAT-F5)", (
     expect(daftar.baris).toMatchObject([
       { nomor: nomorLama, status: "Ditutup" },
     ]);
+  });
+});
+
+describe("hapusPermanen oleh Admin (issue T17, PRD §6.4, §12.5)", () => {
+  async function emailAkun(akunId: string): Promise<string> {
+    const [baris] = await db
+      .select({ email: akun.email })
+      .from(akun)
+      .where(eq(akun.id, akunId));
+    return baris.email;
+  }
+
+  /** Semua baris data pribadi milik sebuah akun, per tabel, untuk memeriksa apa yang tersisa. */
+  async function dataAkun(akunId: string) {
+    const nomor = (
+      await db
+        .select({ nomor: pendaftaran.nomor })
+        .from(pendaftaran)
+        .where(eq(pendaftaran.akunId, akunId))
+    ).map((baris) => baris.nomor);
+    const langkah = await db
+      .select({ kode: langkahPendaftaran.kode })
+      .from(langkahPendaftaran)
+      .innerJoin(
+        pendaftaran,
+        eq(pendaftaran.id, langkahPendaftaran.pendaftaranId),
+      )
+      .where(eq(pendaftaran.akunId, akunId));
+    return {
+      akun: await db.select().from(akun).where(eq(akun.id, akunId)),
+      kredensial: await db
+        .select()
+        .from(kredensial)
+        .where(eq(kredensial.userId, akunId)),
+      sesi: await db.select().from(sesi).where(eq(sesi.userId, akunId)),
+      verifikasi: await db
+        .select()
+        .from(verifikasi)
+        .where(eq(verifikasi.value, akunId)),
+      draf: await db
+        .select()
+        .from(drafFormulirPendaftaran)
+        .where(eq(drafFormulirPendaftaran.akunId, akunId)),
+      pendaftaran: nomor,
+      langkah: langkah.length,
+    };
+  }
+
+  /** Akun yang bisa masuk: kredensial, satu sesi aktif, dan satu tautan atur ulang kata sandi yang belum dipakai. */
+  async function lengkapiAkun(akunId: string) {
+    await db.insert(kredensial).values({
+      userId: akunId,
+      accountId: akunId,
+      providerId: "credential",
+      password: "hash-kata-sandi-uji",
+    });
+    await db.insert(sesi).values({
+      userId: akunId,
+      token: `sesi-uji-${randomUUID()}`,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+    await db.insert(verifikasi).values({
+      identifier: `reset-password:${randomUUID()}`,
+      value: akunId,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    });
+  }
+
+  it("Admin menghapus seseorang dengan mengetik email akunnya: akun, kredensial, sesi, tautan, dan semua pendaftarannya hilang, juga dari daftar (UAT-L3)", async () => {
+    const akunId = await buatPemilikAkun();
+    await lengkapiAkun(akunId);
+    const nomorDitutup = await kirimLalu(akunId);
+    await tutupLalu(nomorDitutup);
+    const nomorBerjalan = await kirimLalu(akunId);
+    const sebelum = await dataAkun(akunId);
+    expect(sebelum.pendaftaran.toSorted()).toEqual(
+      [nomorDitutup, nomorBerjalan].toSorted(),
+    );
+    expect(sebelum.langkah).toBe(44);
+    // Orang lain tidak ikut terhapus.
+    const akunLain = await buatPemilikAkun();
+    await lengkapiAkun(akunLain);
+    const nomorLain = await kirimLalu(akunLain);
+
+    expect(await hapusPermanen(nomorBerjalan, await emailAkun(akunId))).toEqual(
+      { hasil: "terhapus" },
+    );
+
+    expect(await dataAkun(akunId)).toEqual({
+      akun: [],
+      kredensial: [],
+      sesi: [],
+      verifikasi: [],
+      draf: [],
+      pendaftaran: [],
+      langkah: 0,
+    });
+    for (const nomor of [nomorDitutup, nomorBerjalan]) {
+      expect(await bacaPendaftaran(nomor)).toBeUndefined();
+      expect((await bacaDaftarPendaftaran({ cari: nomor }, 1)).baris).toEqual(
+        [],
+      );
+    }
+    const lain = await dataAkun(akunLain);
+    expect(lain.akun).toHaveLength(1);
+    expect(lain.kredensial).toHaveLength(1);
+    expect(lain.sesi).toHaveLength(1);
+    expect(lain.verifikasi).toHaveLength(1);
+    expect(lain.pendaftaran).toEqual([nomorLain]);
+  });
+
+  it("konfirmasi dengan nomor pendaftaran itu juga menghapus, termasuk draf formulir pendaftaran barunya (PRD §12.5)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+    await tutupLalu(nomor);
+    await simpanDrafFormulirPendaftaran(akunId, drafLengkap());
+
+    expect(await hapusPermanen(nomor, nomor)).toEqual({ hasil: "terhapus" });
+
+    const sesudah = await dataAkun(akunId);
+    expect(sesudah.akun).toEqual([]);
+    expect(sesudah.draf).toEqual([]);
+    expect(sesudah.pendaftaran).toEqual([]);
+  });
+
+  it("konfirmasi yang salah ketik, kosong, atau milik orang lain ditolak, dan tidak ada yang terhapus", async () => {
+    const akunId = await buatPemilikAkun();
+    await lengkapiAkun(akunId);
+    const nomor = await kirimLalu(akunId);
+    const email = await emailAkun(akunId);
+    const akunLain = await buatPemilikAkun();
+    const nomorLain = await kirimLalu(akunLain);
+    const sebelum = await dataAkun(akunId);
+
+    for (const konfirmasi of [
+      email.slice(0, -1),
+      `${nomor}1`,
+      "",
+      nomorLain,
+      await emailAkun(akunLain),
+    ]) {
+      expect(await hapusPermanen(nomor, konfirmasi)).toEqual({
+        hasil: "konfirmasi-salah",
+      });
+    }
+
+    expect(await dataAkun(akunId)).toEqual(sebelum);
+    expect((await dataAkun(akunLain)).pendaftaran).toEqual([nomorLain]);
+  });
+
+  it("dari halaman pendaftaran barunya, nomor pendaftaran lama orang yang sama bukan konfirmasi; yang diketik adalah nomor halaman itu", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomorLama = await kirimLalu(akunId);
+    await tutupLalu(nomorLama);
+    const nomorBaru = await kirimLalu(akunId);
+
+    expect(await hapusPermanen(nomorBaru, nomorLama)).toEqual({
+      hasil: "konfirmasi-salah",
+    });
+    expect((await dataAkun(akunId)).pendaftaran).toHaveLength(2);
+  });
+
+  it("nomor pendaftaran yang tidak ada tidak menghapus apa pun", async () => {
+    expect(await hapusPermanen("FGC-1999-0003", "FGC-1999-0003")).toEqual({
+      hasil: "tidak-ada",
+    });
+  });
+
+  it("sesudah FGC-2031-0002 dihapus, pendaftaran berikutnya di tahun itu mendapat 0003, bukan 0002 (PRD §6.4)", async () => {
+    // Tahun 2031 hanya dipakai test ini, jadi penghitungnya dimulai dari awal setiap kali test berjalan.
+    await db
+      .delete(akun)
+      .where(
+        sql`${akun.id} in (select ${pendaftaran.akunId} from ${pendaftaran} where ${pendaftaran.nomor} like 'FGC-2031-%')`,
+      );
+    await db
+      .delete(nomorUrutPendaftaran)
+      .where(eq(nomorUrutPendaftaran.tahun, 2031));
+    const dikirim2031 = new Date("2031-03-10T03:00:00Z");
+    const kirim2031 = async (akunId: string) => {
+      const hasil = await kirimPendaftaran(akunId, drafLengkap(), dikirim2031);
+      return hasil.hasil === "terkirim" ? hasil.nomorPendaftaran : hasil;
+    };
+
+    expect(await kirim2031(await buatPemilikAkun())).toBe("FGC-2031-0001");
+    const akunKedua = await buatPemilikAkun();
+    expect(await kirim2031(akunKedua)).toBe("FGC-2031-0002");
+    expect(
+      await hapusPermanen("FGC-2031-0002", await emailAkun(akunKedua)),
+    ).toEqual({ hasil: "terhapus" });
+
+    expect(await kirim2031(await buatPemilikAkun())).toBe("FGC-2031-0003");
   });
 });

@@ -22,6 +22,7 @@ import {
   type StatusPendaftaran,
   type SyaratKirimGagal,
 } from "@/domain/pendaftaran";
+import { konfirmasiPenghapusanCocok } from "@/domain/penghapusan";
 import {
   type AlasanPenutupan,
   type PenutupanGagal,
@@ -36,6 +37,7 @@ import {
   nomorUrutPendaftaran,
   pendaftaran,
   program,
+  verifikasi,
 } from "./db/schema";
 import type { DrafFormulirPendaftaran } from "./formulir-pendaftaran";
 
@@ -458,6 +460,51 @@ export async function tutupPendaftaran(
       })
       .where(eq(pendaftaran.id, tercatat.id));
     return { hasil: "ditutup" };
+  });
+}
+
+export type HasilHapusPermanen =
+  | { hasil: "terhapus" }
+  | { hasil: "konfirmasi-salah" }
+  | { hasil: "tidak-ada" };
+
+/**
+ * Admin menghapus secara permanen orang yang memiliki pendaftaran `nomor` (PRD §12.5), dengan `konfirmasi` berupa
+ * nomor pendaftaran itu atau email akunnya. Yang terhapus adalah akunnya beserta semua datanya: kredensial, sesi (jadi
+ * setiap perangkat yang masih masuk ikut keluar), tautan atur ulang kata sandi yang belum dipakai, draf formulir
+ * pendaftaran, dan semua pendaftarannya beserta langkahnya, apa pun statusnya. Konfirmasi yang tidak cocok tidak
+ * menghapus apa pun. Penghitung nomor urut tidak ikut turun, jadi nomor pendaftarannya tidak pernah dipakai ulang
+ * (§6.4). Kewenangan Admin diperiksa pemanggilnya.
+ *
+ * Baris akun dikunci lebih dulu dalam satu transaksi, jadi penghapusan dan pengiriman formulir oleh orang itu pada saat
+ * yang sama bergiliran: pengiriman yang datang sesudahnya ditolak karena akunnya sudah tidak ada, dan pendaftaran yang
+ * terkirim sebelumnya ikut terhapus.
+ */
+export async function hapusPermanen(
+  nomor: string,
+  konfirmasi: string,
+): Promise<HasilHapusPermanen> {
+  return db.transaction(async (tx) => {
+    const [orang] = await tx
+      .select({ akunId: akun.id, email: akun.email })
+      .from(pendaftaran)
+      .innerJoin(akun, eq(akun.id, pendaftaran.akunId))
+      .where(eq(pendaftaran.nomor, nomor))
+      .for("update", { of: akun });
+    if (!orang) return { hasil: "tidak-ada" };
+    if (
+      !konfirmasiPenghapusanCocok(konfirmasi, {
+        nomorPendaftaran: nomor,
+        email: orang.email,
+      })
+    ) {
+      return { hasil: "konfirmasi-salah" };
+    }
+    // Token atur ulang kata sandi Better Auth menyimpan id akun sebagai nilainya, tanpa foreign key ke akun.
+    await tx.delete(verifikasi).where(eq(verifikasi.value, orang.akunId));
+    // Kredensial, sesi, draf, pendaftaran, dan langkahnya ikut terhapus lewat foreign key on delete cascade.
+    await tx.delete(akun).where(eq(akun.id, orang.akunId));
+    return { hasil: "terhapus" };
   });
 }
 

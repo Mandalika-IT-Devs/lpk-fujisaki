@@ -2,14 +2,16 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { forbidden } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { z } from "zod";
 import type { IsianWajib } from "@/domain/formulir-pendaftaran";
 import { bolehMembukaMenu } from "@/domain/panel-pegawai";
+import { bolehMenghapusPermanen } from "@/domain/penghapusan";
 import { ALASAN_PENUTUPAN, type PenutupanGagal } from "@/domain/penutupan";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
 import {
   bacaPendaftaran,
+  hapusPermanen,
   tutupPendaftaran,
   ubahIsianPendaftaran,
 } from "@/server/pendaftaran";
@@ -29,8 +31,10 @@ import { pastikanPegawai } from "../../../penjaga";
 import type { Pesan } from "../../pesan-tindakan";
 import {
   alamatPendaftaran,
+  alamatSesudahHapusPermanen,
   skemaNomorPendaftaran,
 } from "../alamat-pendaftaran";
+import { ALAMAT_DAFTAR_PENDAFTARAN } from "../saringan";
 
 // Mengubah isian formulir pendaftaran yang sudah dikirim hanya untuk Staf dan Admin (PRD §2.2, §6.5). Kewenangan
 // diperiksa di server pada setiap tindakan, jadi permintaan langsung dari pemilik akun atau pengunjung juga ditolak.
@@ -294,4 +298,67 @@ export async function tutupPendaftaranDariPanel(
     console.error(galat);
     return ditolak([peringatan(PESAN_GANGGUAN_TUTUP)]);
   }
+}
+
+// Hapus permanen hanya untuk Admin (PRD §2.2, §12.5). Kewenangan diperiksa di server pada setiap tindakan, jadi
+// permintaan langsung dari Staf ditolak, dan konfirmasi diperiksa di server dengan aturan domain sebelum apa pun dihapus.
+
+export type KeadaanHapusPermanen = {
+  /** Hasil tindakan terakhir yang ditolak; penghapusan yang berhasil membawa Admin ke daftar pendaftaran. */
+  pesan: Pesan | null;
+  /** Ketikan konfirmasi terakhir, supaya ketikan yang ditolak bisa diperbaiki. */
+  konfirmasi: string;
+  /** Pesan pada isian konfirmasi bila konfirmasinya tidak cocok. */
+  galat: string | null;
+  /** Kunci baru setiap kali formulir diproses, supaya isian dipasang ulang dari ketikan terakhir. */
+  versi: string;
+};
+
+const PESAN_KONFIRMASI_SALAH =
+  "Data belum dihapus karena konfirmasi tidak cocok dengan nomor pendaftaran atau email akun pemiliknya. Periksa ketikannya, lalu hapus lagi.";
+
+const PESAN_GANGGUAN_HAPUS =
+  "Data belum dihapus karena gangguan di server. Coba hapus lagi beberapa saat lagi; bila tetap gagal, hubungi pengelola server lembaga.";
+
+/** Ketikan konfirmasi seperti yang dikirim browser; isian yang tidak ada dibaca kosong, dan kosong tidak pernah cocok. */
+const skemaKonfirmasi = z.string().catch("");
+
+/**
+ * Admin menghapus permanen pemilik sebuah pendaftaran, beserta akunnya dan semua pendaftarannya (PRD §12.5), sesudah
+ * mengetik nomor pendaftaran itu atau email akun pemiliknya. Keadaan sebelumnya yang dikirim browser tidak dipakai.
+ * Sesudah terhapus, Admin dibawa ke daftar pendaftaran, yang menampilkan kabar penghapusannya.
+ */
+export async function hapusPermanenDariPanel(
+  _sebelum: unknown,
+  formulir: FormData,
+): Promise<KeadaanHapusPermanen> {
+  const pegawai = await pastikanPegawai();
+  const nomor = skemaNomorPendaftaran.safeParse(formulir.get("nomor"));
+  const konfirmasi = skemaKonfirmasi.parse(formulir.get("konfirmasi"));
+  if (!bolehMenghapusPermanen(pegawai.peran)) forbidden();
+
+  const ditolak = (teks: string, galat: string | null = null) => ({
+    pesan: peringatan(teks),
+    konfirmasi,
+    galat,
+    versi: randomUUID(),
+  });
+  if (!nomor.success) return ditolak(PESAN_TIDAK_ADA);
+
+  try {
+    const hasil = await hapusPermanen(nomor.data, konfirmasi);
+    if (hasil.hasil === "tidak-ada") return ditolak(PESAN_TIDAK_ADA);
+    if (hasil.hasil === "konfirmasi-salah") {
+      return ditolak(
+        PESAN_KONFIRMASI_SALAH,
+        `Konfirmasi tidak cocok. Ketik nomor pendaftaran ${nomor.data} atau email akun pemiliknya persis seperti tercatat.`,
+      );
+    }
+  } catch (galat) {
+    console.error(galat);
+    return ditolak(PESAN_GANGGUAN_HAPUS);
+  }
+  revalidatePath(ALAMAT_DAFTAR_PENDAFTARAN, "layout");
+  // redirect dipanggil di luar try, karena ia bekerja dengan melempar galat khusus Next.js.
+  redirect(alamatSesudahHapusPermanen(nomor.data));
 }

@@ -6,6 +6,7 @@ import { IkonPanahKiri } from "@/components/ikon";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
 import type { StatusLangkah } from "@/domain/pendaftaran";
+import { bolehMenghapusPermanen } from "@/domain/penghapusan";
 import { alasanPenutupanDiTahap, bisaDitutup } from "@/domain/penutupan";
 import { TAHAP } from "@/domain/tahap";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
@@ -14,9 +15,14 @@ import {
   keIdPilihan,
   keIsianFormulir,
 } from "@/app/(publik)/akun/formulir-pendaftaran/isian-formulir";
-import { metadataMenu, pastikanBolehMembuka } from "../../../penjaga";
+import {
+  metadataMenu,
+  pastikanBolehMembuka,
+  pastikanPegawai,
+} from "../../../penjaga";
 import { skemaNomorPendaftaran } from "../alamat-pendaftaran";
 import { ALAMAT_DAFTAR_PENDAFTARAN } from "../saringan";
+import { FormulirHapusPermanen } from "./formulir-hapus-permanen";
 import { FormulirTutupPendaftaran } from "./formulir-tutup-pendaftaran";
 import { FormulirUbahIsian } from "./formulir-ubah-isian";
 
@@ -57,12 +63,14 @@ function Baris({ label, children }: { label: string; children: ReactNode }) {
  * status, tahap, langkah tahap 1 beserta statusnya (hanya untuk dibaca), isian formulir pendaftaran yang bisa diubah
  * pegawai (§2.2, §6.5), dan penutupan (§7.5). Program dan bidang kerja yang tercatat tetap bisa dipilih meski sudah
  * dinonaktifkan (§4.3), dan ditandai nonaktif. Pendaftaran Berjalan bisa ditutup dari sini; pendaftaran yang Ditutup
- * menampilkan alasan dan keterangan penutupannya, tanpa cara membukanya kembali.
+ * menampilkan alasan dan keterangan penutupannya, tanpa cara membukanya kembali. Hanya Admin yang melihat bagian hapus
+ * permanen (§2.2, §12.5).
  */
 export default async function HalamanPendaftaran({
   params,
 }: PageProps<"/panel/pendaftaran/[nomor]">) {
   await pastikanBolehMembuka(KUNCI_MENU);
+  const pegawai = await pastikanPegawai();
   const nomor = skemaNomorPendaftaran.safeParse((await params).nomor);
   const pendaftaran = nomor.success
     ? await bacaPendaftaran(nomor.data)
@@ -206,6 +214,24 @@ export default async function HalamanPendaftaran({
             nomor={pendaftaran.nomor}
             pilihanAlasan={alasanPenutupanDiTahap(pendaftaran.tahap)}
             idJudul="judul-tutup-pendaftaran"
+          />
+        </section>
+      )}
+
+      {bolehMenghapusPermanen(pegawai.peran) && (
+        <section aria-labelledby="judul-hapus-permanen" className="grid gap-4">
+          <h2 id="judul-hapus-permanen" className={GAYA_JUDUL_BAGIAN}>
+            Hapus permanen
+          </h2>
+          <p className="max-w-[60ch] text-teks-2">
+            Akun pemilik pendaftaran ini dihapus beserta semua pendaftarannya,
+            termasuk yang sudah ditutup. Pemiliknya tidak bisa masuk lagi, dan
+            penghapusan ini tidak bisa dibatalkan. Nomor pendaftarannya tidak
+            dipakai ulang.
+          </p>
+          <FormulirHapusPermanen
+            nomor={pendaftaran.nomor}
+            idJudul="judul-hapus-permanen"
           />
         </section>
       )}

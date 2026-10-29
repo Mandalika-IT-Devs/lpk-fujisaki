@@ -57,6 +57,13 @@
       "when": 1792841462116,
       "tag": "0007_isi_awal_kontak",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792842849575,
+      "tag": "0008_foto_galeri",
+      "breakpoints": true
     }
   ]
 }

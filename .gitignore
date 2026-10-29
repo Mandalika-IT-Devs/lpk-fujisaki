@@ -9,6 +9,9 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 
+# Gallery photos uploaded on a local machine (FOLDER_FOTO_GALERI in .env.example)
+/data/
+
 # Test output
 test-results/
 playwright-report/

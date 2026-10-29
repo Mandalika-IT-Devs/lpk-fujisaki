@@ -7,7 +7,9 @@ import { TAHAP } from "@/domain/tahap";
 import { formatTanggal } from "@/lib/format";
 import {
   bacaPendaftaranBerjalan,
+  bacaPendaftaranDitutup,
   type PendaftaranBerjalan,
+  type PendaftaranDitutup,
 } from "@/server/pendaftaran";
 import { pastikanPemilikAkun } from "../penjaga-akun";
 import { keluarAkun } from "./aksi";
@@ -20,13 +22,16 @@ import { PengingatVerifikasiEmail } from "./pengingat-verifikasi-email";
 export const metadata: Metadata = { title: "Akunmu" };
 
 /**
- * Halaman akun pemilik akun (issue T11, T13): pendaftaran Berjalan miliknya, atau ajakan mengisi formulir pendaftaran
- * bila belum ada; dan pengingat verifikasi email selama emailnya belum terverifikasi (PRD §5.3). Halaman ini hanya
- * untuk pemilik akun (§2.2).
+ * Halaman akun pemilik akun (issue T11, T13, T16): pendaftaran Berjalan miliknya, atau ajakan mengisi formulir
+ * pendaftaran bila tidak ada; pendaftaran miliknya yang Ditutup beserta alasannya (PRD §2.3, ▶ Keputusan OD-14); dan
+ * pengingat verifikasi email selama emailnya belum terverifikasi (§5.3). Halaman ini hanya untuk pemilik akun (§2.2).
  */
 export default async function HalamanAkun() {
   const pemilikAkun = await pastikanPemilikAkun();
-  const pendaftaran = await bacaPendaftaranBerjalan(pemilikAkun.id);
+  const [pendaftaran, ditutup] = await Promise.all([
+    bacaPendaftaranBerjalan(pemilikAkun.id),
+    bacaPendaftaranDitutup(pemilikAkun.id),
+  ]);
 
   return (
     <main className="wadah pt-8 pb-pad lg:pt-12 lg:pb-pad-lebar">
@@ -66,11 +71,20 @@ export default async function HalamanAkun() {
               >
                 Isi formulir pendaftaran
               </h2>
-              <p className="max-w-[60ch]">
-                Pilih program dan isi data dirimu. Formulir bisa disimpan
-                sebagai draf dan dilanjutkan kapan saja, lalu dikirim bila sudah
-                lengkap.
-              </p>
+              {ditutup.length > 0 ? (
+                <p className="max-w-[60ch]">
+                  Pendaftaranmu sudah ditutup, tetapi kamu bisa mendaftar lagi.
+                  Formulir dimulai dari isian pendaftaranmu yang terakhir, atau
+                  dari draf yang sudah kamu simpan. Periksa isiannya, lalu kirim
+                  untuk mendapat nomor pendaftaran baru.
+                </p>
+              ) : (
+                <p className="max-w-[60ch]">
+                  Pilih program dan isi data dirimu. Formulir bisa disimpan
+                  sebagai draf dan dilanjutkan kapan saja, lalu dikirim bila
+                  sudah lengkap.
+                </p>
+              )}
             </div>
             <TombolUtama
               href={ALAMAT_FORMULIR_PENDAFTARAN}
@@ -80,8 +94,61 @@ export default async function HalamanAkun() {
             </TombolUtama>
           </section>
         )}
+
+        {ditutup.length > 0 && <DaftarPendaftaranDitutup ditutup={ditutup} />}
       </div>
     </main>
+  );
+}
+
+/**
+ * Pendaftaran pemilik akun yang Ditutup, dari yang paling baru dikirim (PRD §2.3, ▶ Keputusan OD-14): nomor
+ * pendaftaran, program, status Ditutup, dan alasan penutupannya, tanpa keterangan penutupan. Status tampil sebagai
+ * teks biasa, karena docs/DESIGN.md belum menetapkan chip Ditutup.
+ */
+function DaftarPendaftaranDitutup({
+  ditutup,
+}: {
+  ditutup: PendaftaranDitutup[];
+}) {
+  return (
+    <section aria-labelledby="judul-pendaftaran-ditutup" className="grid gap-3">
+      <h2
+        id="judul-pendaftaran-ditutup"
+        className="font-papan text-title-kecil"
+      >
+        Pendaftaran yang ditutup
+      </h2>
+      <ul className="grid gap-4">
+        {ditutup.map((pendaftaran) => (
+          <li
+            key={pendaftaran.nomor}
+            className="grid gap-3 rounded-sudut bg-dasar p-4 shadow-papan lg:p-6"
+          >
+            <div>
+              <p className="font-papan text-nomor">{pendaftaran.nomor}</p>
+              <p className="mt-1 text-body-kecil text-teks-2">
+                {pendaftaran.program}
+              </p>
+            </div>
+            <dl className="grid border-t-2 border-navy sm:grid-cols-2 sm:gap-x-6">
+              <div className="border-b border-garis py-3">
+                <dt className="text-keterangan font-semibold text-teks-2">
+                  Status
+                </dt>
+                <dd className="mt-0.5 font-semibold">{pendaftaran.status}</dd>
+              </div>
+              <div className="border-b border-garis py-3">
+                <dt className="text-keterangan font-semibold text-teks-2">
+                  Alasan penutupan
+                </dt>
+                <dd className="mt-0.5 font-semibold">{pendaftaran.alasan}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

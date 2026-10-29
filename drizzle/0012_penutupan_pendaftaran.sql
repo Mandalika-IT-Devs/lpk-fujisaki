@@ -1,0 +1,5 @@
+ALTER TABLE "pendaftaran" ADD COLUMN "alasan_penutupan" text;--> statement-breakpoint
+ALTER TABLE "pendaftaran" ADD COLUMN "keterangan_penutupan" text;--> statement-breakpoint
+ALTER TABLE "pendaftaran" ADD CONSTRAINT "pendaftaran_alasan_penutupan_sah" CHECK ("pendaftaran"."alasan_penutupan" in ('Tidak lolos seleksi', 'Mundur', 'Dikeluarkan'));--> statement-breakpoint
+ALTER TABLE "pendaftaran" ADD CONSTRAINT "pendaftaran_penutupan_hanya_saat_ditutup" CHECK (("pendaftaran"."status" = 'Ditutup') = ("pendaftaran"."alasan_penutupan" is not null) and ("pendaftaran"."alasan_penutupan" is null) = ("pendaftaran"."keterangan_penutupan" is null));--> statement-breakpoint
+ALTER TABLE "pendaftaran" ADD CONSTRAINT "pendaftaran_keterangan_penutupan_terisi" CHECK (btrim("pendaftaran"."keterangan_penutupan") <> '');

@@ -1,4 +1,4 @@
-import { and, asc, eq, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, type SQL, sql } from "drizzle-orm";
 import {
   bagiHalaman,
   type HalamanDaftar,
@@ -22,6 +22,11 @@ import {
   type StatusPendaftaran,
   type SyaratKirimGagal,
 } from "@/domain/pendaftaran";
+import {
+  type AlasanPenutupan,
+  type PenutupanGagal,
+  periksaPenutupan,
+} from "@/domain/penutupan";
 import { db } from "./db";
 import {
   akun,
@@ -179,7 +184,14 @@ export async function kirimPendaftaran(
  */
 type IsianPendaftaran = Omit<
   typeof pendaftaran.$inferSelect,
-  "id" | "akunId" | "nomor" | "dikirimPada" | "status" | "tahap"
+  | "id"
+  | "akunId"
+  | "nomor"
+  | "dikirimPada"
+  | "status"
+  | "tahap"
+  | "alasanPenutupan"
+  | "keteranganPenutupan"
 >;
 
 /** Kolom isian formulir pendaftaran di tabel pendaftaran, dalam urutan PRD §6.1. */
@@ -202,10 +214,13 @@ const KOLOM_ISIAN = {
   nomorHpKontakDarurat: pendaftaran.nomorHpKontakDarurat,
 };
 
+/** Alasan dan keterangan penutupan sebuah pendaftaran yang Ditutup (PRD §7.5). */
+type Penutupan = { alasan: AlasanPenutupan; keterangan: string };
+
 /**
- * Satu pendaftaran: nomor pendaftaran, status, tahap saat ini, dan isian formulir pendaftarannya. Nama program dan
- * bidang kerja ikut dibaca, juga bila keduanya sudah dinonaktifkan (§4.3); bidang kerja berisi "Belum tahu" bila itu
- * yang dipilih.
+ * Satu pendaftaran: nomor pendaftaran, status, tahap saat ini, isian formulir pendaftarannya, dan penutupannya (null
+ * bila tidak Ditutup). Nama program dan bidang kerja ikut dibaca, juga bila keduanya sudah dinonaktifkan (§4.3);
+ * bidang kerja berisi "Belum tahu" bila itu yang dipilih.
  */
 type Pendaftaran = {
   nomor: string;
@@ -214,6 +229,7 @@ type Pendaftaran = {
   program: string;
   bidangKerja: string;
   isian: IsianPendaftaran;
+  penutupan: Penutupan | null;
 };
 
 /** Pendaftaran pertama yang memenuhi `syarat`, atau undefined bila tidak ada. */
@@ -228,21 +244,34 @@ async function bacaSatuPendaftaran(
       program: program.nama,
       namaBidangKerja: bidangKerja.nama,
       isian: KOLOM_ISIAN,
+      alasanPenutupan: pendaftaran.alasanPenutupan,
+      keteranganPenutupan: pendaftaran.keteranganPenutupan,
     })
     .from(pendaftaran)
     .innerJoin(program, eq(program.id, pendaftaran.programId))
     .leftJoin(bidangKerja, eq(bidangKerja.id, pendaftaran.bidangKerjaId))
     .where(syarat);
   if (!baris) return undefined;
-  const { namaBidangKerja, ...isi } = baris;
-  return { ...isi, bidangKerja: namaBidangKerja ?? BIDANG_KERJA_BELUM_TAHU };
+  const { namaBidangKerja, alasanPenutupan, keteranganPenutupan, ...isi } =
+    baris;
+  return {
+    ...isi,
+    bidangKerja: namaBidangKerja ?? BIDANG_KERJA_BELUM_TAHU,
+    // Database menjaga keduanya diisi bersama, hanya untuk pendaftaran yang Ditutup.
+    penutupan:
+      alasanPenutupan !== null && keteranganPenutupan !== null
+        ? { alasan: alasanPenutupan, keterangan: keteranganPenutupan }
+        : null,
+  };
 }
 
 /**
  * Pendaftaran Berjalan seperti yang dilihat pemiliknya di halaman akun (PRD §2.3): nomor, program, status, tahap, dan
  * isian formulir pendaftarannya, termasuk perubahan oleh pegawai (§6.5).
  */
-export type PendaftaranBerjalan = Pendaftaran & { status: "Berjalan" };
+export type PendaftaranBerjalan = Omit<Pendaftaran, "penutupan"> & {
+  status: "Berjalan";
+};
 
 /** Pendaftaran Berjalan milik sebuah akun, atau undefined bila tidak ada. */
 export async function bacaPendaftaranBerjalan(
@@ -251,7 +280,73 @@ export async function bacaPendaftaranBerjalan(
   const baris = await bacaSatuPendaftaran(
     and(eq(pendaftaran.akunId, akunId), eq(pendaftaran.status, "Berjalan")),
   );
-  return baris && { ...baris, status: "Berjalan" };
+  if (!baris) return undefined;
+  return {
+    nomor: baris.nomor,
+    status: "Berjalan",
+    tahap: baris.tahap,
+    program: baris.program,
+    bidangKerja: baris.bidangKerja,
+    isian: baris.isian,
+  };
+}
+
+/**
+ * Pendaftaran Ditutup seperti yang dilihat pemiliknya di halaman akun (PRD §2.3, ▶ Keputusan OD-14): nomor, program,
+ * status Ditutup, dan alasan penutupannya. Keterangan penutupan hanya untuk pegawai, jadi tidak ikut dibaca.
+ */
+export type PendaftaranDitutup = {
+  nomor: string;
+  program: string;
+  status: "Ditutup";
+  alasan: AlasanPenutupan;
+};
+
+/** Semua pendaftaran Ditutup milik sebuah akun, dari yang paling baru dikirim. */
+export async function bacaPendaftaranDitutup(
+  akunId: string,
+): Promise<PendaftaranDitutup[]> {
+  const semua = await db
+    .select({
+      nomor: pendaftaran.nomor,
+      program: program.nama,
+      alasan: pendaftaran.alasanPenutupan,
+    })
+    .from(pendaftaran)
+    .innerJoin(program, eq(program.id, pendaftaran.programId))
+    .where(
+      and(eq(pendaftaran.akunId, akunId), eq(pendaftaran.status, "Ditutup")),
+    )
+    .orderBy(desc(pendaftaran.dikirimPada), desc(pendaftaran.nomor));
+  return semua.map(({ alasan, ...isi }) => {
+    if (alasan === null) {
+      throw new Error(
+        `Pendaftaran ${isi.nomor} berstatus Ditutup tanpa alasan penutupan. Periksa CHECK pendaftaran_penutupan_hanya_saat_ditutup di database.`,
+      );
+    }
+    return { ...isi, status: "Ditutup", alasan };
+  });
+}
+
+/**
+ * Saat kirim, status, dan isian formulir setiap pendaftaran milik sebuah akun, sebagai bahan isian awal formulir
+ * pendaftaran ulang (§6.6).
+ */
+export async function bacaIsianPendaftaranAkun(akunId: string): Promise<
+  {
+    status: StatusPendaftaran;
+    dikirimPada: Date;
+    isian: IsianPendaftaran;
+  }[]
+> {
+  return db
+    .select({
+      status: pendaftaran.status,
+      dikirimPada: pendaftaran.dikirimPada,
+      isian: KOLOM_ISIAN,
+    })
+    .from(pendaftaran)
+    .where(eq(pendaftaran.akunId, akunId));
 }
 
 /** Pendaftaran dengan nomor pendaftaran tertentu, atau undefined bila tidak ada. */
@@ -321,6 +416,49 @@ export async function ubahIsianPendaftaran(
     .where(eq(pendaftaran.nomor, nomor))
     .returning({ nomor: pendaftaran.nomor });
   return diubah ? { hasil: "tersimpan" } : { hasil: "tidak-ada" };
+}
+
+export type HasilTutupPendaftaran =
+  | { hasil: "ditutup" }
+  | { hasil: "ditolak"; gagal: PenutupanGagal[] }
+  | { hasil: "tidak-ada" };
+
+/**
+ * Pegawai menutup sebuah pendaftaran (PRD §7.5) dengan alasan (null bila belum dipilih) dan keterangan. Bila syarat
+ * penutupan terpenuhi, statusnya menjadi Ditutup beserta alasan dan keterangannya; bila tidak, tidak ada yang berubah.
+ * Tidak ada jalan sebaliknya: pendaftaran yang Ditutup tidak bisa dibuka kembali atau ditutup lagi.
+ *
+ * Baris pendaftaran dikunci lebih dulu dalam satu transaksi, jadi dua penutupan bersamaan bergiliran, dan yang kedua
+ * melihat pendaftaran itu sudah Ditutup.
+ */
+export async function tutupPendaftaran(
+  nomor: string,
+  penutupan: { alasan: AlasanPenutupan | null; keterangan: string },
+): Promise<HasilTutupPendaftaran> {
+  return db.transaction(async (tx) => {
+    const [tercatat] = await tx
+      .select({
+        id: pendaftaran.id,
+        status: pendaftaran.status,
+        tahap: pendaftaran.tahap,
+      })
+      .from(pendaftaran)
+      .where(eq(pendaftaran.nomor, nomor))
+      .for("update");
+    if (!tercatat) return { hasil: "tidak-ada" };
+
+    const periksa = periksaPenutupan({ ...tercatat, ...penutupan });
+    if (!periksa.boleh) return { hasil: "ditolak", gagal: periksa.gagal };
+    await tx
+      .update(pendaftaran)
+      .set({
+        status: "Ditutup",
+        alasanPenutupan: periksa.alasan,
+        keteranganPenutupan: periksa.keterangan,
+      })
+      .where(eq(pendaftaran.id, tercatat.id));
+    return { hasil: "ditutup" };
+  });
 }
 
 /**

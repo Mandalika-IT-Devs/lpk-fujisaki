@@ -27,6 +27,7 @@ import {
   STATUS_LANGKAH,
   STATUS_PENDAFTARAN,
 } from "../../domain/pendaftaran";
+import { ALASAN_PENUTUPAN } from "../../domain/penutupan";
 import { TAHAP } from "../../domain/tahap";
 
 // Empat tabel Better Auth (src/server/auth.ts) dengan nama tabel berbahasa Indonesia:
@@ -320,7 +321,8 @@ export const drafFormulirPendaftaran = pgTable(
 /**
  * Satu pendaftaran: nomor pendaftaran, saat dikirim, status (Berjalan, Ditutup, Selesai), tahap saat ini (1–6), dan
  * isian formulir pendaftaran yang dikirim. Program dan bidang kerja yang dinonaktifkan sesudahnya tetap tercatat
- * (§4.3). Satu akun hanya punya satu pendaftaran Berjalan (§6.6), dijaga indeks unik sebagian.
+ * (§4.3). Satu akun hanya punya satu pendaftaran Berjalan (§6.6), dijaga indeks unik sebagian. Pendaftaran yang
+ * Ditutup selalu punya alasan dan keterangan penutupan, dan hanya pendaftaran yang Ditutup yang punya keduanya (§7.5).
  */
 export const pendaftaran = pgTable(
   "pendaftaran",
@@ -360,6 +362,9 @@ export const pendaftaran = pgTable(
     namaKontakDarurat: text("nama_kontak_darurat").notNull(),
     hubunganKontakDarurat: text("hubungan_kontak_darurat").notNull(),
     nomorHpKontakDarurat: text("nomor_hp_kontak_darurat").notNull(),
+    // Penutupan (§7.5): keterangan hanya terlihat oleh pegawai (▶ Keputusan OD-14).
+    alasanPenutupan: text("alasan_penutupan", { enum: ALASAN_PENUTUPAN }),
+    keteranganPenutupan: text("keterangan_penutupan"),
   },
   (t) => [
     index("pendaftaran_akun_id_idx").on(t.akunId),
@@ -397,6 +402,19 @@ export const pendaftaran = pgTable(
     check(
       "pendaftaran_tepat_satu_pilihan_bidang_kerja",
       sql`(${t.bidangKerjaId} is not null) <> ${t.bidangKerjaBelumTahu}`,
+    ),
+    check(
+      "pendaftaran_alasan_penutupan_sah",
+      salahSatuPilihan(t.alasanPenutupan, ALASAN_PENUTUPAN),
+    ),
+    // Alasan dan keterangan penutupan diisi bersama, tepat saat pendaftaran Ditutup; keterangan tidak boleh kosong.
+    check(
+      "pendaftaran_penutupan_hanya_saat_ditutup",
+      sql`(${t.status} = 'Ditutup') = (${t.alasanPenutupan} is not null) and (${t.alasanPenutupan} is null) = (${t.keteranganPenutupan} is null)`,
+    ),
+    check(
+      "pendaftaran_keterangan_penutupan_terisi",
+      sql`btrim(${t.keteranganPenutupan}) <> ''`,
     ),
   ],
 );

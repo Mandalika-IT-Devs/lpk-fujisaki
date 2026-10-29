@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isianAwalFormulirPendaftaran,
   pendaftaranBaru,
   periksaIsianWajib,
   periksaSyaratKirim,
@@ -320,5 +321,69 @@ describe("periksaUbahIsian", () => {
       belumDiisi: ["tanggalLahir"],
       tanggalLahirTidakBenar: false,
     });
+  });
+});
+
+// Ekspektasi dari PRD §6.6: isian lama boleh dipakai sebagai isian awal pendaftaran ulang.
+describe("isianAwalFormulirPendaftaran (PRD §6.6)", () => {
+  const ISIAN_DITUTUP_LAMA = { namaLengkap: "Isian Ditutup 2025" };
+  const ISIAN_DITUTUP_BARU = { namaLengkap: "Isian Ditutup 2026" };
+  const DITUTUP = [
+    {
+      status: "Ditutup" as const,
+      dikirimPada: new Date("2025-03-10T03:00:00Z"),
+      isian: ISIAN_DITUTUP_LAMA,
+    },
+    {
+      status: "Ditutup" as const,
+      dikirimPada: new Date("2026-02-01T03:00:00Z"),
+      isian: ISIAN_DITUTUP_BARU,
+    },
+  ];
+
+  it("tanpa draf dan tanpa pendaftaran: tidak ada isian awal", () => {
+    expect(
+      isianAwalFormulirPendaftaran({ draf: undefined, pendaftaran: [] }),
+    ).toBeUndefined();
+  });
+
+  it("tanpa draf: isian pendaftaran Ditutup yang paling baru dikirim", () => {
+    expect(
+      isianAwalFormulirPendaftaran({ draf: undefined, pendaftaran: DITUTUP }),
+    ).toEqual(ISIAN_DITUTUP_BARU);
+    expect(
+      isianAwalFormulirPendaftaran({
+        draf: undefined,
+        pendaftaran: DITUTUP.toReversed(),
+      }),
+    ).toEqual(ISIAN_DITUTUP_BARU);
+  });
+
+  it("draf yang sudah disimpan sesudah penutupan lebih dulu dipakai daripada isian lama", () => {
+    const draf = { namaLengkap: "Isian Draf" };
+    expect(
+      isianAwalFormulirPendaftaran({ draf, pendaftaran: DITUTUP }),
+    ).toEqual(draf);
+  });
+
+  it("hanya isian pendaftaran Ditutup yang dipakai, bukan yang Berjalan atau Selesai", () => {
+    expect(
+      isianAwalFormulirPendaftaran({
+        draf: undefined,
+        pendaftaran: [
+          DITUTUP[0],
+          {
+            status: "Selesai",
+            dikirimPada: new Date("2026-05-01T03:00:00Z"),
+            isian: { namaLengkap: "Isian Selesai" },
+          },
+          {
+            status: "Berjalan",
+            dikirimPada: new Date("2026-06-01T03:00:00Z"),
+            isian: { namaLengkap: "Isian Berjalan" },
+          },
+        ],
+      }),
+    ).toEqual(ISIAN_DITUTUP_LAMA);
   });
 });

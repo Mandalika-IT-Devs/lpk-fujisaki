@@ -120,7 +120,7 @@ export async function simpanFotoGaleri(foto: {
 }): Promise<FotoGaleri> {
   if (!JENIS_BERKAS_FOTO_GALERI.includes(foto.jenisBerkas)) {
     throw new Error(
-      `Jenis berkas ${foto.jenisBerkas} bukan jenis foto galeri yang disimpan.`,
+      `Jenis berkas ${foto.jenisBerkas} bukan jenis foto galeri yang disimpan, padahal galeri hanya menyimpan foto JPG, PNG, atau WebP (${JENIS_BERKAS_FOTO_GALERI.join(", ")}). Periksa berkasnya dengan periksaSyaratUnggahFotoGaleri (src/domain/foto-galeri.ts) memakai jenis dari kenaliJenisBerkas, lalu panggil simpanFotoGaleri hanya untuk foto yang diterima.`,
     );
   }
   const namaBerkas = `${randomUUID()}.${akhiranBerkas(foto.jenisBerkas)}`;

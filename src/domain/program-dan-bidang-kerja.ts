@@ -52,3 +52,15 @@ export function bisaDipilihDiFormulirPendaftaran<T extends { aktif: boolean }>(
 ): T[] {
   return daftar.filter((isi) => isi.aktif);
 }
+
+/**
+ * Saat pegawai mengubah isian formulir sebuah pendaftaran, yang bisa dipilih adalah program atau bidang kerja aktif,
+ * ditambah yang tercatat pada pendaftaran itu meski sudah dinonaktifkan, karena yang nonaktif tetap tercatat pada
+ * pendaftaran yang sudah memakainya (PRD §4.3). `idTercatat` null bila pendaftaran itu tidak mencatat satu pun,
+ * misalnya bidang kerja "Belum tahu". Urutan daftar dipertahankan.
+ */
+export function bisaDipilihSaatPegawaiMengubahIsian<
+  T extends { id: number; aktif: boolean },
+>(daftar: readonly T[], idTercatat: number | null): T[] {
+  return daftar.filter((isi) => isi.aktif || isi.id === idTercatat);
+}

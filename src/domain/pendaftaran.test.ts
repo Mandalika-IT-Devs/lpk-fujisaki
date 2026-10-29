@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { pendaftaranBaru, periksaSyaratKirim } from "./pendaftaran";
+import {
+  pendaftaranBaru,
+  periksaIsianWajib,
+  periksaSyaratKirim,
+  periksaUbahIsian,
+} from "./pendaftaran";
 
 // Ekspektasi dari PRD §6.5 dan tabel §7.1.
 describe("pendaftaranBaru", () => {
@@ -229,6 +234,91 @@ describe("periksaSyaratKirim (PRD §6.2)", () => {
     ).toEqual({
       boleh: false,
       gagal: [{ syarat: "isian-wajib-terisi", belumDiisi: ["tanggalLahir"] }],
+    });
+  });
+});
+
+// Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (issue T15, PRD §2.2, §6.5): isian wajib PRD §6.1
+// tetap harus terisi, sama seperti saat formulir dikirim.
+describe("periksaIsianWajib", () => {
+  it("semua isian wajib terisi: lengkap, dan isian yang tidak wajib boleh kosong", () => {
+    expect(periksaIsianWajib(FORMULIR_LENGKAP)).toEqual({
+      lengkap: true,
+      formulir: FORMULIR_LENGKAP,
+    });
+  });
+
+  it("isian wajib yang dikosongkan disebut dalam urutan formulir (PRD §6.1)", () => {
+    expect(
+      periksaIsianWajib({
+        ...FORMULIR_LENGKAP,
+        nomorHpKontakDarurat: null,
+        kabupatenKota: null,
+        programId: null,
+        pengalamanKerja: null,
+      }),
+    ).toEqual({
+      lengkap: false,
+      belumDiisi: ["kabupatenKota", "programId", "nomorHpKontakDarurat"],
+    });
+  });
+});
+
+// Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (issue T15) dengan pemeriksaan yang sama seperti
+// formulir pemilik akun: isian wajib terisi (PRD §6.1), dan tanggal lahir tidak jatuh sesudah hari ini (WIB, §6.3).
+// Rentang batas usia program tidak diperiksa ulang. Hari ini pada contoh: 22-10-2026 pukul 17.30 UTC, yaitu
+// 23-10-2026 pukul 00.30 WIB (contoh terakhir PRD §6.3).
+describe("periksaUbahIsian", () => {
+  const SEKARANG = new Date("2026-10-22T17:30:00Z");
+
+  it("isian lengkap dengan tanggal lahir sebelum hari ini: sah", () => {
+    expect(periksaUbahIsian(FORMULIR_LENGKAP, SEKARANG)).toEqual({
+      sah: true,
+      formulir: FORMULIR_LENGKAP,
+    });
+  });
+
+  it("lahir tepat hari ini (WIB): tanggal lahir benar, dan usia di luar rentang program tidak diperiksa ulang", () => {
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2026-10-23" },
+        SEKARANG,
+      ),
+    ).toMatchObject({ sah: true });
+  });
+
+  it("tanggal lahir sesudah hari ini (WIB): tidak sah, juga bila hari itu baru dimulai di WIB", () => {
+    for (const tanggalLahir of ["2026-10-24", "2099-12-31"]) {
+      expect(
+        periksaUbahIsian({ ...FORMULIR_LENGKAP, tanggalLahir }, SEKARANG),
+      ).toEqual({ sah: false, belumDiisi: [], tanggalLahirTidakBenar: true });
+    }
+  });
+
+  it("isian wajib yang kosong dan tanggal lahir yang tidak benar disebut bersama", () => {
+    expect(
+      periksaUbahIsian(
+        {
+          ...FORMULIR_LENGKAP,
+          kabupatenKota: null,
+          tanggalLahir: "2099-12-31",
+        },
+        SEKARANG,
+      ),
+    ).toEqual({
+      sah: false,
+      belumDiisi: ["kabupatenKota"],
+      tanggalLahirTidakBenar: true,
+    });
+  });
+
+  it("tanggal lahir yang kosong hanya disebut sebagai isian wajib yang belum diisi", () => {
+    expect(
+      periksaUbahIsian({ ...FORMULIR_LENGKAP, tanggalLahir: null }, SEKARANG),
+    ).toEqual({
+      sah: false,
+      belumDiisi: ["tanggalLahir"],
+      tanggalLahirTidakBenar: false,
     });
   });
 });

@@ -1,18 +1,24 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, type SQL, sql } from "drizzle-orm";
 import {
   bagiHalaman,
   type HalamanDaftar,
   type SaringanPendaftaran,
   saringPendaftaran,
 } from "@/domain/daftar-pendaftaran";
-import { BIDANG_KERJA_BELUM_TAHU } from "@/domain/formulir-pendaftaran";
+import {
+  BIDANG_KERJA_BELUM_TAHU,
+  type IsianWajib,
+} from "@/domain/formulir-pendaftaran";
 import {
   nomorPendaftaran,
   tahunNomorPendaftaran,
 } from "@/domain/nomor-pendaftaran";
 import {
+  KODE_LANGKAH,
   pendaftaranBaru,
   periksaSyaratKirim,
+  periksaUbahIsian,
+  type StatusLangkah,
   type StatusPendaftaran,
   type SyaratKirimGagal,
 } from "@/domain/pendaftaran";
@@ -86,6 +92,19 @@ async function ambilNomorUrut(tx: Transaksi, tahun: number): Promise<number> {
 }
 
 /**
+ * Isian formulir untuk pemeriksaan isian wajib (§6.1): bidang kerja disimpan dalam dua kolom, id bidang kerja atau
+ * tanda "Belum tahu", tetapi diperiksa sebagai satu isian yang berisi salah satunya.
+ */
+function keFormulirDiperiksa(draf: DrafFormulirPendaftaran) {
+  return {
+    ...draf,
+    bidangKerja: draf.bidangKerjaBelumTahu
+      ? BIDANG_KERJA_BELUM_TAHU
+      : draf.bidangKerjaId,
+  };
+}
+
+/**
  * Pemilik akun mengirim formulir pendaftarannya pada saat `dikirimPada`. `draf` adalah isian formulir yang bentuknya
  * sudah diperiksa. Bila semua syarat kirim terpenuhi (§6.2), sistem membuka pendaftaran baru dengan nomor pendaftaran
  * (§6.4), status Berjalan di tahap 1, semua langkah Belum (§6.5), dan isian formulir sebagai bagian dari pendaftaran
@@ -114,12 +133,7 @@ export async function kirimPendaftaran(
 
     const periksa = periksaSyaratKirim({
       emailTerverifikasi: pemilik?.emailTerverifikasi ?? false,
-      formulir: {
-        ...draf,
-        bidangKerja: draf.bidangKerjaBelumTahu
-          ? BIDANG_KERJA_BELUM_TAHU
-          : draf.bidangKerjaId,
-      },
+      formulir: keFormulirDiperiksa(draf),
       rentangUsia: programDipilih ?? null,
       dikirimPada,
       nomorPendaftaranBerjalan: await nomorPendaftaranBerjalan(tx, akunId),
@@ -159,31 +173,154 @@ export async function kirimPendaftaran(
   });
 }
 
-/** Pendaftaran Berjalan seperti yang dilihat pemiliknya di halaman akun (PRD §2.3). */
-export type PendaftaranBerjalan = {
-  nomor: string;
-  /** Nama program, juga bila program itu sudah dinonaktifkan (§4.3). */
-  program: string;
-  status: "Berjalan";
-  tahap: number;
+/**
+ * Isian formulir pendaftaran yang sudah dikirim, dengan bentuk yang sama seperti draf, tetapi isian wajibnya selalu
+ * terisi.
+ */
+type IsianPendaftaran = Omit<
+  typeof pendaftaran.$inferSelect,
+  "id" | "akunId" | "nomor" | "dikirimPada" | "status" | "tahap"
+>;
+
+/** Kolom isian formulir pendaftaran di tabel pendaftaran, dalam urutan PRD §6.1. */
+const KOLOM_ISIAN = {
+  namaLengkap: pendaftaran.namaLengkap,
+  jenisKelamin: pendaftaran.jenisKelamin,
+  tempatLahir: pendaftaran.tempatLahir,
+  tanggalLahir: pendaftaran.tanggalLahir,
+  kabupatenKota: pendaftaran.kabupatenKota,
+  provinsi: pendaftaran.provinsi,
+  pendidikanTerakhir: pendaftaran.pendidikanTerakhir,
+  jurusanPendidikan: pendaftaran.jurusanPendidikan,
+  programId: pendaftaran.programId,
+  bidangKerjaId: pendaftaran.bidangKerjaId,
+  bidangKerjaBelumTahu: pendaftaran.bidangKerjaBelumTahu,
+  kemampuanBahasaJepang: pendaftaran.kemampuanBahasaJepang,
+  pengalamanKerja: pendaftaran.pengalamanKerja,
+  namaKontakDarurat: pendaftaran.namaKontakDarurat,
+  hubunganKontakDarurat: pendaftaran.hubunganKontakDarurat,
+  nomorHpKontakDarurat: pendaftaran.nomorHpKontakDarurat,
 };
+
+/**
+ * Satu pendaftaran: nomor pendaftaran, status, tahap saat ini, dan isian formulir pendaftarannya. Nama program dan
+ * bidang kerja ikut dibaca, juga bila keduanya sudah dinonaktifkan (§4.3); bidang kerja berisi "Belum tahu" bila itu
+ * yang dipilih.
+ */
+type Pendaftaran = {
+  nomor: string;
+  status: StatusPendaftaran;
+  tahap: number;
+  program: string;
+  bidangKerja: string;
+  isian: IsianPendaftaran;
+};
+
+/** Pendaftaran pertama yang memenuhi `syarat`, atau undefined bila tidak ada. */
+async function bacaSatuPendaftaran(
+  syarat: SQL | undefined,
+): Promise<Pendaftaran | undefined> {
+  const [baris] = await db
+    .select({
+      nomor: pendaftaran.nomor,
+      status: pendaftaran.status,
+      tahap: pendaftaran.tahap,
+      program: program.nama,
+      namaBidangKerja: bidangKerja.nama,
+      isian: KOLOM_ISIAN,
+    })
+    .from(pendaftaran)
+    .innerJoin(program, eq(program.id, pendaftaran.programId))
+    .leftJoin(bidangKerja, eq(bidangKerja.id, pendaftaran.bidangKerjaId))
+    .where(syarat);
+  if (!baris) return undefined;
+  const { namaBidangKerja, ...isi } = baris;
+  return { ...isi, bidangKerja: namaBidangKerja ?? BIDANG_KERJA_BELUM_TAHU };
+}
+
+/**
+ * Pendaftaran Berjalan seperti yang dilihat pemiliknya di halaman akun (PRD §2.3): nomor, program, status, tahap, dan
+ * isian formulir pendaftarannya, termasuk perubahan oleh pegawai (§6.5).
+ */
+export type PendaftaranBerjalan = Pendaftaran & { status: "Berjalan" };
 
 /** Pendaftaran Berjalan milik sebuah akun, atau undefined bila tidak ada. */
 export async function bacaPendaftaranBerjalan(
   akunId: string,
 ): Promise<PendaftaranBerjalan | undefined> {
-  const [baris] = await db
-    .select({
-      nomor: pendaftaran.nomor,
-      program: program.nama,
-      tahap: pendaftaran.tahap,
-    })
-    .from(pendaftaran)
-    .innerJoin(program, eq(program.id, pendaftaran.programId))
-    .where(
-      and(eq(pendaftaran.akunId, akunId), eq(pendaftaran.status, "Berjalan")),
-    );
+  const baris = await bacaSatuPendaftaran(
+    and(eq(pendaftaran.akunId, akunId), eq(pendaftaran.status, "Berjalan")),
+  );
   return baris && { ...baris, status: "Berjalan" };
+}
+
+/** Pendaftaran dengan nomor pendaftaran tertentu, atau undefined bila tidak ada. */
+export async function bacaPendaftaran(
+  nomor: string,
+): Promise<Pendaftaran | undefined> {
+  return bacaSatuPendaftaran(eq(pendaftaran.nomor, nomor));
+}
+
+/**
+ * Status setiap langkah sebuah pendaftaran, dalam urutan PRD §7.1, untuk halaman pendaftaran di panel pegawai (§11.2).
+ * Kosong bila nomor pendaftaran itu tidak ada.
+ */
+export async function bacaLangkahPendaftaran(
+  nomor: string,
+): Promise<{ kode: string; status: StatusLangkah }[]> {
+  const langkah = await db
+    .select({
+      kode: langkahPendaftaran.kode,
+      status: langkahPendaftaran.status,
+    })
+    .from(langkahPendaftaran)
+    .innerJoin(
+      pendaftaran,
+      eq(pendaftaran.id, langkahPendaftaran.pendaftaranId),
+    )
+    .where(eq(pendaftaran.nomor, nomor));
+  const urutan = (kode: string) => KODE_LANGKAH.indexOf(kode);
+  return langkah.toSorted((a, b) => urutan(a.kode) - urutan(b.kode));
+}
+
+export type HasilUbahIsianPendaftaran =
+  | { hasil: "tersimpan" }
+  | {
+      hasil: "ditolak";
+      belumDiisi: IsianWajib[];
+      tanggalLahirTidakBenar: boolean;
+    }
+  | { hasil: "tidak-ada" };
+
+/**
+ * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5) pada saat `sekarang`. `draf` adalah
+ * isian yang bentuknya sudah diperiksa, dengan aturan yang sama seperti formulir pemilik akun. Isian wajib tetap harus
+ * terisi (§6.1) dan tanggal lahir tidak boleh jatuh sesudah hari ini (§6.3); bila tidak, tidak ada yang disimpan.
+ * Isian diganti seluruhnya, termasuk isian tidak wajib yang dikosongkan.
+ */
+export async function ubahIsianPendaftaran(
+  nomor: string,
+  draf: DrafFormulirPendaftaran,
+  sekarang: Date,
+): Promise<HasilUbahIsianPendaftaran> {
+  const periksa = periksaUbahIsian(keFormulirDiperiksa(draf), sekarang);
+  if (!periksa.sah) {
+    return {
+      hasil: "ditolak",
+      belumDiisi: periksa.belumDiisi,
+      tanggalLahirTidakBenar: periksa.tanggalLahirTidakBenar,
+    };
+  }
+  const { bidangKerja, ...isian } = periksa.formulir;
+  const [diubah] = await db
+    .update(pendaftaran)
+    .set({
+      ...isian,
+      bidangKerjaBelumTahu: bidangKerja === BIDANG_KERJA_BELUM_TAHU,
+    })
+    .where(eq(pendaftaran.nomor, nomor))
+    .returning({ nomor: pendaftaran.nomor });
+  return diubah ? { hasil: "tersimpan" } : { hasil: "tidak-ada" };
 }
 
 /**

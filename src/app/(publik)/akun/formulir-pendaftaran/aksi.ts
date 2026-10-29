@@ -6,7 +6,6 @@ import type { SyaratKirimGagal } from "@/domain/pendaftaran";
 import { formatTanggal } from "@/lib/format";
 import {
   bacaPilihanFormulirPendaftaran,
-  type PilihanFormulirPendaftaran,
   simpanDrafFormulirPendaftaran,
 } from "@/server/formulir-pendaftaran";
 import { kirimPendaftaran } from "@/server/pendaftaran";
@@ -14,12 +13,14 @@ import { bacaSekarang } from "@/server/waktu";
 import type { Pesan } from "@/app/panel/(terjaga)/pesan-tindakan";
 import { pastikanPemilikAkun } from "../../penjaga-akun";
 import {
+  bacaIsianFormulir,
   type GalatIsian,
-  ISIAN_KOSONG,
+  galatIsianDitolak,
   type IsianFormulirPendaftaran,
+  keIdPilihan,
   keIsianFormulir,
   LABEL_ISIAN,
-  type NamaIsian,
+  labelIsianSalah,
   periksaDrafFormulirPendaftaran,
 } from "./isian-formulir";
 
@@ -41,30 +42,6 @@ const PESAN_GANGGUAN_KIRIM =
 
 const peringatan = (teks: string): Pesan => ({ jenis: "peringatan", teks });
 
-function bacaIsian(formulir: FormData): IsianFormulirPendaftaran {
-  const isian = { ...ISIAN_KOSONG };
-  for (const nama of Object.keys(ISIAN_KOSONG) as NamaIsian[]) {
-    const nilai = formulir.get(nama);
-    isian[nama] = typeof nilai === "string" ? nilai : "";
-  }
-  return isian;
-}
-
-/** Label isian yang punya pesan kesalahan, dalam urutan formulir. */
-function labelIsianSalah(galat: GalatIsian): string {
-  return (Object.keys(LABEL_ISIAN) as NamaIsian[])
-    .filter((nama) => galat[nama])
-    .map((nama) => LABEL_ISIAN[nama])
-    .join(", ");
-}
-
-function idPilihan(pilihan: PilihanFormulirPendaftaran) {
-  return {
-    programId: pilihan.program.map((p) => p.id),
-    bidangKerjaId: pilihan.bidangKerja.map((b) => b.id),
-  };
-}
-
 /** Isian formulir sudah terkunci karena formulirnya sudah dikirim (PRD §6.5). */
 function pesanTerkunci(nomorPendaftaran: string, tindakan: string): string {
   return `${tindakan} karena formulir pendaftaranmu sudah dikirim dengan nomor ${nomorPendaftaran}, jadi isiannya terkunci. Bila ada isian yang perlu diubah, hubungi lembaga lewat halaman Kontak.`;
@@ -81,10 +58,10 @@ export async function simpanDraf(
   formulir: FormData,
 ): Promise<KeadaanFormulirPendaftaran> {
   const pemilikAkun = await pastikanPemilikAkun();
-  const isian = bacaIsian(formulir);
+  const isian = bacaIsianFormulir(formulir);
 
   try {
-    const pilihan = idPilihan(await bacaPilihanFormulirPendaftaran());
+    const pilihan = keIdPilihan(await bacaPilihanFormulirPendaftaran());
     const hasil = periksaDrafFormulirPendaftaran(isian, pilihan);
     if (!hasil.sah) {
       return {
@@ -153,23 +130,16 @@ function pesanSyaratGagal(
 
 /** Tanda pada isian yang menyebabkan syarat kirim gagal. */
 function galatSyaratGagal(daftarGagal: SyaratKirimGagal[]): GalatIsian {
-  const galat: GalatIsian = {};
-  for (const gagal of daftarGagal) {
-    if (gagal.syarat === "isian-wajib-terisi") {
-      for (const nama of gagal.belumDiisi) {
-        galat[nama] =
-          `${LABEL_ISIAN[nama]} belum diisi. Isian ini wajib diisi sebelum formulir dikirim.`;
-      }
-    }
-    if (
-      gagal.syarat === "batas-usia" &&
-      gagal.batasUsia.alasan === "tanggal-lahir-tidak-benar"
-    ) {
-      galat.tanggalLahir =
-        "Tanggal lahir jatuh sesudah hari ini. Periksa lagi tanggal lahirmu.";
-    }
-  }
-  return galat;
+  return galatIsianDitolak({
+    belumDiisi: daftarGagal.flatMap((gagal) =>
+      gagal.syarat === "isian-wajib-terisi" ? gagal.belumDiisi : [],
+    ),
+    tanggalLahirTidakBenar: daftarGagal.some(
+      (gagal) =>
+        gagal.syarat === "batas-usia" &&
+        gagal.batasUsia.alasan === "tanggal-lahir-tidak-benar",
+    ),
+  });
 }
 
 /**
@@ -182,11 +152,11 @@ export async function kirimFormulir(
   formulir: FormData,
 ): Promise<KeadaanFormulirPendaftaran> {
   const pemilikAkun = await pastikanPemilikAkun();
-  const isian = bacaIsian(formulir);
+  const isian = bacaIsianFormulir(formulir);
 
   try {
     const pilihan = await bacaPilihanFormulirPendaftaran();
-    const bentuk = periksaDrafFormulirPendaftaran(isian, idPilihan(pilihan));
+    const bentuk = periksaDrafFormulirPendaftaran(isian, keIdPilihan(pilihan));
     if (!bentuk.sah) {
       return {
         pesan: [

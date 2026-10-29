@@ -4,12 +4,17 @@ import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { ALAMAT_FORMULIR_PENDAFTARAN } from "@/components/tautan-situs";
 import { TombolUtama } from "@/components/tombol";
 import { TAHAP } from "@/domain/tahap";
+import { formatTanggal } from "@/lib/format";
 import {
   bacaPendaftaranBerjalan,
   type PendaftaranBerjalan,
 } from "@/server/pendaftaran";
 import { pastikanPemilikAkun } from "../penjaga-akun";
 import { keluarAkun } from "./aksi";
+import {
+  LABEL_ISIAN,
+  type NamaIsian,
+} from "./formulir-pendaftaran/isian-formulir";
 import { PengingatVerifikasiEmail } from "./pengingat-verifikasi-email";
 
 export const metadata: Metadata = { title: "Akunmu" };
@@ -81,8 +86,37 @@ export default async function HalamanAkun() {
 }
 
 /**
+ * Isian formulir pendaftaran seperti yang tersimpan, dalam urutan PRD §6.1, termasuk perubahan oleh pegawai (§6.5).
+ * Program dan bidang kerja tampil dengan namanya; isian tidak wajib yang kosong bernilai null.
+ */
+function isianTampil({
+  isian,
+  program,
+  bidangKerja,
+}: PendaftaranBerjalan): [NamaIsian, string | null][] {
+  return [
+    ["namaLengkap", isian.namaLengkap],
+    ["jenisKelamin", isian.jenisKelamin],
+    ["tempatLahir", isian.tempatLahir],
+    ["tanggalLahir", formatTanggal(isian.tanggalLahir)],
+    ["kabupatenKota", isian.kabupatenKota],
+    ["provinsi", isian.provinsi],
+    ["pendidikanTerakhir", isian.pendidikanTerakhir],
+    ["jurusanPendidikan", isian.jurusanPendidikan],
+    ["programId", program],
+    ["bidangKerja", bidangKerja],
+    ["kemampuanBahasaJepang", isian.kemampuanBahasaJepang],
+    ["pengalamanKerja", isian.pengalamanKerja],
+    ["namaKontakDarurat", isian.namaKontakDarurat],
+    ["hubunganKontakDarurat", isian.hubunganKontakDarurat],
+    ["nomorHpKontakDarurat", isian.nomorHpKontakDarurat],
+  ];
+}
+
+/**
  * Kartu akun (docs/DESIGN.md, Cards / Containers) untuk pendaftaran Berjalan (PRD §2.3): nomor pendaftaran, program,
- * chip status Berjalan, dan tahap saat ini dengan lencana kode stasiun. Langkah-langkah tahap itu tampil di M2.
+ * chip status Berjalan, tahap saat ini dengan lencana kode stasiun, dan isian formulir pendaftarannya untuk dibaca,
+ * termasuk perubahan oleh pegawai (§6.5). Langkah-langkah tahap itu tampil di M2.
  */
 function KartuPendaftaran({
   pendaftaran,
@@ -115,6 +149,25 @@ function KartuPendaftaran({
           {tahap.nama}
         </p>
       )}
+      <div className="mt-2 grid gap-2">
+        <h3 className="font-papan text-title-kecil">
+          Isian formulir pendaftaranmu
+        </h3>
+        <dl className="grid border-t-2 border-navy sm:grid-cols-2 sm:gap-x-6">
+          {isianTampil(pendaftaran).map(([nama, nilai]) => (
+            <div key={nama} className="border-b border-garis py-3">
+              <dt className="text-keterangan font-semibold text-teks-2">
+                {LABEL_ISIAN[nama]}
+              </dt>
+              <dd className="mt-0.5 font-semibold whitespace-pre-line">
+                {nilai ?? (
+                  <span className="font-normal text-teks-2">Tidak diisi</span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
       <p className="max-w-[60ch] text-body-kecil text-teks-2">
         Isian formulir pendaftaranmu terkunci sejak dikirim. Bila ada yang perlu
         diubah, hubungi lembaga lewat halaman <Link href="/kontak">Kontak</Link>

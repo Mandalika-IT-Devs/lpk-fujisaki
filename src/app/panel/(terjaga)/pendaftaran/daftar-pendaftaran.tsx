@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IkonPanahKanan, IkonPanahKiri } from "@/components/ikon";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { TombolKedua } from "@/components/tombol";
@@ -8,6 +9,7 @@ import type {
 import { TAHAP } from "@/domain/tahap";
 import { formatAngka, formatTanggalWib } from "@/lib/format";
 import type { BarisDaftarPendaftaran } from "@/server/pendaftaran";
+import { alamatPendaftaran } from "./alamat-pendaftaran";
 import { alamatDaftar } from "./saringan";
 
 const GAYA_KEPALA = "py-2 pr-4 font-semibold";
@@ -18,7 +20,8 @@ const namaTahap = (nomor: number) =>
 
 /**
  * Satu halaman daftar pendaftaran (PRD §11.1): nomor pendaftaran, nama, program, bidang kerja, tahap, status, dan
- * tanggal kirim (WIB), dari yang paling baru dikirim; lalu tautan ke halaman sebelum dan sesudahnya.
+ * tanggal kirim (WIB), dari yang paling baru dikirim; lalu tautan ke halaman sebelum dan sesudahnya. Nomor pendaftaran
+ * menautkan ke halaman pendaftaran itu (§11.2).
  */
 export function DaftarPendaftaran({
   daftar,
@@ -82,7 +85,9 @@ export function DaftarPendaftaran({
                   scope="row"
                   className="py-2 pr-4 font-papan text-nomor whitespace-nowrap"
                 >
-                  {pendaftaran.nomor}
+                  <Link href={alamatPendaftaran(pendaftaran.nomor)}>
+                    {pendaftaran.nomor}
+                  </Link>
                 </th>
                 <td className={`${GAYA_SEL} font-semibold`}>
                   {pendaftaran.namaLengkap}

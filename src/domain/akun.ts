@@ -48,6 +48,20 @@ export function bolehMembukaHalamanAkun(akun: Akun): boolean {
 }
 
 /**
+ * Tautan akun di bar atas situs publik (PRD §3.1, ▶ Keputusan 2026-10-30). Pemilik akun yang sedang masuk melihat
+ * "Akun saya", yang menuju halaman akunnya. Pengunjung melihat "Masuk". Pegawai yang sedang masuk tetap melihat
+ * "Masuk" seperti sebelumnya, karena halaman akun bukan untuknya; bar atas bagi pegawai di luar scope issue T11-b.
+ * `akunMasuk` adalah akun yang sedang masuk, atau null bila pengunjung.
+ */
+export function tautanAkunDiBarAtas(
+  akunMasuk: Akun | null,
+): "masuk" | "akun-saya" {
+  return akunMasuk !== null && bolehMembukaHalamanAkun(akunMasuk)
+    ? "akun-saya"
+    : "masuk";
+}
+
+/**
  * Satu email hanya untuk satu akun, termasuk akun pegawai, dan email dibandingkan tanpa membedakan huruf besar
  * dan kecil (PRD §5.1). Email disimpan dan dicari dalam bentuk ini.
  */

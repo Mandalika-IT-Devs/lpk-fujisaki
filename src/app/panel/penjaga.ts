@@ -19,17 +19,15 @@ export const ALAMAT_MASUK_PEGAWAI = "/panel/masuk";
 export type PegawaiMasuk = { nama: string; peran: Peran };
 
 /** Pegawai aktif yang sedang masuk, atau null bila pengunjung, pemilik akun, atau pegawai nonaktif. */
-export const bacaPegawaiMasuk = cache(
-  async (): Promise<PegawaiMasuk | null> => {
-    const sesi = await auth.api.getSession({ headers: await headers() });
-    if (!sesi) return null;
-    const akun = keAkun(sesi.user);
-    if (akun.jenis !== "pegawai" || !bolehMembukaPanelPegawai(akun)) {
-      return null;
-    }
-    return { nama: sesi.user.name, peran: akun.peran };
-  },
-);
+const bacaPegawaiMasuk = cache(async (): Promise<PegawaiMasuk | null> => {
+  const sesi = await auth.api.getSession({ headers: await headers() });
+  if (!sesi) return null;
+  const akun = keAkun(sesi.user);
+  if (akun.jenis !== "pegawai" || !bolehMembukaPanelPegawai(akun)) {
+    return null;
+  }
+  return { nama: sesi.user.name, peran: akun.peran };
+});
 
 /** Panel menolak siapa pun yang bukan pegawai aktif: mereka diarahkan ke halaman masuk pegawai. */
 export async function pastikanPegawai(): Promise<PegawaiMasuk> {

@@ -7,6 +7,7 @@ import {
   normalkanEmail,
   type Pegawai,
   periksaPerubahanPegawai,
+  tautanAkunDiBarAtas,
 } from "./akun";
 
 // PRD §5.1 dan UAT-E3: kata sandi minimal 8 karakter; 7 karakter ditolak.
@@ -66,6 +67,27 @@ describe("bolehMembukaHalamanAkun", () => {
         aktif: false,
       }),
     ).toBe(false);
+  });
+});
+
+// PRD §3.1 (▶ Keputusan 2026-10-30) dan UAT-C8: pengunjung melihat "Masuk" di bar atas situs publik, pemilik akun
+// yang sedang masuk melihat "Akun saya". Bar atas bagi pegawai yang sedang masuk tetap seperti sebelumnya (issue T11-b).
+describe("tautanAkunDiBarAtas", () => {
+  it("pengunjung melihat Masuk", () => {
+    expect(tautanAkunDiBarAtas(null)).toBe("masuk");
+  });
+
+  it("pemilik akun yang sedang masuk melihat Akun saya", () => {
+    expect(tautanAkunDiBarAtas({ jenis: "pemilik_akun" })).toBe("akun-saya");
+  });
+
+  it("pegawai yang sedang masuk tetap melihat Masuk", () => {
+    expect(
+      tautanAkunDiBarAtas({ jenis: "pegawai", peran: "admin", aktif: true }),
+    ).toBe("masuk");
+    expect(
+      tautanAkunDiBarAtas({ jenis: "pegawai", peran: "staf", aktif: true }),
+    ).toBe("masuk");
   });
 });
 

@@ -64,6 +64,13 @@
       "when": 1792842849575,
       "tag": "0008_foto_galeri",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793290351369,
+      "tag": "0009_akun_calon_peserta",
+      "breakpoints": true
     }
   ]
 }

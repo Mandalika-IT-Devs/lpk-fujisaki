@@ -10,11 +10,15 @@ import type { KeadaanAturKataSandi } from "./kata-sandi-dari-tautan";
 /**
  * Formulir kata sandi dari tautan di email, untuk atur ulang kata sandi (PRD §5.4) dan pegawai baru (PRD §5.5).
  * `aksi` adalah Server Action halaman pemakainya, dan `kabarBerhasil` tampil setelah kata sandi disimpan.
+ * `alamatMasuk` dan `alamatLupaKataSandi` menunjuk halaman masuk dan Lupa kata sandi yang sesuai: milik pegawai
+ * di panel pegawai, atau milik pemilik akun di situs publik.
  */
 export function FormulirAturKataSandi({
   token,
   aksi,
   kabarBerhasil,
+  alamatMasuk,
+  alamatLupaKataSandi,
 }: {
   token: string;
   aksi: (
@@ -22,6 +26,8 @@ export function FormulirAturKataSandi({
     formulir: FormData,
   ) => Promise<KeadaanAturKataSandi>;
   kabarBerhasil: string;
+  alamatMasuk: string;
+  alamatLupaKataSandi: string;
 }) {
   const [keadaan, kirim] = useActionState(aksi, { hasil: "belum" });
 
@@ -29,7 +35,7 @@ export function FormulirAturKataSandi({
     return (
       <div className="grid gap-5">
         <Kabar>{kabarBerhasil}</Kabar>
-        <TombolUtama href="/panel/masuk">Masuk</TombolUtama>
+        <TombolUtama href={alamatMasuk}>Masuk</TombolUtama>
       </div>
     );
   }
@@ -61,7 +67,7 @@ export function FormulirAturKataSandi({
           {keadaan.perluTautanBaru && (
             <>
               {" "}
-              <Link href="/panel/lupa-kata-sandi">
+              <Link href={alamatLupaKataSandi}>
                 Buka halaman Lupa kata sandi
               </Link>
             </>

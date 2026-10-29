@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM } from "@/domain/akun";
 import { GAYA_TAUTAN, KartuAksesPegawai } from "../akses-pegawai";
+import { mintaTautanAturUlang } from "./aksi";
 import { FormulirLupaKataSandi } from "./formulir-lupa-kata-sandi";
 
 export const metadata: Metadata = { title: "Lupa kata sandi" };
@@ -13,7 +14,7 @@ export default function HalamanLupaKataSandi() {
       judul="Lupa kata sandi"
       pengantar={`Isi email akun pegawaimu. Kami kirim tautan untuk mengatur kata sandi baru, yang berlaku ${MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM} jam.`}
     >
-      <FormulirLupaKataSandi />
+      <FormulirLupaKataSandi aksi={mintaTautanAturUlang} />
       <p className="text-body-kecil">
         <Link href="/panel/masuk" className={GAYA_TAUTAN}>
           Kembali ke halaman masuk

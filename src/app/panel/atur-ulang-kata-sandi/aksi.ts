@@ -8,7 +8,10 @@ import {
 
 const PESAN_TAUTAN_TIDAK_BERLAKU = `Tautan atur ulang kata sandi ini tidak berlaku lagi, karena sudah lewat ${MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM} jam, sudah pernah dipakai, atau tidak lengkap. Minta tautan baru di halaman Lupa kata sandi, lalu buka tautan dari email terbaru.`;
 
-/** Pegawai mengatur kata sandi baru dari tautan di email lupa kata sandi (PRD §5.4). */
+/**
+ * Pegawai atau pemilik akun mengatur kata sandi baru dari tautan di email lupa kata sandi (PRD §5.4). Dipakai halaman
+ * atur ulang pegawai dan halaman atur ulang pemilik akun (src/app/(publik)/atur-ulang-kata-sandi).
+ */
 export async function aturKataSandiBaru(
   _keadaan: KeadaanAturKataSandi,
   formulir: FormData,

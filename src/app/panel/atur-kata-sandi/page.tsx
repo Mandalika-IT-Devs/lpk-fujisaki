@@ -23,6 +23,8 @@ export default async function HalamanAturKataSandiPegawaiBaru({
       <FormulirAturKataSandi
         token={typeof token === "string" ? token : ""}
         aksi={aturKataSandiPegawaiBaru}
+        alamatMasuk="/panel/masuk"
+        alamatLupaKataSandi="/panel/lupa-kata-sandi"
         kabarBerhasil="Kata sandi sudah disimpan. Masuk dengan email dan kata sandimu."
       />
       <p className="text-body-kecil">

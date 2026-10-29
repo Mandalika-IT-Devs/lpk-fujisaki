@@ -1,6 +1,6 @@
 import { type BetterAuthOptions, betterAuth, generateId } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError } from "better-auth/api";
+import { APIError, createEmailVerificationToken } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
 import {
@@ -8,6 +8,7 @@ import {
   bolehMasuk,
   MASA_BERLAKU_TAUTAN_ATUR_KATA_SANDI_PEGAWAI_BARU_JAM,
   MASA_BERLAKU_TAUTAN_ATUR_ULANG_KATA_SANDI_JAM,
+  MASA_BERLAKU_TAUTAN_VERIFIKASI_EMAIL_JAM,
   PANJANG_MINIMAL_KATA_SANDI,
 } from "@/domain/akun";
 import { db } from "./db";
@@ -16,6 +17,7 @@ import { type KirimEmail, kirimEmail } from "./email";
 import {
   templatAturKataSandiPegawaiBaru,
   templatAturUlangKataSandi,
+  templatVerifikasiEmail,
 } from "./templat-email";
 
 /** Kode dan pesan galat saat pegawai nonaktif mencoba masuk (PRD §5.5). */
@@ -25,6 +27,12 @@ export const PESAN_AKUN_NONAKTIF =
 
 /** Halaman tempat pegawai mengatur kata sandi baru dari tautan di email (src/app/panel/atur-ulang-kata-sandi). */
 const HALAMAN_ATUR_ULANG_KATA_SANDI_PEGAWAI = "/panel/atur-ulang-kata-sandi";
+
+/** Halaman tempat pemilik akun mengatur kata sandi baru dari tautan di email (src/app/(publik)/atur-ulang-kata-sandi). */
+const HALAMAN_ATUR_ULANG_KATA_SANDI_PEMILIK_AKUN = "/atur-ulang-kata-sandi";
+
+/** Halaman tujuan tautan verifikasi email pemilik akun (src/app/(publik)/verifikasi-email). */
+const HALAMAN_VERIFIKASI_EMAIL = "/verifikasi-email";
 
 /** Halaman tempat pegawai baru mengatur kata sandinya dari tautan di email (src/app/panel/atur-kata-sandi). */
 const HALAMAN_ATUR_KATA_SANDI_PEGAWAI_BARU = "/panel/atur-kata-sandi";
@@ -59,9 +67,14 @@ export function buatAuth({
       // perangkat yang masih masuk harus masuk lagi dengan kata sandi baru. Opsi ini berlaku untuk setiap
       // resetPassword, termasuk tautan pegawai baru, yang belum punya sesi.
       revokeSessionsOnPasswordReset: true,
-      // Tautan menuju halaman atur ulang pegawai di situs yang sama dengan alamat dari Better Auth (BETTER_AUTH_URL).
+      // Tautan menuju halaman atur ulang sesuai jenis akunnya, di situs yang sama dengan alamat dari Better Auth
+      // (BETTER_AUTH_URL): pegawai ke panel pegawai, pemilik akun ke situs publik.
       sendResetPassword: async ({ user, url, token }) => {
-        const tautan = new URL(HALAMAN_ATUR_ULANG_KATA_SANDI_PEGAWAI, url);
+        const halaman =
+          "jenis" in user && user.jenis === "pemilik_akun"
+            ? HALAMAN_ATUR_ULANG_KATA_SANDI_PEMILIK_AKUN
+            : HALAMAN_ATUR_ULANG_KATA_SANDI_PEGAWAI;
+        const tautan = new URL(halaman, url);
         tautan.searchParams.set("token", token);
         await kirimEmail({
           kepada: user.email,
@@ -150,6 +163,32 @@ export async function kirimTautanAturKataSandiPegawaiBaru(
       nama: pegawai.nama,
       tautan: tautan.href,
     }),
+  });
+}
+
+/**
+ * Mengirim email verifikasi kepada pemilik akun (PRD §5.3), saat akunnya dibuat dan saat ia meminta tautan baru.
+ *
+ * Tautan berisi token verifikasi email Better Auth yang berlaku 24 jam. Token itu tidak disimpan di basis data,
+ * jadi email ini bisa dikirim di dalam transaksi pembuatan akun, sebelum akunnya terlihat oleh Better Auth.
+ * Tautan dibuka di halaman verifikasi email, yang memeriksanya lewat verifyEmail Better Auth.
+ */
+export async function kirimTautanVerifikasiEmail(
+  { auth, kirimEmail }: { auth: Auth; kirimEmail: KirimEmail },
+  pemilikAkun: { nama: string; email: string },
+): Promise<void> {
+  const konteks = await auth.$context;
+  const token = await createEmailVerificationToken(
+    konteks.secret,
+    pemilikAkun.email,
+    undefined,
+    MASA_BERLAKU_TAUTAN_VERIFIKASI_EMAIL_JAM * 60 * 60,
+  );
+  const tautan = new URL(HALAMAN_VERIFIKASI_EMAIL, konteks.baseURL);
+  tautan.searchParams.set("token", token);
+  await kirimEmail({
+    kepada: pemilikAkun.email,
+    ...templatVerifikasiEmail({ nama: pemilikAkun.nama, tautan: tautan.href }),
   });
 }
 

@@ -22,7 +22,7 @@ const PESAN_GANGGUAN =
   "Kata sandi baru belum tersimpan karena gangguan di server. Coba lagi beberapa saat lagi; bila tetap gagal, hubungi Admin lembaga.";
 
 /**
- * Pegawai menyimpan kata sandi dari tautan di email; kata sandi lama, bila ada, tidak berlaku lagi.
+ * Pegawai atau pemilik akun menyimpan kata sandi dari tautan di email; kata sandi lama, bila ada, tidak berlaku lagi.
  * `pesanTautanTidakBerlaku` menyebut masa berlaku tautan halaman pemakainya.
  */
 export async function simpanKataSandiDariTautan(

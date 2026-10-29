@@ -76,6 +76,8 @@ Satu orang memakai satu akun sepanjang perjalanannya. Sebutannya berubah mengiku
 
 ▶ Keputusan 2026-10-24: Galeri hanya dikelola Admin. Staf tidak bisa mengunggah maupun menghapus foto galeri (OD-16).
 
+▶ Keputusan 2026-10-30: Pemilik akun yang membuka alamat panel pegawai melihat halaman Masuk pegawai dengan pesan bahwa panel itu khusus pegawai, beserta tautan ke halaman akunnya.
+
 ### 2.3 Yang dilihat pemilik akun
 
 Pemilik akun melihat:
@@ -94,6 +96,8 @@ Pemilik akun tidak melihat:
 Bila pendaftarannya ditutup, yang ia lihat mengikuti OD-14.
 
 ▶ Keputusan 2026-10-24: Bila pendaftarannya ditutup, pemilik akun melihat status Ditutup beserta alasannya (Tidak lolos seleksi, Mundur, atau Dikeluarkan). Keterangan penutupan hanya terlihat oleh pegawai (OD-14).
+
+▶ Keputusan 2026-10-30: Halaman akun menampilkan pendaftaran yang sedang berjalan, lalu semua pendaftarannya yang Ditutup, dari yang terbaru. Pendaftaran yang Ditutup tetap tampil sesudah pemilik akun mendaftar ulang (§6.6).
 
 Permintaan salinan seluruh data pribadi dilayani pegawai di luar sistem (§12.6).
 
@@ -117,6 +121,8 @@ Teks yang bersumber dari kode diubah lewat tiket. Semua halaman dirancang untuk 
 ▶ Keputusan 2026-10-24: Selama OD-04 dan OD-07 belum diputuskan, halaman Tentang Kami dan Kebijakan Privasi menampilkan kotak catatan "[CONTOH]" tepat di bawah pengantarnya. Kotak itu hilang setelah teks resmi diserahkan (T18).
 
 ▶ Keputusan 2026-10-24: Judul bagian program di Beranda mengikuti jumlah program aktif, misalnya "Empat program, satu jalur", lalu "Tiga program, satu jalur" bila satu program dinonaktifkan. Bila tidak ada program aktif, bagian itu tidak tampil.
+
+▶ Keputusan 2026-10-30: Bar atas situs publik menampilkan "Masuk" bagi yang belum masuk. Bagi pemilik akun yang sedang masuk, tulisan itu menjadi "Akun saya" dan menuju halaman akunnya.
 
 ### 3.2 Bahasa
 
@@ -170,6 +176,8 @@ Contoh:
 
 Foto bisa dihapus dari galeri. Siapa yang boleh mengelola galeri mengikuti OD-16.
 
+▶ Keputusan 2026-10-30: "Terbaru di atas" di halaman Galeri dan di bagian Galeri di Beranda berarti tanggal kegiatan terbaru di atas. Foto dengan tanggal kegiatan yang sama diurutkan dari yang terakhir diunggah.
+
 ### 3.5 Kontak
 
 Admin mengelola alamat, nomor WhatsApp kantor, email kantor, dan lokasi peta. Isinya mengikuti OD-05.
@@ -219,6 +227,8 @@ Admin bisa mengaktifkannya kembali.
 
 ▶ Keputusan 2026-10-24: Bila tidak ada program aktif, halaman Program menampilkan "Belum ada program yang dibuka saat ini. Tanyakan program berikutnya ke kantor lembaga di Kesugihan, Cilacap."
 
+▶ Keputusan 2026-10-30: Bila tidak ada program aktif, konter cek usia di Beranda tetap tampil tanpa isian tanggal lahir dan program, dengan kalimat yang sama seperti halaman Program. Tombol "Daftar sekarang" dan tautan Masuk tetap ada, karena membuat akun tidak bergantung pada program.
+
 ## 5. Akun
 
 ### 5.1 Membuat akun calon peserta
@@ -233,6 +243,8 @@ Isian:
 Aturan:
 - Satu email hanya untuk satu akun, termasuk akun pegawai. Email dibandingkan tanpa membedakan huruf besar dan kecil.
 - Satu nomor WhatsApp hanya untuk satu akun, dibandingkan setelah dinormalkan (§5.2).
+
+▶ Keputusan 2026-10-30: Sesudah membuat akun, calon peserta langsung masuk dan dibawa ke halaman akunnya, walau emailnya belum diverifikasi (§5.3).
 
 ### 5.2 Nomor WhatsApp
 
@@ -326,6 +338,10 @@ Formulir pendaftaran hanya bisa dikirim bila:
 3. usia memenuhi batas usia program yang dipilih (§6.3);
 4. akun itu tidak punya pendaftaran yang sedang berjalan (§6.6).
 
+▶ Keputusan 2026-10-30: Bila ada isian yang bentuknya salah, misalnya nomor HP kontak darurat `081234567`, draf belum disimpan sampai isian itu diperbaiki atau dikosongkan. Semua yang sudah diketik tetap di layar, dan isian yang salah ditandai. Isian yang masih kosong tetap boleh.
+
+▶ Keputusan 2026-10-30: Bila pengiriman ditolak dan semua isian yang terisi bentuknya sah, misalnya karena email belum diverifikasi atau usia di luar rentang, isian itu otomatis disimpan sebagai draf. Bila ada isian yang bentuknya salah, berlaku keputusan di atas: draf belum disimpan.
+
 ### 6.3 Batas usia
 
 Usia dihitung dalam tahun penuh, dari tanggal lahir sampai tanggal formulir dikirim (WIB). Usia bertambah tepat pada tanggal ulang tahun. Orang yang lahir 29 Februari dianggap berulang tahun pada 1 Maret di tahun yang bukan kabisat.
@@ -333,6 +349,10 @@ Usia dihitung dalam tahun penuh, dari tanggal lahir sampai tanggal formulir diki
 Usia memenuhi syarat bila **usia minimal ≤ usia ≤ usia maksimal** program yang dipilih. Kedua batas termasuk.
 
 Bila tidak memenuhi, formulir ditolak dengan pesan yang menyebut usia calon peserta dan rentang usia program.
+
+▶ Keputusan 2026-10-30: Pesan penolakan usia berbunyi seperti contoh berikut. Usia, tanggal, nama program, dan rentangnya mengikuti formulir yang dikirim.
+- Terlalu muda: "Formulir belum terkirim karena usiamu 17 tahun pada 23-10-2026, sedangkan Tokutei Ginou (SSW) menerima usia 18–30 tahun. Kamu bisa mengirim formulir untuk program ini mulai 24-10-2026, atau pilih program lain."
+- Terlalu tua: "Formulir belum terkirim karena usiamu 31 tahun pada 23-10-2026, sedangkan Tokutei Ginou (SSW) menerima usia 18–30 tahun. Pilih program lain, atau tanyakan program yang sesuai lewat halaman Kontak."
 
 Contoh untuk program dengan rentang 18–30:
 - lahir 24-10-2008, dikirim 23-10-2026 → usia **17** → **ditolak**.
@@ -366,6 +386,10 @@ Nomor tidak pernah dipakai ulang, juga setelah pendaftarannya ditutup atau dihap
 - Calon peserta melihat halaman konfirmasi berisi nomor pendaftaran dan tombol "Chat WhatsApp" (§3.5).
 - Isian formulir pendaftaran terkunci bagi calon peserta. Perubahan dilakukan pegawai (§2.2), dan setiap perubahan mengikuti OD-18.
 - Pegawai melihat pendaftaran baru di daftar pendaftaran (§11.1).
+
+▶ Keputusan 2026-10-30: Halaman konfirmasi berbunyi "Simpan nomor ini. Isian formulirmu sekarang terkunci; bila ada yang perlu diubah, hubungi lembaga lewat WhatsApp." Di halaman akun, pendaftaran yang sedang berjalan disertai catatan "Isian formulir pendaftaranmu terkunci sejak dikirim. Bila ada yang perlu diubah, hubungi lembaga lewat halaman Kontak."
+
+▶ Keputusan 2026-10-30: Selama pemilik akun punya pendaftaran Berjalan, membuka formulir pendaftaran langsung membawanya ke halaman akun. Pengiriman kedua tetap ditolak di server (§6.6).
 
 ### 6.6 Satu pendaftaran berjalan dan pendaftaran ulang
 
@@ -593,6 +617,8 @@ Saringan:
 
 Pencarian menurut nama atau nomor pendaftaran.
 
+▶ Keputusan 2026-10-30: Saringan bidang kerja juga punya pilihan "Belum tahu", untuk pendaftaran yang belum memilih bidang kerja (§6.1).
+
 ### 11.2 Halaman pendaftaran
 
 Halaman satu pendaftaran menampilkan:
@@ -603,6 +629,8 @@ Halaman satu pendaftaran menampilkan:
 - riwayat perubahan.
 
 Dari halaman ini pegawai mengubah status langkah, menambah percobaan, memindahkan tahap, dan menutup pendaftaran.
+
+▶ Keputusan 2026-10-30: Saat pegawai mengubah tanggal lahir atau program, batas usia program (§6.3) diperiksa terhadap tanggal kirim pendaftaran itu. Bila usia di luar rentang, pegawai melihat peringatan yang menyebut usia dan rentangnya, tetapi perubahan tetap bisa disimpan.
 
 ### 11.3 Catatan
 

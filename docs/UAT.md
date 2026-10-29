@@ -41,7 +41,7 @@ Hasil: menu-menu itu tidak tampil, dan alamat langsung ditolak.
 1. Masuk sebagai calon peserta.
 2. Buka alamat panel pegawai.
 
-Hasil: ditolak.
+Hasil: ditolak. Halaman Masuk pegawai menampilkan pesan bahwa panel itu khusus pegawai, beserta tautan ke halaman akunnya.
 
 **UAT-B3 – Pemilik akun hanya melihat data yang boleh dilihat** (§2.3)
 1. Pakai pendaftaran yang sudah punya hasil pemeriksaan fisik, percobaan tes internal, percobaan ujian resmi, satu catatan untuk siswa, dan satu catatan internal.
@@ -93,6 +93,12 @@ Hasil: nomor 1 tersimpan, nomor 2 ditolak karena alamat wajib. Halaman Kontak me
 2. Tambahkan bidang kerja baru, lalu buka formulir statistik dan simpan tanpa mengisi angkanya.
 
 Hasil: nomor 1, "Restoran" hilang dari Beranda walau angka per bidang kerja kini kurang dari total siswa. Nomor 2, isian bidang kerja baru kosong dan penyimpanan ditolak sampai angkanya diisi.
+
+**UAT-C8 – Bar atas sesudah masuk** (§3.1)
+1. Buka Beranda tanpa masuk.
+2. Masuk sebagai calon peserta, lalu buka Beranda lagi dan klik tulisan di bar atas.
+
+Hasil: nomor 1 menampilkan "Masuk". Nomor 2 menampilkan "Akun saya", yang membawa ke halaman akun.
 
 ## D. Program dan bidang kerja (§4)
 
@@ -180,6 +186,18 @@ Hasil: diterima dengan nomor pendaftaran baru, mulai dari tahap 1. Pendaftaran l
 1. Sebagai Staf, ubah kabupaten/kota pada sebuah pendaftaran.
 
 Hasil: perubahan tersimpan dan terlihat oleh pemilik akun.
+
+**UAT-F7 – Pengiriman ditolak menyimpan draf** (§6.2)
+1. Dengan akun yang belum memverifikasi email, isi formulir tanpa menekan "Simpan draf", lalu tekan "Kirim formulir".
+2. Keluar, lalu masuk lagi dan buka formulir.
+
+Hasil: pengiriman ditolak dengan ajakan memverifikasi email, dan isian yang sudah diketik masih ada sebagai draf.
+
+**UAT-F8 – Tampilan status pendaftaran** (§2.3, §11.1)
+1. Sesudah UAT-F5, buka halaman akun pemilik pendaftaran itu.
+2. Sebagai Staf, buka daftar pendaftaran dan halaman pendaftaran lama.
+
+Hasil: pendaftaran Berjalan memakai chip bergaris biru dengan titik. Pendaftaran Ditutup memakai chip bergaris navy redup beserta alasannya. Chip Selesai (pil penuh biru, teks putih) dicek di M3 sesudah UAT-J4.
 
 ## G. Tahap dan langkah (§7)
 
@@ -288,6 +306,17 @@ Hasil: setiap pindah tahap, perubahan status langkah, percobaan, dan penutupan t
 1. Saring menurut tahap 1, lalu unduh ekspor dan buka di Excel.
 
 Hasil: berkas terbuka rapi di Excel, hanya memuat pendaftaran hasil saringan, dan tidak memuat hasil pemeriksaan fisik maupun catatan internal.
+
+**UAT-K5 – Saringan "Belum tahu"** (§11.1)
+1. Pakai satu pendaftaran dengan bidang kerja "Belum tahu" dan satu dengan "Pembersihan gedung".
+2. Saring menurut bidang kerja "Belum tahu".
+
+Hasil: hanya pendaftaran "Belum tahu" yang tampil.
+
+**UAT-K6 – Peringatan batas usia saat pegawai mengubah isian** (§11.2)
+1. Sebagai Staf, ubah tanggal lahir sebuah pendaftaran SSW sehingga usianya pada tanggal kirim menjadi 17 tahun, lalu simpan.
+
+Hasil: pegawai melihat peringatan berisi usia 17 dan rentang 18–30, dan perubahan tetap tersimpan.
 
 ## L. Data pribadi (§12)
 

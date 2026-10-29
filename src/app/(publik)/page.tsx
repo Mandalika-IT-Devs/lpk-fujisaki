@@ -22,6 +22,7 @@ import {
   bacaStatistikLembagaDiSitusPublik,
   type StatistikLembagaDiSitusPublik,
 } from "@/server/statistik-lembaga";
+import { bacaSekarang } from "@/server/waktu";
 import { KonterCekUsia } from "./konter-cek-usia";
 
 export const metadata: Metadata = {
@@ -43,8 +44,8 @@ const JUDUL_BAGIAN =
  * dari peta jalur enam stasiun, garis turun di sisi kiri (HP) atau kanan (layar lebar) bagian berikutnya.
  * Program aktif (untuk konter cek usia dan bagian program), statistik lembaga, tiga foto galeri terbaru, dan kontak
  * dibaca dari database pada setiap permintaan, jadi perubahan Admin langsung terlihat (PRD §3.1, §3.3, §3.4, §3.5,
- * §4.3). Angka statistik tampil di stasiun yang relevan: FG 02, FG 03, dan FG 06. Garis berakhir di lingkaran ujung
- * pada loket kontak.
+ * §4.3). Jam server juga dibaca pada setiap permintaan, sebagai "sekarang" bagi konter cek usia. Angka statistik tampil
+ * di stasiun yang relevan: FG 02, FG 03, dan FG 06. Garis berakhir di lingkaran ujung pada loket kontak.
  */
 export default async function HalamanBeranda() {
   await connection();
@@ -54,10 +55,11 @@ export default async function HalamanBeranda() {
     daftarFotoGaleri(JUMLAH_FOTO_DI_BERANDA),
     bacaKontak(),
   ]);
+  const sekarang = bacaSekarang();
 
   return (
     <main>
-      <Pembuka daftarProgram={daftarProgram} />
+      <Pembuka daftarProgram={daftarProgram} sekarang={sekarang} />
       <section
         id="alur"
         aria-labelledby="judul-alur"
@@ -104,7 +106,13 @@ export default async function HalamanBeranda() {
  * Pembuka: judul, papan stasiun FG 01, lalu konter cek usia dengan tombol utama, semuanya terlihat di 390×844 tanpa
  * menggulir. Di layar lebar papan di kolom kiri dan konter di kolom kanan (docs/DESIGN.md, Layout).
  */
-function Pembuka({ daftarProgram }: { daftarProgram: readonly Program[] }) {
+function Pembuka({
+  daftarProgram,
+  sekarang,
+}: {
+  daftarProgram: readonly Program[];
+  sekarang: Date;
+}) {
   return (
     <section aria-labelledby="judul" className="pt-3.5 pb-2 lg:pt-6">
       <div className="wadah grid gap-3.5 lg:grid-cols-[7fr_5fr] lg:items-end lg:gap-10">
@@ -135,6 +143,7 @@ function Pembuka({ daftarProgram }: { daftarProgram: readonly Program[] }) {
               usiaMaksimal,
             }),
           )}
+          sekarang={sekarang}
         />
       </div>
     </section>

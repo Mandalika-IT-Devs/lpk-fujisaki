@@ -56,25 +56,25 @@ function tulisJawaban(hasil: HasilPeriksaBatasUsia, nama: string): Jawaban {
 /**
  * Konter "Cek usiamu, lalu daftar" di pembuka Beranda (docs/design/prototipe/beranda.html): tanggal lahir dan
  * program aktif, jawaban langsung yang diumumkan pembaca layar, tombol utama "Daftar sekarang", dan tautan Masuk.
- * Usia dihitung aturan domain batas usia (PRD §6.3) pada saat isian diubah.
+ * Usia dihitung aturan domain batas usia (PRD §6.3) pada `sekarang`, yang dibaca dari jam server saat Beranda diminta.
  */
 export function KonterCekUsia({
   daftarProgram,
+  sekarang,
 }: {
   daftarProgram: readonly ProgramDiKonter[];
+  sekarang: Date;
 }) {
   const id = useId();
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [programId, setProgramId] = useState(daftarProgram[0]?.id);
-  // Saat isian terakhir diubah; usia dihitung pada tanggal WIB saat itu.
-  const [sekarang, setSekarang] = useState<Date>();
 
   const program =
     daftarProgram.find((p) => p.id === programId) ?? daftarProgram[0];
   let jawaban: Jawaban = { jenis: "netral", teks: AJAKAN };
   if (!program) {
     jawaban = { jenis: "netral", teks: TANPA_PROGRAM };
-  } else if (tanggalLahir && sekarang) {
+  } else if (tanggalLahir) {
     jawaban = tulisJawaban(
       periksaBatasUsia({
         tanggalLahir,
@@ -110,10 +110,7 @@ export function KonterCekUsia({
               min="1960-01-01"
               autoComplete="bday"
               value={tanggalLahir}
-              onChange={(e) => {
-                setTanggalLahir(e.target.value);
-                setSekarang(new Date());
-              }}
+              onChange={(e) => setTanggalLahir(e.target.value)}
               className={cn(GAYA_ISIAN, "text-body")}
             />
           </div>
@@ -126,10 +123,7 @@ export function KonterCekUsia({
               <select
                 id={`${id}-program`}
                 value={program.id}
-                onChange={(e) => {
-                  setProgramId(Number(e.target.value));
-                  setSekarang(new Date());
-                }}
+                onChange={(e) => setProgramId(Number(e.target.value))}
                 className={cn(
                   GAYA_ISIAN,
                   "cursor-pointer appearance-none pr-10 text-body",

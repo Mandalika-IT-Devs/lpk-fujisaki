@@ -65,7 +65,7 @@ function hitungUsia(lahir: Tanggal, pada: Tanggal): number {
   return sebelum(pada, ulangTahun(lahir, pada.tahun)) ? usia - 1 : usia;
 }
 
-export type IsianPeriksaBatasUsia = RentangUsia & {
+type IsianPeriksaBatasUsia = RentangUsia & {
   /** Tanggal lahir YYYY-MM-DD. */
   tanggalLahir: string;
   /** Saat formulir dikirim; di konter cek usia, saat ini. */

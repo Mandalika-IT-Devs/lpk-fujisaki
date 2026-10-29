@@ -2,7 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { ADMIN, masukKePanel } from "./pegawai-uji";
 
 // Konter cek usia di Beranda (issue T10, PRD §6.3, UAT-F3 bagian konter). Isi awal program dari issue T06: empat
-// program dengan batas usia 18–30 tahun (▶ Keputusan OD-01). Teks jawaban dari docs/design/prototipe/beranda.html.
+// program dengan batas usia 18–30 tahun (▶ Keputusan OD-01). Teks jawaban dari docs/design/prototipe/beranda.html;
+// semua jenis jawaban diuji di src/app/(publik)/konter-cek-usia.test.tsx.
 // Berkas ini berjalan sesudah test lain (playwright.config.ts), karena salah satu test menonaktifkan program Pelajar
 // sebentar lalu mengaktifkannya kembali.
 
@@ -18,76 +19,72 @@ const PAPAN_CILACAP =
   "Papan stasiun FG 01 Cilacap, stasiun awal: pendaftaran dan seleksi. Berikutnya: belajar bahasa Jepang, FG 02.";
 const HP = { width: 390, height: 844 };
 
-// Contoh PRD §6.3: "hari ini" adalah 23-10-2026 pukul 10.00 WIB.
-const HARI_INI = new Date("2026-10-23T03:00:00Z");
-
 function konter(page: Page) {
   return page.getByRole("region", { name: "Cek usiamu, lalu daftar" });
 }
 
-/** Mengisi tanggal lahir dan program di konter, lalu mengembalikan jawabannya. */
-async function cekUsia(page: Page, tanggalLahir: string, program: string) {
-  const isi = konter(page);
-  await isi.getByLabel("Program", { exact: true }).selectOption({
-    label: program,
-  });
-  await isi.getByLabel("Tanggal lahir").fill(tanggalLahir);
-  return isi.getByRole("status");
+/**
+ * Tanggal hari ini di WIB menurut jam mesin test, yang juga menjalankan server e2e. Konter membaca jam server, jadi
+ * tanggal lahir di test ini dibuat relatif terhadap hari ini. Kalimat persis untuk contoh PRD §6.3 dengan "sekarang"
+ * tetap ada di src/app/(publik)/konter-cek-usia.test.tsx.
+ */
+function hariIniWib(): Date {
+  const teks = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+  return new Date(`${teks}T00:00:00Z`);
 }
 
-test.describe("jawaban langsung", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.clock.setFixedTime(HARI_INI);
-    await page.goto("/");
-  });
+function hariSesudah(tanggal: Date, jumlahHari: number): Date {
+  return new Date(tanggal.getTime() + jumlahHari * 24 * 60 * 60 * 1000);
+}
 
-  test("sebelum tanggal lahir diisi, konter mengajak mengisinya", async ({
-    page,
-  }) => {
-    await expect(konter(page).getByRole("status")).toHaveText(
-      "Isi tanggal lahirmu untuk melihat apakah usiamu masuk rentang program.",
-    );
-  });
+const dua = (angka: number) => String(angka).padStart(2, "0");
 
-  test("usia 17 hari ini untuk program 18–30 menampilkan usia 17 dan tanggal mulai boleh mendaftar; usia tepat 18 bisa mendaftar (UAT-F3, bagian konter)", async ({
-    page,
-  }) => {
-    const jawaban = await cekUsia(page, "2008-10-24", "Tokutei Ginou (SSW)");
-    await expect(jawaban).toHaveText(
-      "Usiamu 17 tahun. Tokutei Ginou (SSW) menerima usia 18–30 tahun. Kamu bisa mendaftar mulai 24-10-2026.",
-    );
+/** Bulan dan hari yang sama, sejumlah tahun sebelumnya, sebagai YYYY-MM-DD. */
+function tahunSebelumnya(tanggal: Date, jumlahTahun: number): string {
+  return `${tanggal.getUTCFullYear() - jumlahTahun}-${dua(tanggal.getUTCMonth() + 1)}-${dua(tanggal.getUTCDate())}`;
+}
 
-    await konter(page).getByLabel("Tanggal lahir").fill("2008-10-23");
-    await expect(jawaban).toHaveText(
-      "Usiamu 18 tahun. Tokutei Ginou (SSW) menerima usia 18–30 tahun, jadi kamu bisa mendaftar.",
-    );
-  });
+function tulisDdMmYyyy(tanggal: Date): string {
+  return `${dua(tanggal.getUTCDate())}-${dua(tanggal.getUTCMonth() + 1)}-${tanggal.getUTCFullYear()}`;
+}
 
-  test("usia di atas batas menampilkan usia dan batasnya", async ({ page }) => {
-    const jawaban = await cekUsia(page, "1995-10-23", "Pemagangan");
+const tanggal29Februari = (tanggal: Date) =>
+  tanggal.getUTCMonth() === 1 && tanggal.getUTCDate() === 29;
 
-    await expect(jawaban).toHaveText(
-      "Usiamu 31 tahun, di atas batas 30 tahun untuk Pemagangan. Tanyakan program lain di loket kami.",
-    );
-  });
+test("usia 17 hari ini untuk program 18–30 menampilkan usia 17 dan tanggal mulai boleh mendaftar; usia tepat 18 bisa mendaftar (UAT-F3, bagian konter)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const hariIni = hariIniWib();
+  // Ulang tahun ke-18 jatuh besok, jadi hari ini usianya 17. Bila besok 29 Februari, tahun lahirnya bukan kabisat,
+  // jadi ulang tahunnya digeser ke 1 Maret.
+  const besok = hariSesudah(hariIni, 1);
+  const ulangTahunKe18 = tanggal29Februari(besok)
+    ? hariSesudah(besok, 1)
+    : besok;
+  // Bila hari ini 29 Februari, lahir 28 Februari 18 tahun lalu: ulang tahunnya kemarin, usianya tetap 18.
+  const lahir18 = tanggal29Februari(hariIni)
+    ? hariSesudah(hariIni, -1)
+    : hariIni;
+  const isi = konter(page);
+  await isi
+    .getByLabel("Program", { exact: true })
+    .selectOption({ label: "Tokutei Ginou (SSW)" });
+  const jawaban = isi.getByRole("status");
 
-  test("tanggal lahir sesudah hari ini belum benar", async ({ page }) => {
-    const jawaban = await cekUsia(page, "2026-10-24", "Gijinkoku");
+  await isi
+    .getByLabel("Tanggal lahir")
+    .fill(tahunSebelumnya(ulangTahunKe18, 18));
+  await expect(jawaban).toHaveText(
+    `Usiamu 17 tahun. Tokutei Ginou (SSW) menerima usia 18–30 tahun. Kamu bisa mendaftar mulai ${tulisDdMmYyyy(ulangTahunKe18)}.`,
+  );
 
-    await expect(jawaban).toHaveText(
-      "Tanggal lahir belum benar. Periksa lagi tahunnya.",
-    );
-  });
-
-  test("jawaban ikut berubah saat program diganti", async ({ page }) => {
-    const jawaban = await cekUsia(page, "2008-10-23", "Gijinkoku");
-    await expect(jawaban).toHaveText(/^Usiamu 18 tahun\. Gijinkoku /);
-
-    await konter(page)
-      .getByLabel("Program", { exact: true })
-      .selectOption({ label: "Pemagangan" });
-    await expect(jawaban).toHaveText(/^Usiamu 18 tahun\. Pemagangan /);
-  });
+  await isi.getByLabel("Tanggal lahir").fill(tahunSebelumnya(lahir18, 18));
+  await expect(jawaban).toHaveText(
+    "Usiamu 18 tahun. Tokutei Ginou (SSW) menerima usia 18–30 tahun, jadi kamu bisa mendaftar.",
+  );
 });
 
 test("di 390×844, konter dan tombol Daftar sekarang terlihat tanpa menggulir, bersama judul dan papan Cilacap", async ({

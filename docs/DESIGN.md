@@ -266,6 +266,18 @@ components:
     typography: "{typography.label}"
     rounded: "{rounded.pil}"
     padding: "6px 10px"
+  status-selesai:
+    backgroundColor: "{colors.jalur}"
+    textColor: "{colors.dasar}"
+    typography: "{typography.label}"
+    rounded: "{rounded.pil}"
+    padding: "6px 10px"
+  status-ditutup:
+    backgroundColor: "{colors.dasar}"
+    textColor: "{colors.teks-2}"
+    typography: "{typography.label}"
+    rounded: "{rounded.pil}"
+    padding: "6px 10px"
   tanda-selesai:
     backgroundColor: "{colors.jalur}"
     textColor: "{colors.dasar}"
@@ -326,7 +338,7 @@ Halaman ini menolak susunan baku situs LPK: foto kelompok selebar layar, deretan
 Palet biru jalur dan navy di atas putih, dengan satu titik oranye matahari yang hemat.
 
 ### Primary
-- **Biru Jalur** (jalur): garis jalur, cincin titik stasiun, bingkai kode stasiun, pita papan stasiun, kaki halaman, tautan, cincin fokus, dan warna "Selesai". Warna struktur dan warna aksi kedua.
+- **Biru Jalur** (jalur): garis jalur, cincin titik stasiun, bingkai kode stasiun, pita papan stasiun, kaki halaman, tautan, cincin fokus, dan warna "Selesai" (tanda status dan chip status pendaftaran Selesai). Warna struktur dan warna aksi kedua.
 - **Biru Jalur Tua** (jalur-tua): keadaan hover tautan dan tombol kedua; segmen tertinggi pada grafik (N2).
 - **Biru Jalur Sedang** (jalur-sedang) dan **Biru Jalur Muda** (jalur-muda): tingkatan data pada grafik batang (N4, N5) dan batang minat bidang kerja. Jalur-muda juga border isian saat hover dan halo fokus isian.
 - **Biru Pucat Peron** (jalur-pucat): latar konter cek usia, latar bagian Pantau dan Kontak, latar catatan, latar hover tombol kedua dan tautan Masuk, bingkai foto kosong.
@@ -339,7 +351,7 @@ Palet biru jalur dan navy di atas putih, dengan satu titik oranye matahari yang 
 
 ### Neutral
 - **Navy Malam** (navy): semua teks utama dan judul; garis atas daftar program (2px); cincin fokus tombol utama.
-- **Navy Redup** (teks-2): teks pendukung, keterangan, sumber data, label isian kecil.
+- **Navy Redup** (teks-2): teks pendukung, keterangan, sumber data, label isian kecil, dan garis serta teks chip status pendaftaran Ditutup.
 - **Teks di Jalur** (teks-di-jalur): teks pendukung di atas biru jalur: teks redup pada pita papan stasiun dan teks kaki halaman.
 - **Garis Peron** (garis): border papan, isian, menu, pemisah baris, bingkai foto putus-putus.
 - **Abu Terlewat** (lewat): cincin putus-putus "Tidak berlaku", teks tombol nonaktif, ikon bingkai foto kosong. Bukan untuk teks bacaan (kontrasnya hanya sekitar 3:1).
@@ -440,7 +452,9 @@ Tegas dan besar, ukuran jempol.
 
 ### Chips
 - **Chip status pendaftaran "Berjalan":** pil bergaris 2px jalur, teks jalur Label 14px, padding 6px 10px, titik bulat 8px berwarna sama di depannya.
-- **Ditutup** dan **Selesai** (status pendaftaran, PRD §7.6) belum punya tampilan yang dibangun. Jangan dikarang; tentukan saat halaman akun atau panel pegawai dibangun, dengan bentuk pil yang sama.
+- **Chip status pendaftaran "Selesai":** pil penuh berlatar jalur, teks putih Label 14px, padding 6px 10px, tanpa titik.
+- **Chip status pendaftaran "Ditutup":** pil bergaris 2px teks-2, teks teks-2 Label 14px, padding 6px 10px, latar putih, tanpa titik.
+- Ketiga chip dipakai sama di halaman akun dan panel pegawai. Bedanya terlihat dari isi (bergaris atau penuh), titik, dan teks statusnya, jadi tidak bergantung pada warna saja (keputusan pemilik 2026-10-30).
 - **Lencana "kamu di sini":** latar oranye, teks navy Mikro 12px, padding 6px 8px, sudut 4px. Satu per peta.
 
 ### Cards / Containers
@@ -502,5 +516,5 @@ Selama foto belum disetujui (OD-06): bingkai 4:3, border putus-putus 1,5px garis
 - **Don't** tambah bayangan selain bayang papan, dan jangan pakai bayangan geser keras.
 - **Don't** pakai bentuk pil selain untuk chip status pendaftaran.
 - **Don't** pakai Barlow Semi Condensed untuk paragraf.
-- **Don't** karang tampilan status Ditutup atau Selesai untuk pendaftaran, foto, testimoni, atau logo mitra; tunggu keputusan dan data yang sah.
+- **Don't** karang foto, testimoni, atau logo mitra; tunggu keputusan dan data yang sah.
 - **Don't** tampilkan program sebagai deretan kartu seragam; program adalah cabang dari jalur yang sama.

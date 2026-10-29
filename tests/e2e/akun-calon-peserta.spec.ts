@@ -190,16 +190,33 @@ test("kata sandi 7 karakter, nomor 081234567, dan pendaftaran tanpa centang pers
   expect(await bacaBarisAkun(sah.email)).toBeUndefined();
 });
 
-test("formulir daftar akun menautkan halaman Kebijakan Privasi di samping centang persetujuan", async ({
+test("tautan Kebijakan Privasi di samping centang persetujuan terbuka di tab baru tanpa mencentang kotaknya, dan seluruh baris centang setinggi minimal 44px bisa diklik", async ({
   page,
 }) => {
   await page.goto("/daftar");
-
   const persetujuan = page.getByLabel(/Saya setuju data pribadi saya diproses/);
+  const tautan = page
+    .getByRole("main")
+    .getByRole("link", { name: "Kebijakan Privasi" });
   await expect(persetujuan).not.toBeChecked();
+  await expect(tautan).toHaveAttribute("href", "/kebijakan-privasi");
+
+  const [tabBaru] = await Promise.all([
+    page.waitForEvent("popup"),
+    tautan.click(),
+  ]);
   await expect(
-    page.getByRole("main").getByRole("link", { name: "Kebijakan Privasi" }),
-  ).toHaveAttribute("href", "/kebijakan-privasi");
+    tabBaru.getByRole("heading", { level: 1, name: "Kebijakan Privasi" }),
+  ).toBeVisible();
+  await tabBaru.close();
+  await expect(persetujuan).not.toBeChecked();
+
+  // Target sentuh minimal 44px (docs/DESIGN.md, Do's): baris label, termasuk celah di antara kotak dan teksnya.
+  const baris = page.locator("label", { has: persetujuan });
+  const kotak = await baris.boundingBox();
+  expect(kotak?.height).toBeGreaterThanOrEqual(44);
+  await baris.click({ position: { x: 28, y: 4 } });
+  await expect(persetujuan).toBeChecked();
 });
 
 test("pemilik akun yang belum memverifikasi email bisa keluar, masuk lagi, dan meminta tautan verifikasi baru", async ({
@@ -324,6 +341,21 @@ test("lupa kata sandi berhasil, kata sandi lama tidak berlaku lagi, dan browser 
   ).toBeVisible();
 
   await browserKedua.close();
+});
+
+test("tautan atur ulang kata sandi yang tidak sah ditolak dengan jalan ke halaman Lupa kata sandi pemilik akun", async ({
+  page,
+}) => {
+  await page.goto("/atur-ulang-kata-sandi?token=bukan-token-sah");
+  await page.getByLabel("Kata sandi baru").fill("sandi-baru-apa-saja");
+  await page.getByRole("button", { name: "Simpan kata sandi" }).click();
+
+  const peringatan = page.getByRole("main").getByRole("alert");
+  await expect(peringatan).toContainText("tidak berlaku lagi");
+  await peringatan
+    .getByRole("link", { name: "Buka halaman Lupa kata sandi" })
+    .click();
+  await expect(page).toHaveURL("/lupa-kata-sandi");
 });
 
 test("lupa kata sandi untuk email yang tidak terdaftar menampilkan pesan yang sama dan tidak mengirim email", async ({

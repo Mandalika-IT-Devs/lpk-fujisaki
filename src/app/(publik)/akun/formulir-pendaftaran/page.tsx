@@ -4,8 +4,9 @@ import { pastikanPemilikAkun } from "../../penjaga-akun";
 export const metadata: Metadata = { title: "Formulir pendaftaran" };
 
 /**
- * Halaman formulir pendaftaran (PRD §6), tujuan ajakan di halaman akun. Sampai formulirnya dibangun (T12), halaman
- * ini hanya berisi judulnya (issue T11), sama seperti halaman daftar akun sebelum T11.
+ * Tempat sementara bagi halaman formulir pendaftaran (PRD §6): tujuan ajakan "Isi formulir pendaftaran" di halaman
+ * akun. Halaman ini hanya berisi judulnya sampai formulirnya dibangun di T12, sama seperti halaman daftar akun
+ * sebelum T11.
  */
 export default async function HalamanFormulirPendaftaran() {
   await pastikanPemilikAkun();

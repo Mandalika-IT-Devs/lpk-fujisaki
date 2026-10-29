@@ -83,22 +83,24 @@ export function FormulirDaftarAkun() {
           Minimal {PANJANG_MINIMAL_KATA_SANDI} karakter.
         </p>
       </div>
-      <div className="flex items-start gap-3">
+      {/* Seluruh baris, termasuk celah antara kotak dan teks, adalah label setinggi minimal 44px (docs/DESIGN.md,
+          Do's). Tautan di dalam label membuka Kebijakan Privasi tanpa mencentang kotak, karena label tidak meneruskan
+          klik pada tautan ke kotak centangnya. */}
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 text-body-kecil">
         <input
-          id="setuju"
           name="setuju"
           type="checkbox"
           defaultChecked={isian.setuju}
           className="mt-0.5 size-6 shrink-0 cursor-pointer accent-jalur"
         />
-        <label htmlFor="setuju" className="cursor-pointer text-body-kecil">
+        <span>
           Saya setuju data pribadi saya diproses lembaga sesuai{" "}
           <Link href="/kebijakan-privasi" target="_blank">
             Kebijakan Privasi
           </Link>
           .
-        </label>
-      </div>
+        </span>
+      </label>
       {keadaan.pesan && <Peringatan>{keadaan.pesan}</Peringatan>}
       <TombolKirim>Buat akun</TombolKirim>
     </form>

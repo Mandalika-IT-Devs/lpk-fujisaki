@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GAYA_TAUTAN } from "@/app/panel/akses-pegawai";
-import { aturKataSandiBaru } from "@/app/panel/atur-ulang-kata-sandi/aksi";
 import { FormulirAturKataSandi } from "@/app/panel/formulir-atur-kata-sandi";
 import {
   ALAMAT_LUPA_KATA_SANDI,
   ALAMAT_MASUK,
 } from "@/components/tautan-situs";
 import { KartuAksesAkun } from "../akses-akun";
+import { aturKataSandiBaruAkun } from "./aksi";
 
 export const metadata: Metadata = { title: "Atur kata sandi baru" };
 
@@ -28,7 +28,7 @@ export default async function HalamanAturUlangKataSandi({
     >
       <FormulirAturKataSandi
         token={typeof token === "string" ? token : ""}
-        aksi={aturKataSandiBaru}
+        aksi={aturKataSandiBaruAkun}
         kabarBerhasil="Kata sandi baru sudah disimpan, dan kata sandi lama tidak berlaku lagi. Masuk dengan kata sandi barumu."
         alamatMasuk={ALAMAT_MASUK}
         alamatLupaKataSandi={ALAMAT_LUPA_KATA_SANDI}

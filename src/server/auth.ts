@@ -57,7 +57,8 @@ export function buatAuth({
     database,
     emailAndPassword: {
       enabled: true,
-      // Akun pegawai dibuat oleh skrip pemasangan dan oleh Admin, bukan lewat pendaftaran sendiri.
+      // Sign-up Better Auth tidak dipakai. Akun pegawai dibuat oleh skrip pemasangan dan oleh Admin
+      // (src/server/akun-pegawai.ts), dan akun calon peserta dibuat pengunjung lewat src/server/akun-calon-peserta.ts.
       disableSignUp: true,
       minPasswordLength: PANJANG_MINIMAL_KATA_SANDI,
       // Lupa kata sandi (PRD §5.4). Better Auth menolak tautan yang sudah lewat masa berlakunya.

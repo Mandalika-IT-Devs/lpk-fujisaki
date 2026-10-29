@@ -9,11 +9,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // Modul database dimuat sesudah .env.ci dibaca, karena koneksinya memakai DATABASE_URL.
 config({ path: ".env.ci", override: true, quiet: true });
 const { db, tutupDatabase } = await import("./db");
-const { akun, langkahPendaftaran, pendaftaran, program } =
+const { akun, bidangKerja, langkahPendaftaran, pendaftaran, program } =
   await import("./db/schema");
 const { bacaDrafFormulirPendaftaran, simpanDrafFormulirPendaftaran } =
   await import("./formulir-pendaftaran");
-const { bacaPendaftaranBerjalan, kirimPendaftaran } =
+const { bacaDaftarPendaftaran, bacaPendaftaranBerjalan, kirimPendaftaran } =
   await import("./pendaftaran");
 const { ubahProgram } = await import("./program");
 
@@ -249,5 +249,112 @@ describe("simpanDrafFormulirPendaftaran sesudah formulir dikirim", () => {
     expect(await bacaDrafFormulirPendaftaran(akunId)).toMatchObject(
       drafLengkap(),
     );
+  });
+});
+
+describe("bacaDaftarPendaftaran", () => {
+  // Program dan bidang kerja sendiri, supaya saringan program hanya menemukan pendaftaran dari test ini.
+  let programDaftar: { id: number; nama: string };
+  let bidangKerjaDaftar: { id: number; nama: string };
+
+  beforeAll(async () => {
+    [programDaftar] = await db
+      .insert(program)
+      .values({
+        nama: `Program Daftar Uji ${randomUUID()}`,
+        deskripsi: "Deskripsi uji",
+        syarat: "Syarat uji",
+        lamaPelatihan: "6 bulan",
+        usiaMinimal: 18,
+        usiaMaksimal: 30,
+      })
+      .returning({ id: program.id, nama: program.nama });
+    [bidangKerjaDaftar] = await db
+      .insert(bidangKerja)
+      .values({ nama: `Bidang Kerja Daftar Uji ${randomUUID()}` })
+      .returning({ id: bidangKerja.id, nama: bidangKerja.nama });
+  });
+
+  /** Mengirim formulir atas nama orang baru di program daftar uji. */
+  async function kirimDiProgramDaftar(isian: {
+    namaLengkap: string;
+    dikirimPada: Date;
+    bidangKerjaId: number | null;
+  }) {
+    const hasil = await kirimPendaftaran(
+      await buatPemilikAkun(),
+      {
+        ...drafLengkap(),
+        namaLengkap: isian.namaLengkap,
+        programId: programDaftar.id,
+        bidangKerjaId: isian.bidangKerjaId,
+        bidangKerjaBelumTahu: isian.bidangKerjaId === null,
+      },
+      isian.dikirimPada,
+    );
+    if (hasil.hasil !== "terkirim") {
+      throw new Error(
+        `Pengiriman contoh seharusnya diterima: ${JSON.stringify(hasil)}`,
+      );
+    }
+    return hasil.nomorPendaftaran;
+  }
+
+  it("membaca pendaftaran yang cocok beserta nama program dan bidang kerjanya, dari yang paling baru dikirim (PRD §11.1)", async () => {
+    const dikirimLama = new Date("2026-03-08T02:00:00Z");
+    const dikirimBaru = new Date("2026-03-10T02:00:00Z");
+    const nomorLama = await kirimDiProgramDaftar({
+      namaLengkap: "Dewi Lestari",
+      dikirimPada: dikirimLama,
+      bidangKerjaId: null,
+    });
+    const nomorBaru = await kirimDiProgramDaftar({
+      namaLengkap: "Siti Aminah",
+      dikirimPada: dikirimBaru,
+      bidangKerjaId: bidangKerjaDaftar.id,
+    });
+    await db
+      .update(pendaftaran)
+      .set({ status: "Ditutup" })
+      .where(eq(pendaftaran.nomor, nomorLama));
+
+    const halaman = await bacaDaftarPendaftaran(
+      { programId: programDaftar.id },
+      1,
+    );
+
+    expect(halaman.jumlah).toBe(2);
+    expect(halaman.baris).toEqual([
+      {
+        nomor: nomorBaru,
+        namaLengkap: "Siti Aminah",
+        programId: programDaftar.id,
+        program: programDaftar.nama,
+        bidangKerjaId: bidangKerjaDaftar.id,
+        bidangKerja: bidangKerjaDaftar.nama,
+        tahap: 1,
+        status: "Berjalan",
+        dikirimPada: dikirimBaru,
+      },
+      {
+        nomor: nomorLama,
+        namaLengkap: "Dewi Lestari",
+        programId: programDaftar.id,
+        program: programDaftar.nama,
+        bidangKerjaId: null,
+        bidangKerja: "Belum tahu",
+        tahap: 1,
+        status: "Ditutup",
+        dikirimPada: dikirimLama,
+      },
+    ]);
+    expect(
+      (
+        await bacaDaftarPendaftaran(
+          { programId: programDaftar.id, status: "Ditutup" },
+          1,
+        )
+      ).baris.map(({ nomor }) => nomor),
+    ).toEqual([nomorLama]);
   });
 });

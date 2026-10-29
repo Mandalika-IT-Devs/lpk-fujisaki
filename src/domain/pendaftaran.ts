@@ -10,7 +10,7 @@ import { TAHAP } from "./tahap";
 
 /** Status pendaftaran secara keseluruhan (PRD §7.6). */
 export const STATUS_PENDAFTARAN = ["Berjalan", "Ditutup", "Selesai"] as const;
-type StatusPendaftaran = (typeof STATUS_PENDAFTARAN)[number];
+export type StatusPendaftaran = (typeof STATUS_PENDAFTARAN)[number];
 
 /** Status setiap langkah (PRD §7.2). */
 export const STATUS_LANGKAH = ["Belum", "Selesai", "Tidak berlaku"] as const;

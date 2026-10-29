@@ -1,4 +1,10 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
+import {
+  bagiHalaman,
+  type HalamanDaftar,
+  type SaringanPendaftaran,
+  saringPendaftaran,
+} from "@/domain/daftar-pendaftaran";
 import { BIDANG_KERJA_BELUM_TAHU } from "@/domain/formulir-pendaftaran";
 import {
   nomorPendaftaran,
@@ -7,11 +13,13 @@ import {
 import {
   pendaftaranBaru,
   periksaSyaratKirim,
+  type StatusPendaftaran,
   type SyaratKirimGagal,
 } from "@/domain/pendaftaran";
 import { db } from "./db";
 import {
   akun,
+  bidangKerja,
   drafFormulirPendaftaran,
   langkahPendaftaran,
   nomorUrutPendaftaran,
@@ -176,4 +184,54 @@ export async function bacaPendaftaranBerjalan(
       and(eq(pendaftaran.akunId, akunId), eq(pendaftaran.status, "Berjalan")),
     );
   return baris && { ...baris, status: "Berjalan" };
+}
+
+/**
+ * Satu baris daftar pendaftaran di panel pegawai (PRD §11.1). Nama program dan bidang kerja ikut dibaca, juga bila
+ * keduanya sudah dinonaktifkan (§4.3). Bidang kerja berisi "Belum tahu" bila belum dipilih.
+ */
+export type BarisDaftarPendaftaran = {
+  nomor: string;
+  namaLengkap: string;
+  programId: number;
+  program: string;
+  bidangKerjaId: number | null;
+  bidangKerja: string;
+  tahap: number;
+  status: StatusPendaftaran;
+  dikirimPada: Date;
+};
+
+/**
+ * Satu halaman daftar pendaftaran untuk pegawai: pendaftaran yang cocok dengan saringan dan pencarian, dari yang
+ * paling baru dikirim (§11.1). Saringan, urutan, dan pembagian halaman mengikuti modul domain, jadi semua pendaftaran
+ * dibaca lebih dulu; lembaga menerima sekitar 100 pendaftaran per tahun (§1.1).
+ */
+export async function bacaDaftarPendaftaran(
+  saringan: SaringanPendaftaran,
+  halaman: number,
+): Promise<HalamanDaftar<BarisDaftarPendaftaran>> {
+  const semua = await db
+    .select({
+      nomor: pendaftaran.nomor,
+      namaLengkap: pendaftaran.namaLengkap,
+      programId: pendaftaran.programId,
+      program: program.nama,
+      bidangKerjaId: pendaftaran.bidangKerjaId,
+      namaBidangKerja: bidangKerja.nama,
+      tahap: pendaftaran.tahap,
+      status: pendaftaran.status,
+      dikirimPada: pendaftaran.dikirimPada,
+    })
+    .from(pendaftaran)
+    .innerJoin(program, eq(program.id, pendaftaran.programId))
+    .leftJoin(bidangKerja, eq(bidangKerja.id, pendaftaran.bidangKerjaId))
+    // Urutan tetap sebelum diurutkan menurut saat kirim, supaya pendaftaran yang dikirim pada saat yang sama tidak
+    // berpindah halaman di antara dua pembacaan.
+    .orderBy(asc(pendaftaran.nomor));
+  const baris = semua.map(({ namaBidangKerja, ...isi }) => ({
+    ...isi,
+    bidangKerja: namaBidangKerja ?? BIDANG_KERJA_BELUM_TAHU,
+  }));
+  return bagiHalaman(saringPendaftaran(baris, saringan), halaman);
 }

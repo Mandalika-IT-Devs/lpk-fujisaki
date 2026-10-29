@@ -6,6 +6,7 @@ import { IkonPanahKiri } from "@/components/ikon";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
 import type { StatusLangkah } from "@/domain/pendaftaran";
+import { alasanPenutupanDiTahap, bisaDitutup } from "@/domain/penutupan";
 import { TAHAP } from "@/domain/tahap";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
 import { bacaLangkahPendaftaran, bacaPendaftaran } from "@/server/pendaftaran";
@@ -16,6 +17,7 @@ import {
 import { metadataMenu, pastikanBolehMembuka } from "../../../penjaga";
 import { skemaNomorPendaftaran } from "../alamat-pendaftaran";
 import { ALAMAT_DAFTAR_PENDAFTARAN } from "../saringan";
+import { FormulirTutupPendaftaran } from "./formulir-tutup-pendaftaran";
 import { FormulirUbahIsian } from "./formulir-ubah-isian";
 
 const KUNCI_MENU = "pendaftaran";
@@ -51,10 +53,11 @@ function Baris({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * Halaman satu pendaftaran untuk Staf dan Admin (PRD §11.2, bagian isian formulir): nomor pendaftaran, status, tahap,
- * langkah tahap 1 beserta statusnya (hanya untuk dibaca), dan isian formulir pendaftaran yang bisa diubah pegawai
- * (§2.2, §6.5). Program dan bidang kerja yang tercatat tetap bisa dipilih meski sudah dinonaktifkan (§4.3), dan
- * ditandai nonaktif.
+ * Halaman satu pendaftaran untuk Staf dan Admin (PRD §11.2, bagian isian formulir dan penutupan): nomor pendaftaran,
+ * status, tahap, langkah tahap 1 beserta statusnya (hanya untuk dibaca), isian formulir pendaftaran yang bisa diubah
+ * pegawai (§2.2, §6.5), dan penutupan (§7.5). Program dan bidang kerja yang tercatat tetap bisa dipilih meski sudah
+ * dinonaktifkan (§4.3), dan ditandai nonaktif. Pendaftaran Berjalan bisa ditutup dari sini; pendaftaran yang Ditutup
+ * menampilkan alasan dan keterangan penutupannya, tanpa cara membukanya kembali.
  */
 export default async function HalamanPendaftaran({
   params,
@@ -88,6 +91,7 @@ export default async function HalamanPendaftaran({
   const statusLangkah = new Map(
     langkah.map(({ kode, status }) => [kode, status]),
   );
+  const { penutupan } = pendaftaran;
 
   return (
     <div className="grid max-w-2xl gap-10">
@@ -118,7 +122,25 @@ export default async function HalamanPendaftaran({
                 </span>
               )}
             </Baris>
+            {penutupan && (
+              <>
+                <Baris label="Alasan penutupan">{penutupan.alasan}</Baris>
+                <Baris label="Keterangan penutupan">
+                  <span className="whitespace-pre-line">
+                    {penutupan.keterangan}
+                  </span>
+                </Baris>
+              </>
+            )}
           </dl>
+          {penutupan && (
+            <p className="mt-3 max-w-[60ch] text-teks-2">
+              Pendaftaran yang ditutup tidak bisa dibuka kembali. Pemiliknya
+              bisa mengirim formulir pendaftaran baru, yang mendapat nomor
+              pendaftaran baru. Keterangan penutupan hanya terlihat oleh
+              pegawai.
+            </p>
+          )}
         </section>
       </div>
 
@@ -157,7 +179,8 @@ export default async function HalamanPendaftaran({
         </h2>
         <p className="max-w-[60ch] text-teks-2">
           Pemilik akun tidak bisa mengubah isiannya sesudah formulir dikirim.
-          Perubahan yang disimpan di sini langsung terlihat di halaman akunnya.
+          {pendaftaran.status === "Berjalan" &&
+            " Perubahan yang disimpan di sini langsung terlihat di halaman akunnya."}
         </p>
         <FormulirUbahIsian
           nomor={pendaftaran.nomor}
@@ -166,6 +189,26 @@ export default async function HalamanPendaftaran({
           idJudul="judul-isian-formulir"
         />
       </section>
+
+      {bisaDitutup(pendaftaran.status) && (
+        <section
+          aria-labelledby="judul-tutup-pendaftaran"
+          className="grid gap-4"
+        >
+          <h2 id="judul-tutup-pendaftaran" className={GAYA_JUDUL_BAGIAN}>
+            Tutup pendaftaran
+          </h2>
+          <p className="max-w-[60ch] text-teks-2">
+            Pendaftaran yang ditutup berstatus Ditutup dan tidak bisa dibuka
+            kembali. Pemiliknya bisa mengirim formulir pendaftaran baru.
+          </p>
+          <FormulirTutupPendaftaran
+            nomor={pendaftaran.nomor}
+            pilihanAlasan={alasanPenutupanDiTahap(pendaftaran.tahap)}
+            idJudul="judul-tutup-pendaftaran"
+          />
+        </section>
+      )}
     </div>
   );
 }

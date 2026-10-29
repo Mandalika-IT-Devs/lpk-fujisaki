@@ -3,10 +3,16 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { forbidden } from "next/navigation";
+import { z } from "zod";
 import type { IsianWajib } from "@/domain/formulir-pendaftaran";
 import { bolehMembukaMenu } from "@/domain/panel-pegawai";
+import { ALASAN_PENUTUPAN, type PenutupanGagal } from "@/domain/penutupan";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
-import { bacaPendaftaran, ubahIsianPendaftaran } from "@/server/pendaftaran";
+import {
+  bacaPendaftaran,
+  tutupPendaftaran,
+  ubahIsianPendaftaran,
+} from "@/server/pendaftaran";
 import { bacaSekarang } from "@/server/waktu";
 import {
   bacaIsianFormulir,
@@ -122,11 +128,15 @@ export async function simpanIsianPendaftaran(
     revalidatePath(alamatPendaftaran(nomor.data));
     // Isian tampil seperti yang tersimpan, sama seperti saat halaman dibuka lagi; misalnya nomor HP dalam bentuk
     // ternormalisasi (§5.2).
+    // Pemilik akun hanya melihat isian pendaftarannya yang Berjalan; yang Ditutup tampil dengan alasannya saja (OD-14).
     return {
       pesan: [
         {
           jenis: "kabar",
-          teks: `Perubahan isian formulir ${nomor.data} sudah disimpan dan terlihat oleh pemilik akunnya.`,
+          teks:
+            tercatat.status === "Berjalan"
+              ? `Perubahan isian formulir ${nomor.data} sudah disimpan dan terlihat oleh pemilik akunnya.`
+              : `Perubahan isian formulir ${nomor.data} sudah disimpan.`,
         },
       ],
       isian: keIsianFormulir(bentuk.draf, pilihan),
@@ -136,5 +146,152 @@ export async function simpanIsianPendaftaran(
   } catch (galat) {
     console.error(galat);
     return ditolak([peringatan(PESAN_GANGGUAN)]);
+  }
+}
+
+// Menutup pendaftaran hanya untuk Staf dan Admin (PRD §2.2, §7.5, §11.2), diperiksa di server pada setiap tindakan.
+// Aturan penutupan ada di modul domain (periksaPenutupan); tindakan ini hanya membaca isian dan menyusun pesannya.
+
+/** Isian formulir tutup pendaftaran, seperti yang dikirim browser. */
+type IsianPenutupan = { alasan: string; keterangan: string };
+
+/** Pesan pada isian formulir tutup pendaftaran yang membuat penutupan ditolak. */
+type GalatPenutupan = Partial<Record<keyof IsianPenutupan, string>>;
+
+export type KeadaanTutupPendaftaran = {
+  /** Hasil tindakan terakhir; penutupan yang ditolak membawa satu pesan untuk setiap sebabnya. */
+  pesan: Pesan[];
+  /** Isian hasil proses terakhir, supaya isian yang ditolak tidak hilang. */
+  isian: IsianPenutupan;
+  galat: GalatPenutupan;
+  /** Kunci baru setiap kali formulir diproses, supaya isian dipasang ulang dari isian hasil proses terakhir. */
+  versi: string;
+};
+
+const PESAN_GANGGUAN_TUTUP =
+  "Pendaftaran belum ditutup karena gangguan di server. Coba tutup lagi beberapa saat lagi; bila tetap gagal, hubungi pengelola server lembaga.";
+
+const GALAT_ALASAN_TIDAK_DIKENALI =
+  "Alasan penutupan tidak dikenali. Pilih salah satu alasan yang tersedia.";
+
+/** Alasan yang dipilih: salah satu alasan penutupan, atau null bila belum dipilih (PRD §7.5). */
+const skemaAlasan = z
+  .string()
+  .transform((isi) => isi.trim() || null)
+  .pipe(z.enum(ALASAN_PENUTUPAN, GALAT_ALASAN_TIDAK_DIKENALI).nullable());
+
+/** Teks isian formulir yang dikirim browser; isian yang tidak ada dibaca kosong. */
+function teksIsian(formulir: FormData, nama: keyof IsianPenutupan): string {
+  const nilai = formulir.get(nama);
+  return typeof nilai === "string" ? nilai : "";
+}
+
+/** Pesan pada isian dan pesan tindakan untuk setiap syarat penutupan yang gagal, dalam urutan formulir. */
+function pesanPenutupanGagal(gagal: PenutupanGagal): {
+  isian?: keyof IsianPenutupan;
+  galat?: string;
+  pesan: string;
+} {
+  switch (gagal.syarat) {
+    case "status-berjalan":
+      return {
+        pesan:
+          gagal.status === "Ditutup"
+            ? "Pendaftaran ini sudah ditutup, jadi tidak bisa ditutup lagi atau dibuka kembali. Pemiliknya bisa mengirim formulir pendaftaran baru."
+            : `Pendaftaran ini berstatus ${gagal.status}, jadi tidak bisa ditutup. Hanya pendaftaran Berjalan yang bisa ditutup.`,
+      };
+    case "alasan-dipilih":
+      return {
+        isian: "alasan",
+        galat: "Alasan penutupan belum dipilih. Pilih salah satu alasan.",
+        pesan:
+          "Pendaftaran belum ditutup karena alasan penutupan belum dipilih. Pilih alasannya, lalu tutup lagi.",
+      };
+    case "alasan-sesuai-tahap":
+      return {
+        isian: "alasan",
+        galat: `${gagal.alasan} hanya untuk pendaftaran di tahap 1. Pilih alasan lain.`,
+        pesan: `Pendaftaran belum ditutup karena alasan ${gagal.alasan} hanya untuk pendaftaran di tahap 1, sedangkan pendaftaran ini di tahap ${gagal.tahap}. Pilih alasan lain, lalu tutup lagi.`,
+      };
+    case "keterangan-diisi":
+      return {
+        isian: "keterangan",
+        galat:
+          "Keterangan penutupan belum diisi. Keterangan wajib diisi untuk menutup pendaftaran.",
+        pesan:
+          "Pendaftaran belum ditutup karena keterangan penutupan belum diisi. Tulis keterangannya, lalu tutup lagi.",
+      };
+  }
+}
+
+/**
+ * Pegawai menutup sebuah pendaftaran dengan alasan dan keterangan (PRD §7.5). Keadaan sebelumnya yang dikirim browser
+ * tidak dipakai: semua yang dibutuhkan dibaca dari isian formulir dan database. Sesudah ditutup, halaman pendaftaran
+ * menampilkan status Ditutup beserta alasan dan keterangannya, tanpa formulir ini.
+ */
+export async function tutupPendaftaranDariPanel(
+  _sebelum: unknown,
+  formulir: FormData,
+): Promise<KeadaanTutupPendaftaran> {
+  const pegawai = await pastikanPegawai();
+  const nomor = skemaNomorPendaftaran.safeParse(formulir.get("nomor"));
+  const isian: IsianPenutupan = {
+    alasan: teksIsian(formulir, "alasan"),
+    keterangan: teksIsian(formulir, "keterangan"),
+  };
+  const alasan = skemaAlasan.safeParse(isian.alasan);
+  if (!bolehMembukaMenu(pegawai.peran, "pendaftaran")) forbidden();
+
+  const versi = randomUUID();
+  const ditolak = (pesan: Pesan[], galat: GalatPenutupan = {}) => ({
+    pesan,
+    isian,
+    galat,
+    versi,
+  });
+  if (!nomor.success) return ditolak([peringatan(PESAN_TIDAK_ADA)]);
+  if (!alasan.success) {
+    return ditolak(
+      [
+        peringatan(
+          "Pendaftaran belum ditutup karena alasan penutupan tidak dikenali. Pilih salah satu alasan, lalu tutup lagi.",
+        ),
+      ],
+      { alasan: GALAT_ALASAN_TIDAK_DIKENALI },
+    );
+  }
+
+  try {
+    const hasil = await tutupPendaftaran(nomor.data, {
+      alasan: alasan.data,
+      keterangan: isian.keterangan,
+    });
+    if (hasil.hasil === "tidak-ada") {
+      return ditolak([peringatan(PESAN_TIDAK_ADA)]);
+    }
+    if (hasil.hasil === "ditolak") {
+      const galat: GalatPenutupan = {};
+      const pesan = hasil.gagal.map((gagal) => {
+        const uraian = pesanPenutupanGagal(gagal);
+        if (uraian.isian) galat[uraian.isian] = uraian.galat;
+        return peringatan(uraian.pesan);
+      });
+      return ditolak(pesan, galat);
+    }
+    revalidatePath(alamatPendaftaran(nomor.data));
+    return {
+      pesan: [
+        {
+          jenis: "kabar",
+          teks: `Pendaftaran ${nomor.data} sudah ditutup.`,
+        },
+      ],
+      isian: { alasan: "", keterangan: "" },
+      galat: {},
+      versi,
+    };
+  } catch (galat) {
+    console.error(galat);
+    return ditolak([peringatan(PESAN_GANGGUAN_TUTUP)]);
   }
 }

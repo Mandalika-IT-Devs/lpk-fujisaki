@@ -176,3 +176,24 @@ export function periksaSyaratKirim<F extends FormulirDiperiksa>(keadaan: {
   }
   return { boleh: true, formulir: isianWajib.formulir, batasUsia };
 }
+
+/**
+ * Isian awal formulir pendaftaran pemilik akun (PRD §6.2, §6.6): draf yang pernah disimpan, atau, bila belum ada
+ * draf, isian pendaftaran Ditutup miliknya yang paling baru dikirim, supaya ia bisa mendaftar ulang dari isian lama.
+ * Draf lebih dulu dipakai, karena draf hanya bisa disimpan sesudah pendaftaran terakhirnya ditutup (draf dihapus saat
+ * formulir dikirim), jadi draf selalu lebih baru daripada isian lama. Tanpa keduanya, tidak ada isian awal.
+ */
+export function isianAwalFormulirPendaftaran<I>(keadaan: {
+  draf: I | undefined;
+  pendaftaran: readonly {
+    status: StatusPendaftaran;
+    dikirimPada: Date;
+    isian: I;
+  }[];
+}): I | undefined {
+  if (keadaan.draf !== undefined) return keadaan.draf;
+  const [terbaru] = keadaan.pendaftaran
+    .filter(({ status }) => status === "Ditutup")
+    .toSorted((a, b) => b.dikirimPada.getTime() - a.dikirimPada.getTime());
+  return terbaru?.isian;
+}

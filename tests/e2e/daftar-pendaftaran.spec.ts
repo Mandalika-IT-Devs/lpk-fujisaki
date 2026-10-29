@@ -4,7 +4,7 @@ import postgres from "postgres";
 import { ADMIN, masukKePanel, STAF } from "./pegawai-uji";
 
 // Daftar pendaftaran di panel pegawai (issue T14, PRD §11.1, UAT-K1 tanpa saringan kelas).
-// Pendaftaran uji diisi langsung ke database test, karena penutupan dan pindah tahap belum punya halaman. Semuanya
+// Pendaftaran uji diisi langsung ke database test, karena pindah tahap belum punya halaman. Semuanya
 // dikirim pada 2025, jadi nomornya (FGC-2025-…) tidak pernah bertabrakan dengan nomor yang diberikan test lain saat
 // mengirim formulir. Test lain bisa menambah pendaftaran kapan saja, jadi pemeriksaan di sini hanya memastikan bahwa
 // setiap baris yang tampil cocok, bahwa pendaftaran uji yang cocok tampil berurutan, dan yang tidak cocok tidak tampil.
@@ -119,12 +119,14 @@ async function isiPendaftaranUji() {
         insert into pendaftaran (akun_id, nomor, dikirim_pada, status, tahap, nama_lengkap, jenis_kelamin, tempat_lahir,
           tanggal_lahir, kabupaten_kota, provinsi, pendidikan_terakhir, program_id, bidang_kerja_id,
           bidang_kerja_belum_tahu, kemampuan_bahasa_jepang, nama_kontak_darurat, hubungan_kontak_darurat,
-          nomor_hp_kontak_darurat)
+          nomor_hp_kontak_darurat, alasan_penutupan, keterangan_penutupan)
         values (${akunId}, ${uji.nomor}, ${uji.dikirimPada}, ${uji.status}, ${uji.tahap}, ${uji.namaLengkap},
           'Perempuan', 'Cilacap', '2004-05-17', 'Kab. Cilacap', 'Jawa Tengah', 'SMK',
           (select id from program where nama = ${uji.program}),
           (select id from bidang_kerja where nama = ${uji.bidangKerja}),
-          ${uji.bidangKerja === null}, 'N5', 'Kontak Darurat Uji', 'Ibu', '6281234567890')`;
+          ${uji.bidangKerja === null}, 'N5', 'Kontak Darurat Uji', 'Ibu', '6281234567890',
+          ${uji.status === "Ditutup" ? "Mundur" : null},
+          ${uji.status === "Ditutup" ? "Keterangan penutupan uji" : null})`;
     }
   } finally {
     await sql.end();

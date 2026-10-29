@@ -13,6 +13,7 @@ const { akun, bidangKerja, langkahPendaftaran, pendaftaran, program } =
   await import("./db/schema");
 const {
   bacaDrafFormulirPendaftaran,
+  bacaIsianAwalFormulirPendaftaran,
   bacaPilihanUbahIsian,
   simpanDrafFormulirPendaftaran,
 } = await import("./formulir-pendaftaran");
@@ -21,7 +22,9 @@ const {
   bacaLangkahPendaftaran,
   bacaPendaftaran,
   bacaPendaftaranBerjalan,
+  bacaPendaftaranDitutup,
   kirimPendaftaran,
+  tutupPendaftaran,
   ubahIsianPendaftaran,
 } = await import("./pendaftaran");
 const { ubahProgram } = await import("./program");
@@ -113,6 +116,19 @@ async function kirimLalu(akunId: string) {
     );
   }
   return hasil.nomorPendaftaran;
+}
+
+/** Pegawai menutup pendaftaran dengan alasan Mundur dan keterangan contoh. */
+async function tutupLalu(nomor: string) {
+  const hasil = await tutupPendaftaran(nomor, {
+    alasan: "Mundur",
+    keterangan: "Mundur atas permintaan sendiri.",
+  });
+  if (hasil.hasil !== "ditutup") {
+    throw new Error(
+      `Penutupan contoh seharusnya diterima: ${JSON.stringify(hasil)}`,
+    );
+  }
 }
 
 describe("kirimPendaftaran", () => {
@@ -301,6 +317,7 @@ describe("bacaPendaftaran dan bacaLangkahPendaftaran", () => {
       program: programUji.nama,
       bidangKerja: "Belum tahu",
       isian: drafLengkap(),
+      penutupan: null,
     });
     const langkah = await bacaLangkahPendaftaran(nomor);
     expect(langkah.slice(0, 6)).toEqual([
@@ -402,10 +419,7 @@ describe("bacaDaftarPendaftaran", () => {
       dikirimPada: dikirimBaru,
       bidangKerjaId: bidangKerjaDaftar.id,
     });
-    await db
-      .update(pendaftaran)
-      .set({ status: "Ditutup" })
-      .where(eq(pendaftaran.nomor, nomorLama));
+    await tutupLalu(nomorLama);
 
     const halaman = await bacaDaftarPendaftaran(
       { programId: programDaftar.id },
@@ -566,10 +580,7 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
     expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
 
     // Sesudah ditutup, pemilik akun boleh mengirim formulir baru (§6.6); itu membuka pendaftaran baru.
-    await db
-      .update(pendaftaran)
-      .set({ status: "Ditutup" })
-      .where(eq(pendaftaran.nomor, nomor));
+    await tutupLalu(nomor);
     expect(await simpanDrafFormulirPendaftaran(akunId, diubah)).toEqual({
       hasil: "tersimpan",
     });
@@ -585,5 +596,169 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
       hasil: "tidak-ada",
     });
     expect(await bacaPendaftaran("FGC-1999-0001")).toBeUndefined();
+  });
+});
+
+describe("tutupPendaftaran (issue T16, PRD §7.5)", () => {
+  it("penutupan tanpa keterangan ditolak, dan pendaftarannya tetap Berjalan", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+
+    expect(
+      await tutupPendaftaran(nomor, { alasan: "Mundur", keterangan: "   " }),
+    ).toEqual({ hasil: "ditolak", gagal: [{ syarat: "keterangan-diisi" }] });
+    expect(await bacaPendaftaran(nomor)).toMatchObject({
+      status: "Berjalan",
+      penutupan: null,
+    });
+    expect(await bacaPendaftaranBerjalan(akunId)).toMatchObject({ nomor });
+  });
+
+  it("penutupan dengan alasan Mundur dan keterangan membuat statusnya Ditutup, dengan alasan dan keterangan tersimpan", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+
+    expect(
+      await tutupPendaftaran(nomor, {
+        alasan: "Mundur",
+        keterangan: "  Diterima kerja di pabrik dekat rumah.\n",
+      }),
+    ).toEqual({ hasil: "ditutup" });
+
+    expect(await bacaPendaftaran(nomor)).toEqual({
+      nomor,
+      status: "Ditutup",
+      tahap: 1,
+      program: programUji.nama,
+      bidangKerja: "Belum tahu",
+      isian: drafLengkap(),
+      penutupan: {
+        alasan: "Mundur",
+        keterangan: "Diterima kerja di pabrik dekat rumah.",
+      },
+    });
+    expect(await bacaPendaftaranBerjalan(akunId)).toBeUndefined();
+  });
+
+  it("pendaftaran yang sudah Ditutup tidak bisa ditutup lagi, juga bila dua penutupan dikirim bersamaan; alasan dan keterangan pertama tetap", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+
+    const hasil = await Promise.all([
+      tutupPendaftaran(nomor, { alasan: "Mundur", keterangan: "Pertama" }),
+      tutupPendaftaran(nomor, { alasan: "Mundur", keterangan: "Pertama" }),
+    ]);
+    expect(hasil.filter((h) => h.hasil === "ditutup")).toHaveLength(1);
+    expect(hasil.filter((h) => h.hasil === "ditolak")).toEqual([
+      {
+        hasil: "ditolak",
+        gagal: [{ syarat: "status-berjalan", status: "Ditutup" }],
+      },
+    ]);
+
+    expect(
+      await tutupPendaftaran(nomor, {
+        alasan: "Dikeluarkan",
+        keterangan: "Ditutup ulang",
+      }),
+    ).toEqual({
+      hasil: "ditolak",
+      gagal: [{ syarat: "status-berjalan", status: "Ditutup" }],
+    });
+    expect((await bacaPendaftaran(nomor))?.penutupan).toEqual({
+      alasan: "Mundur",
+      keterangan: "Pertama",
+    });
+  });
+
+  it("database menolak status Ditutup tanpa alasan dan keterangan penutupan", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+
+    await expect(
+      db
+        .update(pendaftaran)
+        .set({ status: "Ditutup" })
+        .where(eq(pendaftaran.nomor, nomor)),
+    ).rejects.toThrow();
+    expect((await bacaPendaftaran(nomor))?.status).toBe("Berjalan");
+  });
+
+  it("nomor pendaftaran yang tidak ada tidak menutup apa pun", async () => {
+    expect(
+      await tutupPendaftaran("FGC-1999-0002", {
+        alasan: "Mundur",
+        keterangan: "Keterangan uji",
+      }),
+    ).toEqual({ hasil: "tidak-ada" });
+  });
+});
+
+describe("pendaftaran ulang sesudah penutupan (issue T16, PRD §6.6, UAT-F5)", () => {
+  it("pemilik akun melihat pendaftarannya yang Ditutup beserta alasannya, tanpa keterangan (▶ Keputusan OD-14)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+    await tutupLalu(nomor);
+
+    expect(await bacaPendaftaranDitutup(akunId)).toEqual([
+      { nomor, program: programUji.nama, status: "Ditutup", alasan: "Mundur" },
+    ]);
+  });
+
+  it("isian lama menjadi isian awal formulir baru sampai pemilik akun menyimpan draf", async () => {
+    const akunId = await buatPemilikAkun();
+    expect(await bacaIsianAwalFormulirPendaftaran(akunId)).toBeUndefined();
+    const nomor = await kirimLalu(akunId);
+    await ubahIsianPendaftaran(
+      nomor,
+      { ...drafLengkap(), kabupatenKota: "Diubah Pegawai" },
+      DIUBAH_PADA,
+    );
+    await tutupLalu(nomor);
+
+    expect(await bacaIsianAwalFormulirPendaftaran(akunId)).toEqual({
+      ...drafLengkap(),
+      kabupatenKota: "Diubah Pegawai",
+    });
+
+    const draf = { ...drafLengkap(), kabupatenKota: "Isian Draf Baru" };
+    await simpanDrafFormulirPendaftaran(akunId, draf);
+    // Draf dibaca seperti yang tersimpan, termasuk akun pemiliknya.
+    expect(await bacaIsianAwalFormulirPendaftaran(akunId)).toMatchObject(draf);
+  });
+
+  it("formulir baru mendapat nomor baru, Berjalan di tahap 1; pendaftaran lama tetap Ditutup dan terlihat di daftar pegawai (UAT-F5)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomorLama = await kirimLalu(akunId);
+    await tutupLalu(nomorLama);
+
+    const nomorBaru = await kirimLalu(akunId);
+
+    expect(nomorBaru).not.toBe(nomorLama);
+    expect(urutan(nomorBaru)).toBeGreaterThan(urutan(nomorLama));
+    expect(await bacaPendaftaranBerjalan(akunId)).toMatchObject({
+      nomor: nomorBaru,
+      status: "Berjalan",
+      tahap: 1,
+    });
+    const langkahBaru = await bacaLangkahPendaftaran(nomorBaru);
+    expect(langkahBaru).toHaveLength(22);
+    expect(new Set(langkahBaru.map(({ status }) => status))).toEqual(
+      new Set(["Belum"]),
+    );
+    expect(await bacaPendaftaran(nomorLama)).toMatchObject({
+      status: "Ditutup",
+      penutupan: { alasan: "Mundur" },
+    });
+    expect(await bacaPendaftaranDitutup(akunId)).toEqual([
+      {
+        nomor: nomorLama,
+        program: programUji.nama,
+        status: "Ditutup",
+        alasan: "Mundur",
+      },
+    ]);
+    const daftar = await bacaDaftarPendaftaran({ cari: nomorLama }, 1);
+    expect(daftar.baris).toMatchObject([
+      { nomor: nomorLama, status: "Ditutup" },
+    ]);
   });
 });

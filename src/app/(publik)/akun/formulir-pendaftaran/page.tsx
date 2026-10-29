@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { IkonPanahKiri } from "@/components/ikon";
 import { ALAMAT_AKUN } from "@/components/tautan-situs";
 import {
-  bacaDrafFormulirPendaftaran,
+  bacaIsianAwalFormulirPendaftaran,
   bacaPilihanFormulirPendaftaran,
 } from "@/server/formulir-pendaftaran";
 import { bacaPendaftaranBerjalan } from "@/server/pendaftaran";
@@ -17,18 +17,19 @@ export const metadata: Metadata = { title: "Formulir pendaftaran" };
 
 /**
  * Halaman formulir pendaftaran pemilik akun (PRD §6.1, §6.2), tujuan ajakan "Isi formulir pendaftaran" di halaman
- * akun. Draf yang pernah disimpan dimuat kembali. Halaman ini hanya untuk pemilik akun (§2.2). Sesudah formulir
- * dikirim, isiannya terkunci (§6.5): selama pendaftarannya Berjalan, halaman ini mengarah ke halaman akun, yang
- * menampilkan pendaftaran itu.
+ * akun. Draf yang pernah disimpan dimuat kembali; tanpa draf, pemilik akun yang pendaftarannya Ditutup mulai dari
+ * isian pendaftaran terakhirnya (§6.6). Halaman ini hanya untuk pemilik akun (§2.2). Sesudah formulir dikirim,
+ * isiannya terkunci (§6.5): selama pendaftarannya Berjalan, halaman ini mengarah ke halaman akun, yang menampilkan
+ * pendaftaran itu.
  */
 export default async function HalamanFormulirPendaftaran() {
   const pemilikAkun = await pastikanPemilikAkun();
   if (await bacaPendaftaranBerjalan(pemilikAkun.id)) redirect(ALAMAT_AKUN);
-  const [pilihan, draf] = await Promise.all([
+  const [pilihan, isianAwal] = await Promise.all([
     bacaPilihanFormulirPendaftaran(),
-    bacaDrafFormulirPendaftaran(pemilikAkun.id),
+    bacaIsianAwalFormulirPendaftaran(pemilikAkun.id),
   ]);
-  const awal = keIsianFormulir(draf, {
+  const awal = keIsianFormulir(isianAwal, {
     programId: pilihan.program.map((p) => p.id),
     bidangKerjaId: pilihan.bidangKerja.map((b) => b.id),
   });

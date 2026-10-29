@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { isianAwalFormulirPendaftaran } from "@/domain/pendaftaran";
 import {
   bisaDipilihDiFormulirPendaftaran,
   bisaDipilihSaatPegawaiMengubahIsian,
@@ -6,7 +7,11 @@ import {
 import { daftarBidangKerja } from "./bidang-kerja";
 import { db } from "./db";
 import { drafFormulirPendaftaran } from "./db/schema";
-import { kunciAkun, nomorPendaftaranBerjalan } from "./pendaftaran";
+import {
+  bacaIsianPendaftaranAkun,
+  kunciAkun,
+  nomorPendaftaranBerjalan,
+} from "./pendaftaran";
 import { daftarProgram } from "./program";
 
 // Draf formulir pendaftaran pemilik akun (PRD §6.1, §6.2): satu draf per akun, disimpan kapan saja meski belum
@@ -81,6 +86,24 @@ export async function bacaDrafFormulirPendaftaran(
     .from(drafFormulirPendaftaran)
     .where(eq(drafFormulirPendaftaran.akunId, akunId));
   return baris;
+}
+
+/**
+ * Isian awal formulir pendaftaran sebuah akun (PRD §6.6): draf yang pernah disimpan, atau isian pendaftaran Ditutup
+ * miliknya yang paling baru dikirim, menurut aturan domain isianAwalFormulirPendaftaran. Undefined bila tidak ada
+ * keduanya.
+ */
+export async function bacaIsianAwalFormulirPendaftaran(
+  akunId: string,
+): Promise<DrafFormulirPendaftaran | undefined> {
+  const [draf, semuaPendaftaran] = await Promise.all([
+    bacaDrafFormulirPendaftaran(akunId),
+    bacaIsianPendaftaranAkun(akunId),
+  ]);
+  return isianAwalFormulirPendaftaran<DrafFormulirPendaftaran>({
+    draf,
+    pendaftaran: semuaPendaftaran,
+  });
 }
 
 export type HasilSimpanDraf =

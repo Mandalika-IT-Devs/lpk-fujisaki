@@ -145,6 +145,12 @@ Contoh:
 
 Beranda menampilkan total siswa, jumlah per level, jumlah per bidang kerja, jumlah alumni di Jepang, dan tanggal "data per".
 
+▶ Keputusan 2026-10-29: Bidang kerja yang dinonaktifkan sesudah statistik disimpan langsung hilang dari Beranda, walau jumlah per bidang kerja yang tampil jadi kurang dari total siswa sampai Admin menyimpan ulang statistik (§4.3).
+
+▶ Keputusan 2026-10-29: Bidang kerja yang ditambahkan sesudah statistik disimpan mendapat isian kosong di formulir statistik. Isian itu wajib diisi sebelum Admin bisa menyimpan, tidak otomatis bernilai 0.
+
+▶ Keputusan 2026-10-29: Tahun pertama keberangkatan pada papan kedatangan di Beranda ("sejak 2019") tertulis tetap di kode, bukan isian Admin.
+
 ### 3.4 Galeri
 
 Setiap foto galeri punya judul, tanggal kegiatan, dan berkas foto.
@@ -169,6 +175,10 @@ Foto bisa dihapus dari galeri. Siapa yang boleh mengelola galeri mengikuti OD-16
 Admin mengelola alamat, nomor WhatsApp kantor, email kantor, dan lokasi peta. Isinya mengikuti OD-05.
 
 Tombol "Chat WhatsApp" membuka percakapan dengan nomor kantor lewat tautan `https://wa.me/<nomor>`. Tombol ini ada di halaman Kontak dan di halaman konfirmasi pendaftaran (§6.5).
+
+▶ Keputusan 2026-10-29: Alamat dan email kantor wajib diisi. Nomor WhatsApp dan tautan peta boleh kosong.
+
+▶ Keputusan 2026-10-29: Selama tautan peta belum diisi, halaman Kontak menampilkan catatan "Lokasi peta menyusul." Selama nomor WhatsApp belum diisi, tombol "Chat WhatsApp" tampil nonaktif dengan catatan "Nomor WhatsApp kantor menyusul."
 
 ## 4. Program dan bidang kerja
 
@@ -255,6 +265,8 @@ Pemilik akun yang belum memverifikasi email tetap bisa masuk dan menyusun draf f
 Pemilik akun dan pegawai bisa meminta tautan atur ulang kata sandi lewat email. Tautan itu berlaku 1 jam.
 
 ▶ Keputusan 2026-10-24: Setelah kata sandi diatur ulang, semua sesi lain akun itu diakhiri. Perangkat lain yang masih masuk harus masuk lagi dengan kata sandi baru.
+
+▶ Keputusan 2026-10-29: Yang diakhiri adalah semua sesi akun itu, termasuk sesi di browser tempat kata sandi diatur ulang. Sesudah mengatur ulang, pemilik akun atau pegawai masuk lagi dengan kata sandi baru di semua perangkat (UAT-E4).
 
 ▶ Keputusan 2026-10-24: Pegawai nonaktif tetap bisa meminta tautan dan mengatur ulang kata sandinya, tetapi tetap tidak bisa masuk (§5.5).
 

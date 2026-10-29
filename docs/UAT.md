@@ -81,6 +81,19 @@ Hasil: hanya nomor 1 yang diterima dan tampil di Galeri. Nomor 2–4 ditolak den
 
 Hasil: WhatsApp terbuka dengan nomor kantor.
 
+**UAT-C6 – Kontak tanpa WhatsApp dan peta** (§3.5)
+1. Sebagai Admin, kosongkan nomor WhatsApp dan tautan peta, lalu simpan.
+2. Kosongkan alamat, lalu simpan.
+3. Buka halaman Kontak.
+
+Hasil: nomor 1 tersimpan, nomor 2 ditolak karena alamat wajib. Halaman Kontak menampilkan tombol "Chat WhatsApp" nonaktif dengan catatan "Nomor WhatsApp kantor menyusul.", dan catatan "Lokasi peta menyusul."
+
+**UAT-C7 – Bidang kerja berubah sesudah statistik disimpan** (§3.3, §4.3)
+1. Simpan statistik seperti UAT-C2, lalu nonaktifkan "Restoran" dan buka Beranda.
+2. Tambahkan bidang kerja baru, lalu buka formulir statistik dan simpan tanpa mengisi angkanya.
+
+Hasil: nomor 1, "Restoran" hilang dari Beranda walau angka per bidang kerja kini kurang dari total siswa. Nomor 2, isian bidang kerja baru kosong dan penyimpanan ditolak sampai angkanya diisi.
+
 ## D. Program dan bidang kerja (§4)
 
 **UAT-D1 – Program nonaktif** (§4.3)

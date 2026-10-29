@@ -10,6 +10,7 @@ import {
   type GalatIsian,
   ISIAN_KOSONG,
   type IsianFormulirPendaftaran,
+  keIsianFormulir,
   LABEL_ISIAN,
   type NamaIsian,
   periksaDrafFormulirPendaftaran,
@@ -58,10 +59,11 @@ export async function simpanDraf(
 
   try {
     const pilihan = await bacaPilihanFormulirPendaftaran();
-    const hasil = periksaDrafFormulirPendaftaran(isian, {
+    const idPilihan = {
       programId: pilihan.program.map((p) => p.id),
       bidangKerjaId: pilihan.bidangKerja.map((b) => b.id),
-    });
+    };
+    const hasil = periksaDrafFormulirPendaftaran(isian, idPilihan);
     if (!hasil.sah) {
       return {
         pesan: { jenis: "peringatan", teks: pesanIsianSalah(hasil.galat) },
@@ -70,6 +72,13 @@ export async function simpanDraf(
       };
     }
     await simpanDrafFormulirPendaftaran(pemilikAkun.id, hasil.draf);
+    // Isian tampil seperti yang tersimpan, sama seperti saat formulir dibuka lagi; misalnya nomor HP dalam bentuk
+    // ternormalisasi (§5.2).
+    return {
+      pesan: { jenis: "kabar", teks: KABAR_DRAF_TERSIMPAN },
+      isian: keIsianFormulir(hasil.draf, idPilihan),
+      galat: {},
+    };
   } catch (galat) {
     console.error(galat);
     return {
@@ -78,9 +87,4 @@ export async function simpanDraf(
       galat: {},
     };
   }
-  return {
-    pesan: { jenis: "kabar", teks: KABAR_DRAF_TERSIMPAN },
-    isian,
-    galat: {},
-  };
 }

@@ -55,6 +55,56 @@ async function teksPilihan(page: Page, label: string) {
     .allTextContents();
 }
 
+/** Isian teks dan tanggal (label → nilai) untuk test yang mengisi semua isian. */
+const ISIAN_TEKS = {
+  "Nama lengkap sesuai KTP": "Sari Wulandari",
+  "Tempat lahir": "Cilacap",
+  "Tanggal lahir": "2004-02-29",
+  "Kabupaten/kota domisili": "Kab. Cilacap",
+  "Jurusan pendidikan terakhir": "Tata Boga",
+  "Pengalaman kerja": "Dua tahun di rumah makan",
+  "Nama kontak darurat": "Siti Aminah",
+  "Hubungan kontak darurat": "Ibu",
+};
+
+/** Isian pilihan (label → teks pilihan) untuk test yang mengisi semua isian. */
+const ISIAN_PILIHAN = {
+  "Provinsi domisili": "Jawa Tengah",
+  "Pendidikan terakhir": "SMK",
+  Program: "Tokutei Ginou (SSW)",
+  "Bidang kerja yang diminati": "Pembersihan gedung",
+  "Kemampuan bahasa Jepang saat ini": "N5",
+};
+
+/** Mengisi semua isian formulir, dengan nomor HP kontak darurat yang diberikan. */
+async function isiSemuaIsian(page: Page, nomorHp: string) {
+  const isian = formulir(page);
+  for (const [label, nilai] of Object.entries(ISIAN_TEKS)) {
+    await isian.getByLabel(label).fill(nilai);
+  }
+  await isian.getByRole("radio", { name: "Perempuan" }).check();
+  for (const [label, teks] of Object.entries(ISIAN_PILIHAN)) {
+    await isian
+      .getByLabel(label, { exact: true })
+      .selectOption({ label: teks });
+  }
+  await isian.getByLabel("Nomor HP kontak darurat").fill(nomorHp);
+}
+
+/** Semua isian selain nomor HP kontak darurat masih berisi nilai dari isiSemuaIsian. */
+async function periksaSemuaIsianTetap(page: Page) {
+  const isian = formulir(page);
+  for (const [label, nilai] of Object.entries(ISIAN_TEKS)) {
+    await expect(isian.getByLabel(label)).toHaveValue(nilai);
+  }
+  await expect(isian.getByRole("radio", { name: "Perempuan" })).toBeChecked();
+  for (const [label, teks] of Object.entries(ISIAN_PILIHAN)) {
+    await expect(
+      isian.getByLabel(label, { exact: true }).locator("option:checked"),
+    ).toHaveText(teks);
+  }
+}
+
 test("draf yang sebagian terisi tetap ada setelah keluar lalu masuk lagi (UAT-F1 langkah 1)", async ({
   page,
 }) => {
@@ -207,6 +257,61 @@ test("nomor HP kontak darurat yang tidak sah ditandai salah di isiannya, dan dra
   await expect(isian.getByRole("status")).toHaveText(KABAR_DRAF_TERSIMPAN);
   await expect(nomorHp).not.toHaveAttribute("aria-invalid", "true");
   await expect(isian.getByRole("alert")).toHaveCount(0);
+});
+
+test("sesudah Simpan draf semua isian dan pilihan tetap terisi, dan simpan kedua tidak menghapus pilihan yang tersimpan", async ({
+  page,
+}) => {
+  await buatAkunLaluBukaFormulir(page, {
+    nama: "Calon Simpan Ulang Uji",
+    email: "calon.simpan.ulang@contoh.test",
+    nomorWhatsApp: "0812-0000-1207",
+    kataSandi: "sandi-calon-uji",
+  });
+  const isian = formulir(page);
+  const nomorHp = isian.getByLabel("Nomor HP kontak darurat");
+
+  await isiSemuaIsian(page, "0812-3456-7890");
+  await simpanDraf(page);
+  await expect(isian.getByRole("status")).toHaveText(KABAR_DRAF_TERSIMPAN);
+  await periksaSemuaIsianTetap(page);
+  // Sesudah disimpan, nomor tampil dalam bentuk tersimpan, sama seperti sesudah dimuat ulang (PRD §5.2).
+  await expect(nomorHp).toHaveValue("6281234567890");
+
+  await simpanDraf(page);
+  await expect(isian.getByRole("status")).toHaveText(KABAR_DRAF_TERSIMPAN);
+  await periksaSemuaIsianTetap(page);
+
+  await page.reload();
+  await periksaSemuaIsianTetap(page);
+  await expect(nomorHp).toHaveValue("6281234567890");
+});
+
+test("sesudah Simpan draf ditolak karena nomor HP kontak darurat salah, semua isian dan pilihan lain tetap terisi untuk diperbaiki", async ({
+  page,
+}) => {
+  await buatAkunLaluBukaFormulir(page, {
+    nama: "Calon Ditolak Uji",
+    email: "calon.ditolak@contoh.test",
+    nomorWhatsApp: "0812-0000-1208",
+    kataSandi: "sandi-calon-uji",
+  });
+  const isian = formulir(page);
+  const nomorHp = isian.getByLabel("Nomor HP kontak darurat");
+
+  await isiSemuaIsian(page, "081234567");
+  await simpanDraf(page);
+  await expect(isian.getByRole("alert")).toContainText(
+    "Draf belum tersimpan karena isian berikut belum benar: Nomor HP kontak darurat.",
+  );
+  await periksaSemuaIsianTetap(page);
+  await expect(nomorHp).toHaveValue("081234567");
+
+  await nomorHp.fill("0812-3456-7890");
+  await simpanDraf(page);
+  await expect(isian.getByRole("status")).toHaveText(KABAR_DRAF_TERSIMPAN);
+  await page.reload();
+  await periksaSemuaIsianTetap(page);
 });
 
 test("hanya program dan bidang kerja aktif yang muncul, ditambah pilihan Belum tahu untuk bidang kerja (PRD §4.3)", async ({

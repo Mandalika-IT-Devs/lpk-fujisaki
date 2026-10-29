@@ -43,8 +43,8 @@ export default async function HalamanFormulirPendaftaran() {
             Formulir pendaftaran
           </h1>
           <p className="max-w-[60ch] text-teks-2">
-            Isi data dirimu sesuai KTP. Formulir bisa disimpan sebagai draf
-            kapan saja, juga bila belum lengkap, lalu dilanjutkan nanti.
+            Formulir bisa disimpan sebagai draf kapan saja, juga bila belum
+            lengkap, lalu dilanjutkan nanti.
           </p>
         </div>
         <div className="rounded-sudut bg-dasar p-4 shadow-papan lg:p-6">

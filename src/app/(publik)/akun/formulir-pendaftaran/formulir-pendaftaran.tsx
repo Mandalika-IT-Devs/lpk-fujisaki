@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import type { PilihanFormulirPendaftaran } from "@/server/formulir-pendaftaran";
 import { GAYA_ISIAN, GAYA_LABEL } from "@/app/panel/akses-pegawai";
 import { PesanTindakan } from "@/app/panel/(terjaga)/pesan-tindakan";
-import { simpanDraf } from "./aksi";
+import { type KeadaanFormulirPendaftaran, simpanDraf } from "./aksi";
 import {
   type GalatIsian,
   type IsianFormulirPendaftaran,
@@ -150,6 +150,17 @@ function Bagian({
   );
 }
 
+/** Keadaan formulir di browser: keadaan dari server, ditambah versi yang naik setiap kali draf disimpan. */
+type KeadaanTampil = KeadaanFormulirPendaftaran & { versi: number };
+
+async function simpanDrafLaluNaikkanVersi(
+  sebelum: KeadaanTampil,
+  formulir: FormData,
+): Promise<KeadaanTampil> {
+  const { versi, ...keadaan } = sebelum;
+  return { ...(await simpanDraf(keadaan, formulir)), versi: versi + 1 };
+}
+
 /**
  * Formulir pendaftaran pemilik akun dengan semua isian PRD §6.1, dalam urutan tabelnya, dan tanpa isian NIK, tinggi
  * badan, atau berat badan (§12.2). Formulir bisa disimpan sebagai draf kapan saja, juga bila belum lengkap (§6.2).
@@ -163,10 +174,11 @@ export function FormulirPendaftaran({
   awal: IsianFormulirPendaftaran;
   pilihan: PilihanFormulirPendaftaran;
 }) {
-  const [keadaan, kirim] = useActionState(simpanDraf, {
+  const [keadaan, kirim] = useActionState(simpanDrafLaluNaikkanVersi, {
     pesan: null,
     isian: awal,
     galat: {},
+    versi: 0,
   });
   const { isian, galat } = keadaan;
 
@@ -177,206 +189,212 @@ export function FormulirPendaftaran({
       aria-label="Formulir pendaftaran"
       className="grid gap-8"
     >
-      <Bagian id="bagian-data-diri" judul="Data diri">
-        <Kolom nama="namaLengkap" galat={galat}>
-          <input
-            {...atributIsian("namaLengkap", galat)}
-            type="text"
-            autoComplete="name"
-            defaultValue={isian.namaLengkap}
-            className={GAYA_ISIAN_FORMULIR}
-          />
-        </Kolom>
-        <div className="grid gap-1">
-          <p id="label-jenisKelamin" className={GAYA_LABEL}>
-            {LABEL_ISIAN.jenisKelamin}
-          </p>
-          <div
-            role="radiogroup"
-            aria-labelledby="label-jenisKelamin"
-            aria-invalid={galat.jenisKelamin ? true : undefined}
-            aria-describedby={
-              galat.jenisKelamin ? "galat-jenisKelamin" : undefined
-            }
-            className="flex flex-wrap gap-x-8"
-          >
-            {PILIHAN_JENIS_KELAMIN.map((jenis) => (
-              <label
-                key={jenis}
-                className="flex min-h-11 cursor-pointer items-center gap-3"
-              >
-                <input
-                  type="radio"
-                  name="jenisKelamin"
-                  value={jenis}
-                  defaultChecked={isian.jenisKelamin === jenis}
-                  className="size-6 shrink-0 cursor-pointer accent-jalur"
-                />
-                {jenis}
-              </label>
-            ))}
-          </div>
-          <PesanGalat nama="jenisKelamin" galat={galat} />
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
-          <Kolom nama="tempatLahir" galat={galat}>
+      {/* React mengatur ulang formulir sesudah setiap action, dan select kembali ke pilihan saat pertama dipasang.
+          Isian dipasang ulang dengan kunci versi, supaya setiap isian berangkat dari isian hasil simpan terakhir. */}
+      <div key={keadaan.versi} className="grid gap-8">
+        <Bagian id="bagian-data-diri" judul="Data diri">
+          <Kolom nama="namaLengkap" galat={galat}>
             <input
-              {...atributIsian("tempatLahir", galat)}
+              {...atributIsian("namaLengkap", galat)}
               type="text"
-              autoComplete="off"
-              defaultValue={isian.tempatLahir}
+              autoComplete="name"
+              defaultValue={isian.namaLengkap}
               className={GAYA_ISIAN_FORMULIR}
             />
           </Kolom>
-          <Kolom nama="tanggalLahir" galat={galat}>
-            <input
-              {...atributIsian("tanggalLahir", galat)}
-              type="date"
-              autoComplete="bday"
-              defaultValue={isian.tanggalLahir}
-              className={GAYA_ISIAN_FORMULIR}
-            />
-          </Kolom>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
-          <Kolom nama="kabupatenKota" galat={galat}>
-            <input
-              {...atributIsian("kabupatenKota", galat)}
-              type="text"
-              autoComplete="address-level2"
-              defaultValue={isian.kabupatenKota}
-              className={GAYA_ISIAN_FORMULIR}
-            />
-          </Kolom>
-          <Kolom nama="provinsi" galat={galat}>
-            <Pilihan
-              nama="provinsi"
-              galat={galat}
-              nilai={isian.provinsi}
-              autoComplete="address-level1"
+          <div className="grid gap-1">
+            <p id="label-jenisKelamin" className={GAYA_LABEL}>
+              {LABEL_ISIAN.jenisKelamin}
+            </p>
+            <div
+              role="radiogroup"
+              aria-labelledby="label-jenisKelamin"
+              aria-invalid={galat.jenisKelamin ? true : undefined}
+              aria-describedby={
+                galat.jenisKelamin ? "galat-jenisKelamin" : undefined
+              }
+              className="flex flex-wrap gap-x-8"
             >
-              {DAFTAR_PROVINSI.map((provinsi) => (
-                <option key={provinsi} value={provinsi}>
-                  {provinsi}
+              {PILIHAN_JENIS_KELAMIN.map((jenis) => (
+                <label
+                  key={jenis}
+                  className="flex min-h-11 cursor-pointer items-center gap-3"
+                >
+                  <input
+                    type="radio"
+                    name="jenisKelamin"
+                    value={jenis}
+                    defaultChecked={isian.jenisKelamin === jenis}
+                    className="size-6 shrink-0 cursor-pointer accent-jalur"
+                  />
+                  {jenis}
+                </label>
+              ))}
+            </div>
+            <PesanGalat nama="jenisKelamin" galat={galat} />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <Kolom nama="tempatLahir" galat={galat}>
+              <input
+                {...atributIsian("tempatLahir", galat)}
+                type="text"
+                autoComplete="off"
+                defaultValue={isian.tempatLahir}
+                className={GAYA_ISIAN_FORMULIR}
+              />
+            </Kolom>
+            <Kolom nama="tanggalLahir" galat={galat}>
+              <input
+                {...atributIsian("tanggalLahir", galat)}
+                type="date"
+                autoComplete="bday"
+                defaultValue={isian.tanggalLahir}
+                className={GAYA_ISIAN_FORMULIR}
+              />
+            </Kolom>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <Kolom nama="kabupatenKota" galat={galat}>
+              <input
+                {...atributIsian("kabupatenKota", galat)}
+                type="text"
+                autoComplete="address-level2"
+                defaultValue={isian.kabupatenKota}
+                className={GAYA_ISIAN_FORMULIR}
+              />
+            </Kolom>
+            <Kolom nama="provinsi" galat={galat}>
+              <Pilihan
+                nama="provinsi"
+                galat={galat}
+                nilai={isian.provinsi}
+                autoComplete="address-level1"
+              >
+                {DAFTAR_PROVINSI.map((provinsi) => (
+                  <option key={provinsi} value={provinsi}>
+                    {provinsi}
+                  </option>
+                ))}
+              </Pilihan>
+            </Kolom>
+          </div>
+        </Bagian>
+
+        <Bagian id="bagian-pendidikan" judul="Pendidikan">
+          <Kolom nama="pendidikanTerakhir" galat={galat}>
+            <Pilihan
+              nama="pendidikanTerakhir"
+              galat={galat}
+              nilai={isian.pendidikanTerakhir}
+            >
+              {PILIHAN_PENDIDIKAN_TERAKHIR.map((pendidikan) => (
+                <option key={pendidikan} value={pendidikan}>
+                  {pendidikan}
                 </option>
               ))}
             </Pilihan>
           </Kolom>
-        </div>
-      </Bagian>
-
-      <Bagian id="bagian-pendidikan" judul="Pendidikan">
-        <Kolom nama="pendidikanTerakhir" galat={galat}>
-          <Pilihan
-            nama="pendidikanTerakhir"
-            galat={galat}
-            nilai={isian.pendidikanTerakhir}
-          >
-            {PILIHAN_PENDIDIKAN_TERAKHIR.map((pendidikan) => (
-              <option key={pendidikan} value={pendidikan}>
-                {pendidikan}
-              </option>
-            ))}
-          </Pilihan>
-        </Kolom>
-        <Kolom nama="jurusanPendidikan" galat={galat} tidakWajib>
-          <input
-            {...atributIsian("jurusanPendidikan", galat)}
-            type="text"
-            autoComplete="off"
-            defaultValue={isian.jurusanPendidikan}
-            className={GAYA_ISIAN_FORMULIR}
-          />
-        </Kolom>
-      </Bagian>
-
-      <Bagian id="bagian-program" judul="Program dan pengalaman">
-        <Kolom nama="programId" galat={galat}>
-          <Pilihan nama="programId" galat={galat} nilai={isian.programId}>
-            {pilihan.program.map((program) => (
-              <option key={program.id} value={program.id}>
-                {program.nama}
-              </option>
-            ))}
-          </Pilihan>
-        </Kolom>
-        <Kolom nama="bidangKerja" galat={galat}>
-          <Pilihan nama="bidangKerja" galat={galat} nilai={isian.bidangKerja}>
-            {pilihan.bidangKerja.map((bidang) => (
-              <option key={bidang.id} value={bidang.id}>
-                {bidang.nama}
-              </option>
-            ))}
-            <option value={NILAI_BELUM_TAHU}>{BIDANG_KERJA_BELUM_TAHU}</option>
-          </Pilihan>
-        </Kolom>
-        <Kolom
-          nama="kemampuanBahasaJepang"
-          galat={galat}
-          keterangan="Keterangan awal saja. Levelmu nanti ditentukan oleh kelas di lembaga."
-        >
-          <Pilihan
-            nama="kemampuanBahasaJepang"
-            galat={galat}
-            nilai={isian.kemampuanBahasaJepang}
-            keterangan
-          >
-            {PILIHAN_KEMAMPUAN_BAHASA_JEPANG.map((kemampuan) => (
-              <option key={kemampuan} value={kemampuan}>
-                {kemampuan}
-              </option>
-            ))}
-          </Pilihan>
-        </Kolom>
-        <Kolom nama="pengalamanKerja" galat={galat} tidakWajib>
-          <textarea
-            {...atributIsian("pengalamanKerja", galat)}
-            defaultValue={isian.pengalamanKerja}
-            className={GAYA_ISIAN_PANJANG}
-          />
-        </Kolom>
-      </Bagian>
-
-      <Bagian id="bagian-kontak-darurat" judul="Kontak darurat">
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
-          <Kolom nama="namaKontakDarurat" galat={galat}>
+          <Kolom nama="jurusanPendidikan" galat={galat} tidakWajib>
             <input
-              {...atributIsian("namaKontakDarurat", galat)}
+              {...atributIsian("jurusanPendidikan", galat)}
               type="text"
               autoComplete="off"
-              defaultValue={isian.namaKontakDarurat}
+              defaultValue={isian.jurusanPendidikan}
               className={GAYA_ISIAN_FORMULIR}
             />
+          </Kolom>
+        </Bagian>
+
+        <Bagian id="bagian-program" judul="Program dan pengalaman">
+          <Kolom nama="programId" galat={galat}>
+            <Pilihan nama="programId" galat={galat} nilai={isian.programId}>
+              {pilihan.program.map((program) => (
+                <option key={program.id} value={program.id}>
+                  {program.nama}
+                </option>
+              ))}
+            </Pilihan>
+          </Kolom>
+          <Kolom nama="bidangKerja" galat={galat}>
+            <Pilihan nama="bidangKerja" galat={galat} nilai={isian.bidangKerja}>
+              {pilihan.bidangKerja.map((bidang) => (
+                <option key={bidang.id} value={bidang.id}>
+                  {bidang.nama}
+                </option>
+              ))}
+              <option value={NILAI_BELUM_TAHU}>
+                {BIDANG_KERJA_BELUM_TAHU}
+              </option>
+            </Pilihan>
           </Kolom>
           <Kolom
-            nama="hubunganKontakDarurat"
+            nama="kemampuanBahasaJepang"
             galat={galat}
-            keterangan="Misalnya Ibu, Ayah, atau Kakak."
+            keterangan="Keterangan awal saja. Levelmu nanti ditentukan oleh kelas di lembaga."
+          >
+            <Pilihan
+              nama="kemampuanBahasaJepang"
+              galat={galat}
+              nilai={isian.kemampuanBahasaJepang}
+              keterangan
+            >
+              {PILIHAN_KEMAMPUAN_BAHASA_JEPANG.map((kemampuan) => (
+                <option key={kemampuan} value={kemampuan}>
+                  {kemampuan}
+                </option>
+              ))}
+            </Pilihan>
+          </Kolom>
+          <Kolom nama="pengalamanKerja" galat={galat} tidakWajib>
+            <textarea
+              {...atributIsian("pengalamanKerja", galat)}
+              defaultValue={isian.pengalamanKerja}
+              className={GAYA_ISIAN_PANJANG}
+            />
+          </Kolom>
+        </Bagian>
+
+        <Bagian id="bagian-kontak-darurat" judul="Kontak darurat">
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <Kolom nama="namaKontakDarurat" galat={galat}>
+              <input
+                {...atributIsian("namaKontakDarurat", galat)}
+                type="text"
+                autoComplete="off"
+                defaultValue={isian.namaKontakDarurat}
+                className={GAYA_ISIAN_FORMULIR}
+              />
+            </Kolom>
+            <Kolom
+              nama="hubunganKontakDarurat"
+              galat={galat}
+              keterangan="Misalnya Ibu, Ayah, atau Kakak."
+            >
+              <input
+                {...atributIsian("hubunganKontakDarurat", galat, true)}
+                type="text"
+                autoComplete="off"
+                defaultValue={isian.hubunganKontakDarurat}
+                className={GAYA_ISIAN_FORMULIR}
+              />
+            </Kolom>
+          </div>
+          <Kolom
+            nama="nomorHpKontakDarurat"
+            galat={galat}
+            keterangan="Nomor HP Indonesia, misalnya 0812-3456-7890."
           >
             <input
-              {...atributIsian("hubunganKontakDarurat", galat, true)}
-              type="text"
+              {...atributIsian("nomorHpKontakDarurat", galat, true)}
+              type="tel"
+              inputMode="tel"
               autoComplete="off"
-              defaultValue={isian.hubunganKontakDarurat}
+              defaultValue={isian.nomorHpKontakDarurat}
               className={GAYA_ISIAN_FORMULIR}
             />
           </Kolom>
-        </div>
-        <Kolom
-          nama="nomorHpKontakDarurat"
-          galat={galat}
-          keterangan="Nomor HP Indonesia, misalnya 0812-3456-7890."
-        >
-          <input
-            {...atributIsian("nomorHpKontakDarurat", galat, true)}
-            type="tel"
-            inputMode="tel"
-            autoComplete="off"
-            defaultValue={isian.nomorHpKontakDarurat}
-            className={GAYA_ISIAN_FORMULIR}
-          />
-        </Kolom>
-      </Bagian>
+        </Bagian>
+      </div>
 
       <div className="grid gap-4">
         <PesanTindakan pesan={keadaan.pesan} />

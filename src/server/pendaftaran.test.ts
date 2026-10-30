@@ -578,7 +578,7 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
         },
         DIUBAH_PADA,
       ),
-    ).toEqual({ hasil: "tersimpan" });
+    ).toEqual({ hasil: "tersimpan", peringatanBatasUsia: null });
 
     expect((await bacaPendaftaranBerjalan(akunId))?.isian).toEqual({
       ...drafLengkap(),
@@ -654,7 +654,7 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
         },
         DIUBAH_PADA,
       ),
-    ).toEqual({ hasil: "tersimpan" });
+    ).toEqual({ hasil: "tersimpan", peringatanBatasUsia: null });
 
     const sesudah = await bacaPendaftaran(nomor);
     expect(sesudah?.bidangKerja).toBe(bidang.nama);
@@ -698,6 +698,104 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
       hasil: "tidak-ada",
     });
     expect(await bacaPendaftaran("FGC-1999-0001")).toBeUndefined();
+  });
+});
+
+describe("peringatan batas usia saat pegawai mengubah isian (issue T15-b, PRD §11.2, UAT-K6)", () => {
+  it("tanggal lahir diubah sehingga usia pada tanggal kirim 17: perubahan tersimpan, dengan peringatan usia 17 dan rentang 18–30 program itu", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    // Dikirim 23-10-2026 (PRD §6.3); pada hari pegawai mengubahnya, 28-10-2026, usianya sudah 18.
+    const diubah = { ...drafLengkap(), tanggalLahir: "2008-10-24" };
+
+    expect(await ubahIsianPendaftaran(nomor, diubah, DIUBAH_PADA)).toEqual({
+      hasil: "tersimpan",
+      peringatanBatasUsia: {
+        namaProgram: programUji.nama,
+        memenuhi: false,
+        alasan: "terlalu-muda",
+        tanggalKirimWib: "2026-10-23",
+        usia: 17,
+        usiaMinimal: 18,
+        usiaMaksimal: 30,
+        bolehMendaftarMulai: "2026-10-24",
+      },
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(diubah);
+  });
+
+  it("tanggal lahir diubah tetapi usia pada tanggal kirim tetap 18: perubahan tersimpan tanpa peringatan", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    const diubah = { ...drafLengkap(), tanggalLahir: "2008-10-23" };
+
+    expect(await ubahIsianPendaftaran(nomor, diubah, DIUBAH_PADA)).toEqual({
+      hasil: "tersimpan",
+      peringatanBatasUsia: null,
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(diubah);
+  });
+
+  it("program diubah ke program 18–21 sedangkan usia pada tanggal kirim 22: perubahan tersimpan, dengan peringatan rentang program baru", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    const [programSempit] = await db
+      .insert(program)
+      .values({
+        nama: `Program Uji 18–21 ${randomUUID()}`,
+        deskripsi: "Deskripsi uji",
+        syarat: "Syarat uji",
+        lamaPelatihan: "6 bulan",
+        usiaMinimal: 18,
+        usiaMaksimal: 21,
+      })
+      .returning({ id: program.id, nama: program.nama });
+    const diubah = { ...drafLengkap(), programId: programSempit.id };
+
+    expect(await ubahIsianPendaftaran(nomor, diubah, DIUBAH_PADA)).toEqual({
+      hasil: "tersimpan",
+      peringatanBatasUsia: {
+        namaProgram: programSempit.nama,
+        memenuhi: false,
+        alasan: "terlalu-tua",
+        tanggalKirimWib: "2026-10-23",
+        usia: 22,
+        usiaMinimal: 18,
+        usiaMaksimal: 21,
+      },
+    });
+    expect((await bacaPendaftaran(nomor))?.program).toBe(programSempit.nama);
+  });
+
+  it("isian lain diubah tanpa mengubah tanggal lahir atau program: tanpa peringatan, juga bila usia yang tersimpan di luar rentang", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    const diLuarRentang = { ...drafLengkap(), tanggalLahir: "2008-10-24" };
+    await ubahIsianPendaftaran(nomor, diLuarRentang, DIUBAH_PADA);
+
+    expect(
+      await ubahIsianPendaftaran(
+        nomor,
+        { ...diLuarRentang, kabupatenKota: "Kota Semarang" },
+        DIUBAH_PADA,
+      ),
+    ).toEqual({ hasil: "tersimpan", peringatanBatasUsia: null });
+    expect((await bacaPendaftaran(nomor))?.isian.kabupatenKota).toBe(
+      "Kota Semarang",
+    );
+  });
+
+  it("perubahan yang ditolak tidak membawa peringatan batas usia, dan isian tersimpan tidak berubah", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+
+    expect(
+      await ubahIsianPendaftaran(
+        nomor,
+        { ...drafLengkap(), tanggalLahir: "2008-10-24", kabupatenKota: null },
+        DIUBAH_PADA,
+      ),
+    ).toEqual({
+      hasil: "ditolak",
+      belumDiisi: ["kabupatenKota"],
+      tanggalLahirTidakBenar: false,
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
   });
 });
 

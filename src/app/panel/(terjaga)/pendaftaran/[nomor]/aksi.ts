@@ -6,8 +6,10 @@ import { forbidden, redirect } from "next/navigation";
 import { z } from "zod";
 import type { IsianWajib } from "@/domain/formulir-pendaftaran";
 import { bolehMembukaMenu } from "@/domain/panel-pegawai";
+import type { PeringatanBatasUsia } from "@/domain/pendaftaran";
 import { bolehMenghapusPermanen } from "@/domain/penghapusan";
 import { ALASAN_PENUTUPAN, type PenutupanGagal } from "@/domain/penutupan";
+import { formatTanggal } from "@/lib/format";
 import { bacaPilihanUbahIsian } from "@/server/formulir-pendaftaran";
 import {
   bacaPendaftaran,
@@ -82,8 +84,30 @@ function pesanDitolak(ditolak: {
 }
 
 /**
+ * Peringatan bagi pegawai bila usia pada tanggal kirim di luar rentang program sesudah tanggal lahir atau program diubah
+ * (PRD §11.2, ▶ Keputusan 2026-10-30). Perubahannya tetap disimpan, jadi pesannya menyebut usia dan rentangnya, lalu
+ * meminta pegawai memeriksa ulang.
+ */
+function pesanPeringatanBatasUsia(
+  peringatanBatasUsia: PeringatanBatasUsia & { namaProgram: string },
+): Pesan {
+  const { namaProgram, usiaMinimal, usiaMaksimal } = peringatanBatasUsia;
+  const tanggalKirim = formatTanggal(peringatanBatasUsia.tanggalKirimWib);
+  const rentang = `${namaProgram}, yaitu ${usiaMinimal}–${usiaMaksimal} tahun`;
+  if (peringatanBatasUsia.alasan === "tanggal-lahir-tidak-benar") {
+    return peringatan(
+      `Perubahan tetap disimpan, tetapi tanggal lahirnya jatuh sesudah tanggal kirim ${tanggalKirim}, jadi usianya pada tanggal kirim di luar batas usia ${rentang}. Periksa lagi tanggal lahirnya.`,
+    );
+  }
+  return peringatan(
+    `Perubahan tetap disimpan, tetapi usianya ${peringatanBatasUsia.usia} tahun pada tanggal kirim ${tanggalKirim}, di luar batas usia ${rentang}. Periksa lagi tanggal lahir dan programnya; bila keduanya sudah benar, perubahan ini boleh dibiarkan.`,
+  );
+}
+
+/**
  * Pegawai menyimpan perubahan isian formulir sebuah pendaftaran. Keadaan sebelumnya yang dikirim browser tidak dipakai:
- * semua yang dibutuhkan dibaca dari isian formulir dan database.
+ * semua yang dibutuhkan dibaca dari isian formulir dan database. Perubahan yang membuat usia pada tanggal kirim di luar
+ * rentang program tetap disimpan, dengan peringatan sesudah kabar tersimpannya.
  */
 export async function simpanIsianPendaftaran(
   _sebelum: unknown,
@@ -142,6 +166,9 @@ export async function simpanIsianPendaftaran(
               ? `Perubahan isian formulir ${nomor.data} sudah disimpan dan terlihat oleh pemilik akunnya.`
               : `Perubahan isian formulir ${nomor.data} sudah disimpan.`,
         },
+        ...(hasil.peringatanBatasUsia
+          ? [pesanPeringatanBatasUsia(hasil.peringatanBatasUsia)]
+          : []),
       ],
       isian: keIsianFormulir(bentuk.draf, pilihan),
       galat: {},

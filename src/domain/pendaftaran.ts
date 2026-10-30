@@ -178,6 +178,19 @@ export function periksaSyaratKirim<F extends FormulirDiperiksa>(keadaan: {
 }
 
 /**
+ * Pengiriman yang ditolak menyimpan isian formulir pendaftarannya sebagai draf, supaya isian itu tidak hilang (PRD
+ * §6.2, ▶ Keputusan 2026-10-30), misalnya bila email belum terverifikasi atau usia di luar rentang. Kecualinya: selama
+ * akun itu punya pendaftaran Berjalan, isian formulirnya terkunci (§6.5), jadi tidak ada draf yang disimpan.
+ * `gagal` adalah syarat kirim yang gagal; bentuk setiap isian yang terisi sudah diperiksa lebih dulu, dan isian yang
+ * bentuknya salah tidak pernah sampai ke pemeriksaan syarat kirim.
+ */
+export function drafDisimpanSaatDitolak(
+  gagal: readonly SyaratKirimGagal[],
+): boolean {
+  return !gagal.some(({ syarat }) => syarat === "satu-pendaftaran-berjalan");
+}
+
+/**
  * Isian awal formulir pendaftaran pemilik akun (PRD §6.2, §6.6): draf yang pernah disimpan, atau, bila belum ada
  * draf, isian pendaftaran Ditutup miliknya yang paling baru dikirim, supaya ia bisa mendaftar ulang dari isian lama.
  * Draf lebih dulu dipakai, karena draf hanya bisa disimpan sesudah pendaftaran terakhirnya ditutup (draf dihapus saat

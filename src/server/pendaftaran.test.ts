@@ -236,15 +236,22 @@ describe("kirimPendaftaran", () => {
               terkirim[0].hasil === "terkirim" && terkirim[0].nomorPendaftaran,
           },
         ],
+        drafTersimpan: false,
       },
     ]);
+    // Pengiriman yang kalah menunggu kunci akun, lalu melihat isiannya sudah terkunci (§6.5): tidak ada draf tersisa.
+    expect(await bacaDrafFormulirPendaftaran(akunId)).toBeUndefined();
   });
 
   it("menolak akun yang emailnya belum terverifikasi (UAT-F2)", async () => {
     const akunId = await buatPemilikAkun({ emailTerverifikasi: false });
 
     expect(await kirimPendaftaran(akunId, drafLengkap(), DIKIRIM_PADA)).toEqual(
-      { hasil: "ditolak", gagal: [{ syarat: "email-terverifikasi" }] },
+      {
+        hasil: "ditolak",
+        gagal: [{ syarat: "email-terverifikasi" }],
+        drafTersimpan: true,
+      },
     );
     expect(await bacaPendaftaranBerjalan(akunId)).toBeUndefined();
   });
@@ -266,6 +273,90 @@ describe("kirimPendaftaran", () => {
     } finally {
       await ubahProgram(programUji.id, { aktif: true });
     }
+  });
+});
+
+describe("kirimPendaftaran yang ditolak menyimpan isiannya sebagai draf (issue T13-b, PRD §6.2 ▶ Keputusan 2026-10-30)", () => {
+  it("ditolak karena email belum terverifikasi: isiannya menjadi draf, menggantikan draf sebelumnya (UAT-F7)", async () => {
+    const akunId = await buatPemilikAkun({ emailTerverifikasi: false });
+    await simpanDrafFormulirPendaftaran(akunId, {
+      ...drafLengkap(),
+      namaLengkap: "Nama Di Draf Lama",
+      pengalamanKerja: "Dua tahun di rumah makan",
+    });
+    const diketik = { ...drafLengkap(), namaLengkap: "Nama Diketik Lagi" };
+
+    expect(await kirimPendaftaran(akunId, diketik, DIKIRIM_PADA)).toEqual({
+      hasil: "ditolak",
+      gagal: [{ syarat: "email-terverifikasi" }],
+      drafTersimpan: true,
+    });
+    expect(await bacaDrafFormulirPendaftaran(akunId)).toEqual({
+      akunId,
+      ...diketik,
+    });
+  });
+
+  it("ditolak karena usia di luar rentang: isiannya menjadi draf", async () => {
+    const akunId = await buatPemilikAkun();
+    // Usia 17 tahun pada 23-10-2026 untuk program 18–30 (contoh PRD §6.3).
+    const terlaluMuda = { ...drafLengkap(), tanggalLahir: "2008-10-24" };
+
+    expect(
+      await kirimPendaftaran(akunId, terlaluMuda, DIKIRIM_PADA),
+    ).toMatchObject({
+      hasil: "ditolak",
+      gagal: [{ syarat: "batas-usia" }],
+      drafTersimpan: true,
+    });
+    expect(await bacaDrafFormulirPendaftaran(akunId)).toMatchObject(
+      terlaluMuda,
+    );
+  });
+
+  it("ditolak karena isian wajib belum diisi: isian yang sudah terisi menjadi draf", async () => {
+    const akunId = await buatPemilikAkun();
+    const belumLengkap = {
+      ...drafLengkap(),
+      tempatLahir: null,
+      namaKontakDarurat: null,
+    };
+
+    expect(
+      await kirimPendaftaran(akunId, belumLengkap, DIKIRIM_PADA),
+    ).toMatchObject({ hasil: "ditolak", drafTersimpan: true });
+    expect(await bacaDrafFormulirPendaftaran(akunId)).toMatchObject(
+      belumLengkap,
+    );
+  });
+
+  it("masih punya pendaftaran Berjalan: tidak ada draf yang disimpan, karena isiannya terkunci (PRD §6.5)", async () => {
+    const akunId = await buatPemilikAkun();
+    const nomor = await kirimLalu(akunId);
+
+    expect(
+      await kirimPendaftaran(
+        akunId,
+        { ...drafLengkap(), namaLengkap: "Nama Diubah" },
+        DIKIRIM_PADA,
+      ),
+    ).toEqual({
+      hasil: "ditolak",
+      gagal: [{ syarat: "satu-pendaftaran-berjalan", nomorPendaftaran: nomor }],
+      drafTersimpan: false,
+    });
+    expect(await bacaDrafFormulirPendaftaran(akunId)).toBeUndefined();
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+
+  it("akun yang sudah dihapus tidak mendapat draf, dan pengirimannya ditolak tanpa galat (PRD §12.5)", async () => {
+    expect(
+      await kirimPendaftaran(randomUUID(), drafLengkap(), DIKIRIM_PADA),
+    ).toEqual({
+      hasil: "ditolak",
+      gagal: [{ syarat: "email-terverifikasi" }],
+      drafTersimpan: false,
+    });
   });
 });
 

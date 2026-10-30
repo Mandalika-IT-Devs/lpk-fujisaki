@@ -9,6 +9,7 @@ import { db } from "./db";
 import { drafFormulirPendaftaran } from "./db/schema";
 import {
   bacaIsianPendaftaranAkun,
+  gantiDraf,
   kunciAkun,
   nomorPendaftaranBerjalan,
 } from "./pendaftaran";
@@ -122,13 +123,7 @@ export async function simpanDrafFormulirPendaftaran(
     const nomorPendaftaran = await nomorPendaftaranBerjalan(tx, akunId);
     if (nomorPendaftaran !== null)
       return { hasil: "terkunci", nomorPendaftaran };
-    await tx
-      .insert(drafFormulirPendaftaran)
-      .values({ akunId, ...draf })
-      .onConflictDoUpdate({
-        target: drafFormulirPendaftaran.akunId,
-        set: draf,
-      });
+    await gantiDraf(tx, akunId, draf);
     return { hasil: "tersimpan" };
   });
 }

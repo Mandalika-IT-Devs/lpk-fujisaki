@@ -2,8 +2,9 @@ import { expect, type Page, test } from "@playwright/test";
 import { tungguEmail } from "./kotak-keluar";
 
 // Kirim formulir pendaftaran, nomor pendaftaran, dan halaman akun (issue T13, PRD §6.2–§6.6, UAT-F1 langkah 2,
-// UAT-F2, UAT-F3, UAT-F4). Pengiriman bersamaan, nomor yang tidak dipakai ulang, dan program yang dinonaktifkan
-// (UAT-D1) diuji dengan database sungguhan di src/server/pendaftaran.test.ts.
+// UAT-F2, UAT-F3, UAT-F4), juga draf yang tersimpan saat pengiriman ditolak (issue T13-b, UAT-F7). Pengiriman
+// bersamaan, nomor yang tidak dipakai ulang, program yang dinonaktifkan (UAT-D1), dan draf yang tidak disimpan selama
+// isiannya terkunci diuji dengan database sungguhan di src/server/pendaftaran.test.ts.
 // Berkas ini hanya memakai program Tokutei Ginou (SSW), rentang 18–30 (▶ Keputusan OD-01), dan bidang kerja
 // Pembersihan gedung, yang tidak pernah dinonaktifkan test lain. Setiap test memakai email dan nomor WhatsApp sendiri.
 
@@ -16,6 +17,8 @@ type CalonPeserta = {
 
 const ALAMAT_FORMULIR = "/akun/formulir-pendaftaran";
 const POLA_NOMOR_PENDAFTARAN = /^FGC-\d{4}-\d{4,}$/;
+const KABAR_DRAF_OTOMATIS =
+  "Isianmu tetap tersimpan sebagai draf, jadi kamu bisa melanjutkannya kapan saja dari halaman akunmu.";
 
 /** Tanggal WIB (UTC+7) hari ini ditambah sejumlah hari, sebagai {tahun, bulanHari "MM-DD"}. */
 function tanggalWibHariIni(tambahHari = 0) {
@@ -185,6 +188,17 @@ test("usia 17 tahun ditolak dengan pesan yang menyebut usia dan rentang program,
     "Tokutei Ginou (SSW) menerima usia 18–30 tahun",
   );
   await expect(page).toHaveURL(ALAMAT_FORMULIR);
+  // Pengiriman yang ditolak karena usia menyimpan isiannya sebagai draf (PRD §6.2 ▶ Keputusan 2026-10-30).
+  await expect(formulir(page).getByRole("status")).toHaveText(
+    KABAR_DRAF_OTOMATIS,
+  );
+  await page.reload();
+  await expect(formulir(page).getByLabel("Tanggal lahir")).toHaveValue(
+    tanggalLahirUlangTahunKe(18, 1),
+  );
+  await expect(
+    formulir(page).getByLabel("Nama lengkap sesuai KTP"),
+  ).toHaveValue("Sari Wulandari");
 
   // Ulang tahun ke-18 jatuh hari ini.
   await formulir(page)
@@ -221,6 +235,8 @@ test("formulir kedua yang dikirim saat masih ada pendaftaran Berjalan ditolak (U
     `Formulir belum terkirim karena kamu masih punya pendaftaran yang sedang berjalan, ${nomor}. Satu akun hanya boleh punya satu pendaftaran yang sedang berjalan; lihat pendaftaranmu di halaman akun.`,
   );
   await expect(tabKedua).toHaveURL(ALAMAT_FORMULIR);
+  // Isiannya terkunci (PRD §6.5), jadi isian tab kedua tidak disimpan sebagai draf.
+  await expect(formulir(tabKedua).getByRole("status")).toHaveCount(0);
 });
 
 test("formulir yang isian wajibnya belum diisi ditolak, dan setiap isian wajib yang kosong ditandai", async ({
@@ -259,4 +275,112 @@ test("formulir yang isian wajibnya belum diisi ditolak, dan setiap isian wajib y
   await expect(isian.getByLabel("Nama lengkap sesuai KTP")).toHaveValue(
     "Sari Wulandari",
   );
+});
+
+test("pengiriman yang ditolak karena email belum terverifikasi menyimpan isiannya sebagai draf, juga sesudah keluar dan masuk lagi (UAT-F7)", async ({
+  page,
+}) => {
+  const calon = {
+    nama: "Calon Draf Otomatis Uji",
+    email: "calon.draf.otomatis@contoh.test",
+    nomorWhatsApp: "0812-0000-1306",
+    kataSandi: "sandi-calon-uji",
+  };
+  await buatAkun(page, calon, { verifikasi: false });
+  await page.goto(ALAMAT_FORMULIR);
+
+  // Tanpa menekan "Simpan draf".
+  const tanggalLahir = tanggalLahirUlangTahunKe(20);
+  await isiSemuaIsian(page, tanggalLahir);
+  await kirimFormulir(page);
+
+  await expect(formulir(page).getByRole("alert")).toHaveText(
+    `Formulir belum terkirim karena emailmu belum terverifikasi. Buka tautan verifikasi yang kami kirim ke ${calon.email}, atau minta tautan baru di halaman akunmu, lalu kirim lagi.`,
+  );
+  await expect(formulir(page).getByRole("status")).toHaveText(
+    KABAR_DRAF_OTOMATIS,
+  );
+
+  await page.getByRole("link", { name: "Kembali ke akunmu" }).click();
+  await page.getByRole("button", { name: "Keluar" }).click();
+  await expect(page).toHaveURL("/masuk");
+  await page.getByLabel("Email").fill(calon.email);
+  await page.getByLabel("Kata sandi").fill(calon.kataSandi);
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await expect(page).toHaveURL("/akun");
+  await page.getByRole("link", { name: "Isi formulir pendaftaran" }).click();
+
+  const isian = formulir(page);
+  await expect(isian.getByLabel("Nama lengkap sesuai KTP")).toHaveValue(
+    "Sari Wulandari",
+  );
+  await expect(isian.getByRole("radio", { name: "Perempuan" })).toBeChecked();
+  await expect(isian.getByLabel("Tempat lahir")).toHaveValue("Cilacap");
+  await expect(isian.getByLabel("Tanggal lahir")).toHaveValue(tanggalLahir);
+  await expect(isian.getByLabel("Kabupaten/kota domisili")).toHaveValue(
+    "Kab. Cilacap",
+  );
+  await expect(isian.getByLabel("Provinsi domisili")).toHaveValue(
+    "Jawa Tengah",
+  );
+  await expect(
+    isian.getByLabel("Pendidikan terakhir", { exact: true }),
+  ).toHaveValue("SMK");
+  await expect(
+    isian.getByLabel("Program", { exact: true }).locator("option:checked"),
+  ).toHaveText("Tokutei Ginou (SSW)");
+  await expect(
+    isian.getByLabel("Bidang kerja yang diminati").locator("option:checked"),
+  ).toHaveText("Pembersihan gedung");
+  await expect(
+    isian.getByLabel("Kemampuan bahasa Jepang saat ini"),
+  ).toHaveValue("N5");
+  await expect(isian.getByLabel("Nama kontak darurat")).toHaveValue(
+    "Siti Aminah",
+  );
+  await expect(isian.getByLabel("Hubungan kontak darurat")).toHaveValue("Ibu");
+  // Nomor HP disimpan dalam bentuk ternormalisasi (PRD §5.2).
+  await expect(isian.getByLabel("Nomor HP kontak darurat")).toHaveValue(
+    "6281234567890",
+  );
+});
+
+test("pengiriman yang ditolak karena ada isian berbentuk salah tidak menyimpan draf, dan isian itu ditandai salah (PRD §6.2 ▶ Keputusan 2026-10-30)", async ({
+  page,
+}) => {
+  await buatAkun(page, {
+    nama: "Calon Bentuk Salah Uji",
+    email: "calon.bentuk.salah@contoh.test",
+    nomorWhatsApp: "0812-0000-1307",
+    kataSandi: "sandi-calon-uji",
+  });
+  await page.goto(ALAMAT_FORMULIR);
+
+  await isiSemuaIsian(page, tanggalLahirUlangTahunKe(20));
+  const nomorHp = formulir(page).getByLabel("Nomor HP kontak darurat");
+  await nomorHp.fill("081234567");
+  await kirimFormulir(page);
+
+  await expect(formulir(page).getByRole("alert")).toHaveText(
+    "Formulir belum terkirim karena isian berikut belum benar: Nomor HP kontak darurat. Perbaiki isian yang ditandai, lalu kirim lagi.",
+  );
+  await expect(nomorHp).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    formulir(page).getByLabel("Nama kontak darurat"),
+  ).not.toHaveAttribute("aria-invalid", "true");
+  await expect(formulir(page).getByRole("status")).toHaveCount(0);
+  // Yang diketik tetap di layar, supaya bisa diperbaiki.
+  await expect(nomorHp).toHaveValue("081234567");
+  await expect(
+    formulir(page).getByLabel("Nama lengkap sesuai KTP"),
+  ).toHaveValue("Sari Wulandari");
+
+  // Tidak ada draf: formulir yang dibuka lagi masih kosong.
+  await page.reload();
+  await expect(
+    formulir(page).getByLabel("Nama lengkap sesuai KTP"),
+  ).toHaveValue("");
+  await expect(
+    formulir(page).getByLabel("Nomor HP kontak darurat"),
+  ).toHaveValue("");
 });

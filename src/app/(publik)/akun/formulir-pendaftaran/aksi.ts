@@ -34,6 +34,10 @@ export type KeadaanFormulirPendaftaran = {
 const KABAR_DRAF_TERSIMPAN =
   "Draf tersimpan. Kamu bisa melanjutkannya kapan saja dari halaman akunmu.";
 
+/** Kabar sesudah pengiriman yang ditolak menyimpan isiannya sebagai draf (PRD §6.2 ▶ Keputusan 2026-10-30). */
+const KABAR_DRAF_OTOMATIS =
+  "Isianmu tetap tersimpan sebagai draf, jadi kamu bisa melanjutkannya kapan saja dari halaman akunmu.";
+
 const PESAN_GANGGUAN_DRAF =
   "Draf belum tersimpan karena gangguan di server. Coba simpan lagi beberapa saat lagi; bila tetap gagal, hubungi lembaga lewat halaman Kontak.";
 
@@ -144,7 +148,8 @@ function galatSyaratGagal(daftarGagal: SyaratKirimGagal[]): GalatIsian {
 
 /**
  * Pemilik akun mengirim formulir pendaftarannya (PRD §6.2). Bentuk setiap isian diperiksa lebih dulu, seperti saat
- * menyimpan draf. Lalu keempat syarat kirim diperiksa di server; setiap syarat yang gagal punya pesannya sendiri.
+ * menyimpan draf; bila ada yang salah, draf belum disimpan. Lalu keempat syarat kirim diperiksa di server; setiap
+ * syarat yang gagal punya pesannya sendiri, dan isiannya disimpan sebagai draf kecuali selama isiannya terkunci (§6.5).
  * Bila diterima, pemilik akun diarahkan ke halaman konfirmasi yang berisi nomor pendaftarannya (§6.5).
  */
 export async function kirimFormulir(
@@ -156,7 +161,8 @@ export async function kirimFormulir(
 
   try {
     const pilihan = await bacaPilihanFormulirPendaftaran();
-    const bentuk = periksaDrafFormulirPendaftaran(isian, keIdPilihan(pilihan));
+    const idPilihan = keIdPilihan(pilihan);
+    const bentuk = periksaDrafFormulirPendaftaran(isian, idPilihan);
     if (!bentuk.sah) {
       return {
         pesan: [
@@ -177,14 +183,18 @@ export async function kirimFormulir(
       const namaProgram =
         pilihan.program.find((p) => p.id === bentuk.draf.programId)?.nama ??
         "Program ini";
-      return {
-        pesan: hasil.gagal.map((gagal) =>
-          peringatan(
-            pesanSyaratGagal(gagal, { email: pemilikAkun.email, namaProgram }),
-          ),
+      const pesan = hasil.gagal.map((gagal) =>
+        peringatan(
+          pesanSyaratGagal(gagal, { email: pemilikAkun.email, namaProgram }),
         ),
-        isian,
-        galat: galatSyaratGagal(hasil.gagal),
+      );
+      const galat = galatSyaratGagal(hasil.gagal);
+      if (!hasil.drafTersimpan) return { pesan, isian, galat };
+      // Isian tampil seperti yang tersimpan, sama seperti sesudah "Simpan draf".
+      return {
+        pesan: [...pesan, { jenis: "kabar", teks: KABAR_DRAF_OTOMATIS }],
+        isian: keIsianFormulir(bentuk.draf, idPilihan),
+        galat,
       };
     }
   } catch (galat) {

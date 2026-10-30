@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  drafDisimpanSaatDitolak,
   isianAwalFormulirPendaftaran,
   pendaftaranBaru,
   periksaIsianWajib,
@@ -236,6 +237,76 @@ describe("periksaSyaratKirim (PRD §6.2)", () => {
       boleh: false,
       gagal: [{ syarat: "isian-wajib-terisi", belumDiisi: ["tanggalLahir"] }],
     });
+  });
+});
+
+// Pengiriman yang ditolak menyimpan isiannya sebagai draf (issue T13-b, PRD §6.2 ▶ Keputusan 2026-10-30), kecuali
+// selama isiannya terkunci karena akun itu punya pendaftaran Berjalan (§6.5).
+describe("drafDisimpanSaatDitolak", () => {
+  /** Syarat kirim yang gagal untuk keadaan contoh yang pasti ditolak. */
+  function gagalSaatDikirim(keadaan: Parameters<typeof periksaSyaratKirim>[0]) {
+    const hasil = periksaSyaratKirim(keadaan);
+    if (hasil.boleh) throw new Error("Keadaan contoh seharusnya ditolak.");
+    return hasil.gagal;
+  }
+
+  it("ditolak karena email belum terverifikasi: isiannya disimpan sebagai draf (UAT-F7)", () => {
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({ ...SYARAT_TERPENUHI, emailTerverifikasi: false }),
+      ),
+    ).toBe(true);
+  });
+
+  it("ditolak karena usia di luar rentang: isiannya disimpan sebagai draf", () => {
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({
+          ...SYARAT_TERPENUHI,
+          formulir: { ...FORMULIR_LENGKAP, tanggalLahir: "2008-10-24" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({
+          ...SYARAT_TERPENUHI,
+          formulir: { ...FORMULIR_LENGKAP, tanggalLahir: "1995-10-23" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("ditolak karena isian wajib belum diisi: isian yang sudah terisi disimpan sebagai draf", () => {
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({
+          ...SYARAT_TERPENUHI,
+          formulir: { ...FORMULIR_LENGKAP, tempatLahir: null },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("masih punya pendaftaran Berjalan: tidak ada draf yang disimpan, juga bila syarat lain ikut gagal (PRD §6.5)", () => {
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({
+          ...SYARAT_TERPENUHI,
+          nomorPendaftaranBerjalan: "FGC-2026-0037",
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      drafDisimpanSaatDitolak(
+        gagalSaatDikirim({
+          ...SYARAT_TERPENUHI,
+          emailTerverifikasi: false,
+          formulir: { ...FORMULIR_LENGKAP, tanggalLahir: "2008-10-24" },
+          nomorPendaftaranBerjalan: "FGC-2026-0037",
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

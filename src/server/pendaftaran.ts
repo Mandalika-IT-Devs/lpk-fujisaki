@@ -14,6 +14,7 @@ import {
   tahunNomorPendaftaran,
 } from "@/domain/nomor-pendaftaran";
 import {
+  drafDisimpanSaatDitolak,
   KODE_LANGKAH,
   pendaftaranBaru,
   periksaSyaratKirim,
@@ -61,9 +62,29 @@ export async function kunciAkun(
   return baris;
 }
 
+/**
+ * Mengganti draf sebuah akun seluruhnya, termasuk isian yang dikosongkan, atau membuatnya bila belum ada. Dipanggil di
+ * dalam transaksi yang sudah mengunci baris akun itu dan memastikan isiannya belum terkunci (§6.5).
+ */
+export async function gantiDraf(
+  tx: Transaksi,
+  akunId: string,
+  draf: DrafFormulirPendaftaran,
+): Promise<void> {
+  await tx
+    .insert(drafFormulirPendaftaran)
+    .values({ akunId, ...draf })
+    .onConflictDoUpdate({ target: drafFormulirPendaftaran.akunId, set: draf });
+}
+
 export type HasilKirimPendaftaran =
   | { hasil: "terkirim"; nomorPendaftaran: string }
-  | { hasil: "ditolak"; gagal: SyaratKirimGagal[] };
+  | {
+      hasil: "ditolak";
+      gagal: SyaratKirimGagal[];
+      /** Isian yang dikirim kini tersimpan sebagai draf akun itu (§6.2). */
+      drafTersimpan: boolean;
+    };
 
 /** Nomor pendaftaran Berjalan milik sebuah akun, atau null bila tidak ada (§6.6). */
 export async function nomorPendaftaranBerjalan(
@@ -115,10 +136,13 @@ function keFormulirDiperiksa(draf: DrafFormulirPendaftaran) {
  * Pemilik akun mengirim formulir pendaftarannya pada saat `dikirimPada`. `draf` adalah isian formulir yang bentuknya
  * sudah diperiksa. Bila semua syarat kirim terpenuhi (§6.2), sistem membuka pendaftaran baru dengan nomor pendaftaran
  * (§6.4), status Berjalan di tahap 1, semua langkah Belum (§6.5), dan isian formulir sebagai bagian dari pendaftaran
- * itu. Draf akun itu lalu dihapus, supaya data pribadinya tidak tersimpan ganda (ADR-0004).
+ * itu. Draf akun itu lalu dihapus, supaya data pribadinya tidak tersimpan ganda (ADR-0004). Bila ditolak, isian itu
+ * disimpan sebagai draf, menggantikan draf sebelumnya, kecuali selama isiannya terkunci (§6.2 ▶ Keputusan 2026-10-30,
+ * §6.5), atau bila akunnya sudah tidak ada.
  *
  * Semuanya terjadi dalam satu transaksi. Baris akun dikunci lebih dulu, jadi dua pengiriman bersamaan dari akun yang
- * sama tidak bisa membuka dua pendaftaran Berjalan; indeks unik sebagian di tabel pendaftaran menjaganya juga.
+ * sama tidak bisa membuka dua pendaftaran Berjalan; indeks unik sebagian di tabel pendaftaran menjaganya juga. Karena
+ * itu pula pengiriman yang ditolak tidak bisa menyimpan draf sesudah pengiriman lain dari akun yang sama diterima.
  */
 export async function kirimPendaftaran(
   akunId: string,
@@ -145,7 +169,12 @@ export async function kirimPendaftaran(
       dikirimPada,
       nomorPendaftaranBerjalan: await nomorPendaftaranBerjalan(tx, akunId),
     });
-    if (!periksa.boleh) return { hasil: "ditolak", gagal: periksa.gagal };
+    if (!periksa.boleh) {
+      const drafTersimpan =
+        pemilik !== undefined && drafDisimpanSaatDitolak(periksa.gagal);
+      if (drafTersimpan) await gantiDraf(tx, akunId, draf);
+      return { hasil: "ditolak", gagal: periksa.gagal, drafTersimpan };
+    }
 
     const nomorUrut = await ambilNomorUrut(
       tx,

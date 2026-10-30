@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChipStatus } from "@/components/chip-status";
 import { IkonPanahKanan, IkonPanahKiri } from "@/components/ikon";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { TombolKedua } from "@/components/tombol";
@@ -103,7 +104,9 @@ export function DaftarPendaftaran({
                     {namaTahap(pendaftaran.tahap)}
                   </span>
                 </td>
-                <td className={GAYA_SEL}>{pendaftaran.status}</td>
+                <td className={GAYA_SEL}>
+                  <ChipStatus status={pendaftaran.status} />
+                </td>
                 <td className="py-2 whitespace-nowrap">
                   {formatTanggalWib(pendaftaran.dikirimPada)}
                 </td>

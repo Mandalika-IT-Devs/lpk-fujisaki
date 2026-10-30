@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { ChipStatus } from "@/components/chip-status";
 import { IkonPanahKiri } from "@/components/ikon";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { type JenisTanda, TandaStatus } from "@/components/tanda-status";
@@ -118,7 +119,9 @@ export default async function HalamanPendaftaran({
           <dl className="grid border-t-2 border-navy sm:grid-cols-2 sm:gap-x-6">
             <Baris label="Nama lengkap">{pendaftaran.isian.namaLengkap}</Baris>
             <Baris label="Program">{pendaftaran.program}</Baris>
-            <Baris label="Status">{pendaftaran.status}</Baris>
+            <Baris label="Status">
+              <ChipStatus status={pendaftaran.status} />
+            </Baris>
             <Baris label="Tahap">
               {tahap && (
                 <span className="flex flex-wrap items-center gap-2">

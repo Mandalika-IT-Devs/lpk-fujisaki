@@ -4,6 +4,7 @@ import {
   bolehMembukaPanelPegawai,
   cariMenuPanelPegawai,
   menuPanelPegawai,
+  perluPesanPanelKhususPegawai,
 } from "./panel-pegawai";
 
 // Menu dari issue T03 dan PRD §2.2: Staf melihat Pendaftaran; Admin juga melihat
@@ -86,5 +87,34 @@ describe("bolehMembukaPanelPegawai", () => {
 
   it("pemilik akun tidak boleh membuka panel pegawai", () => {
     expect(bolehMembukaPanelPegawai({ jenis: "pemilik_akun" })).toBe(false);
+  });
+});
+
+// PRD §2.2 (▶ Keputusan 2026-10-30) dan UAT-B2: pemilik akun yang membuka alamat panel pegawai ditolak, lalu halaman
+// Masuk pegawai memberitahunya bahwa panel itu khusus pegawai, beserta tautan ke halaman akunnya.
+describe("perluPesanPanelKhususPegawai", () => {
+  it("pemilik akun yang sedang masuk mendapat pesan itu", () => {
+    expect(perluPesanPanelKhususPegawai({ jenis: "pemilik_akun" })).toBe(true);
+  });
+
+  it("pengunjung melihat halaman Masuk pegawai tanpa pesan itu", () => {
+    expect(perluPesanPanelKhususPegawai(null)).toBe(false);
+  });
+
+  it("pegawai, aktif maupun nonaktif, tidak mendapat pesan itu", () => {
+    expect(
+      perluPesanPanelKhususPegawai({
+        jenis: "pegawai",
+        peran: "staf",
+        aktif: false,
+      }),
+    ).toBe(false);
+    expect(
+      perluPesanPanelKhususPegawai({
+        jenis: "pegawai",
+        peran: "admin",
+        aktif: true,
+      }),
+    ).toBe(false);
   });
 });

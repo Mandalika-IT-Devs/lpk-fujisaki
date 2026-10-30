@@ -1,4 +1,9 @@
-import { type Akun, bolehMasuk, type Peran } from "./akun";
+import {
+  type Akun,
+  bolehMasuk,
+  bolehMembukaHalamanAkun,
+  type Peran,
+} from "./akun";
 
 /**
  * Menu panel pegawai dan siapa yang boleh membukanya (PRD §2.2).
@@ -20,6 +25,16 @@ type KunciMenu = MenuPanelPegawai["kunci"];
 /** Hanya pegawai aktif yang boleh membuka panel pegawai (PRD §2.2, §5.5). */
 export function bolehMembukaPanelPegawai(akun: Akun): boolean {
   return akun.jenis === "pegawai" && bolehMasuk(akun);
+}
+
+/**
+ * Pemilik akun yang membuka alamat panel pegawai tetap ditolak, lalu halaman Masuk pegawai memberitahunya bahwa
+ * panel itu khusus pegawai, beserta tautan ke halaman akunnya (PRD §2.2, ▶ Keputusan 2026-10-30). Pesan itu hanya
+ * untuk akun yang punya halaman akun. Pengunjung dan pegawai nonaktif melihat halaman Masuk pegawai seperti biasa.
+ * `akunMasuk` adalah akun yang sedang masuk, atau null bila pengunjung.
+ */
+export function perluPesanPanelKhususPegawai(akunMasuk: Akun | null): boolean {
+  return akunMasuk !== null && bolehMembukaHalamanAkun(akunMasuk);
 }
 
 export function bolehMembukaMenu(peran: Peran, kunci: KunciMenu): boolean {

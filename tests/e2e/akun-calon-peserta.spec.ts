@@ -24,6 +24,8 @@ const PESAN_EMAIL_DIPAKAI =
   "Email ini sudah dipakai akun lain. Masuk dengan email itu, atau pakai email lain.";
 const PESAN_NOMOR_DIPAKAI =
   "Nomor WhatsApp ini sudah dipakai akun lain. Pakai nomor WhatsApp lain, atau masuk ke akun yang memakai nomor ini.";
+const PESAN_PANEL_KHUSUS_PEGAWAI =
+  "Panel ini khusus pegawai lembaga, jadi akunmu tidak bisa membukanya. Buka akunmu untuk mengisi formulir pendaftaran dan memantau pendaftaranmu.";
 
 /** Mengisi formulir daftar akun. Persetujuan dicentang kecuali `setuju` false. */
 async function isiFormulirDaftar(
@@ -374,7 +376,23 @@ test("lupa kata sandi untuk email yang tidak terdaftar menampilkan pesan yang sa
   expect(await emailUntuk(tidakTerdaftar, sejak)).toEqual([]);
 });
 
-test("pemilik akun yang membuka panel pegawai ditolak (UAT-B2)", async ({
+/** Halaman Masuk pegawai bagi pemilik akun yang membuka panel pegawai: pesan dan tautan ke akunnya (UAT-B2). */
+async function periksaPesanPanelKhususPegawai(page: Page) {
+  await expect(page).toHaveURL("/panel/masuk");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Masuk pegawai" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Menu panel pegawai" }),
+  ).toHaveCount(0);
+  const peringatan = page.getByRole("main").getByRole("alert");
+  await expect(peringatan).toHaveText(PESAN_PANEL_KHUSUS_PEGAWAI);
+  await expect(
+    peringatan.getByRole("link", { name: "Buka akunmu" }),
+  ).toHaveAttribute("href", "/akun");
+}
+
+test("pemilik akun yang membuka panel pegawai ditolak, lalu melihat pesan bahwa panel itu khusus pegawai beserta tautan ke halaman akunnya (UAT-B2)", async ({
   page,
 }) => {
   const calon: CalonPeserta = {
@@ -387,20 +405,92 @@ test("pemilik akun yang membuka panel pegawai ditolak (UAT-B2)", async ({
 
   for (const alamat of ["/panel", "/panel/pendaftaran", "/panel/program"]) {
     await page.goto(alamat);
-    await expect(page).toHaveURL("/panel/masuk");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Masuk pegawai" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "Menu panel pegawai" }),
-    ).toHaveCount(0);
+    await periksaPesanPanelKhususPegawai(page);
   }
 
-  // Sesinya tetap sesi pemilik akun: akunnya masih terbuka.
-  await page.goto("/akun");
+  // Sesinya tetap sesi pemilik akun: tautan di pesan membuka akunnya.
+  await page
+    .getByRole("main")
+    .getByRole("alert")
+    .getByRole("link", { name: "Buka akunmu" })
+    .click();
+  await expect(page).toHaveURL("/akun");
   await expect(
     page.getByRole("heading", { level: 1, name: `Halo, ${calon.nama}` }),
   ).toBeVisible();
+});
+
+test("pemilik akun yang masuk lewat halaman Masuk pegawai mendapat pesan yang sama, bukan panel pegawai (UAT-B2)", async ({
+  page,
+}) => {
+  const calon: CalonPeserta = {
+    nama: "Calon Masuk Panel Uji",
+    email: "calon.masuk.panel@contoh.test",
+    nomorWhatsApp: "0812-0000-0702",
+    kataSandi: "sandi-calon-uji",
+  };
+  await buatAkun(page, calon);
+  await page.getByRole("button", { name: "Keluar" }).click();
+  await expect(page).toHaveURL("/masuk");
+
+  await page.goto("/panel/masuk");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+  await page.getByLabel("Email").fill(calon.email);
+  await page.getByLabel("Kata sandi").fill(calon.kataSandi);
+  await page.getByRole("button", { name: "Masuk" }).click();
+
+  await periksaPesanPanelKhususPegawai(page);
+});
+
+test("bar atas menampilkan Masuk bagi pengunjung dan Akun saya bagi pemilik akun yang sedang masuk (UAT-C8)", async ({
+  page,
+}) => {
+  const calon: CalonPeserta = {
+    nama: "Calon Bar Atas Uji",
+    email: "calon.bar.atas@contoh.test",
+    nomorWhatsApp: "0812-0000-0701",
+    kataSandi: "sandi-calon-uji",
+  };
+  await buatAkun(page, calon);
+  await page.getByRole("button", { name: "Keluar" }).click();
+  await expect(page).toHaveURL("/masuk");
+
+  const bar = page.getByRole("banner");
+  const tautanMasuk = bar.getByRole("link", { name: "Masuk", exact: true });
+  const tautanAkunSaya = bar.getByRole("link", {
+    name: "Akun saya",
+    exact: true,
+  });
+
+  // 1. Beranda tanpa masuk.
+  await page.goto("/");
+  await expect(tautanMasuk).toHaveAttribute("href", "/masuk");
+  await expect(tautanAkunSaya).toHaveCount(0);
+
+  // 2. Masuk lewat tautan di bar atas, buka Beranda lagi, lalu klik tulisan di bar atas.
+  await tautanMasuk.click();
+  await expect(page).toHaveURL("/masuk");
+  await page.getByLabel("Email").fill(calon.email);
+  await page.getByLabel("Kata sandi").fill(calon.kataSandi);
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await expect(page).toHaveURL("/akun");
+  await expect(tautanAkunSaya).toHaveAttribute("href", "/akun");
+  await expect(tautanMasuk).toHaveCount(0);
+
+  await bar.getByRole("link", { name: "Fujisaki Gakuin Center" }).click();
+  await expect(page).toHaveURL("/");
+  await expect(tautanMasuk).toHaveCount(0);
+  await tautanAkunSaya.click();
+  await expect(page).toHaveURL("/akun");
+  await expect(
+    page.getByRole("heading", { level: 1, name: `Halo, ${calon.nama}` }),
+  ).toBeVisible();
+
+  // Sesudah keluar, bar atas kembali menampilkan Masuk.
+  await page.getByRole("button", { name: "Keluar" }).click();
+  await expect(page).toHaveURL("/masuk");
+  await expect(tautanMasuk).toBeVisible();
+  await expect(tautanAkunSaya).toHaveCount(0);
 });
 
 test("pegawai yang membuka halaman akun dibawa ke panel pegawai", async ({

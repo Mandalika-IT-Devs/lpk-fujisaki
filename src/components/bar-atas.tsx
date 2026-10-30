@@ -1,12 +1,24 @@
 import Link from "next/link";
 import { MenuHp, MenuLebar } from "./menu-utama";
-import { ALAMAT_MASUK } from "./tautan-situs";
+import { ALAMAT_AKUN, ALAMAT_MASUK } from "./tautan-situs";
+
+/** Tautan akun di kanan bar atas, hasil aturan tautanAkunDiBarAtas di src/domain/akun.ts (PRD §3.1). */
+const TAUTAN_AKUN = {
+  masuk: { href: ALAMAT_MASUK, tulisan: "Masuk" },
+  "akun-saya": { href: ALAMAT_AKUN, tulisan: "Akun saya" },
+} as const;
 
 /**
- * Bar atas situs publik (docs/DESIGN.md, Navigation): lengket, merek di kiri, menu dan Masuk di kanan.
+ * Bar atas situs publik (docs/DESIGN.md, Navigation): lengket, merek di kiri, menu dan tautan akun di kanan.
+ * Tautan akun bergaya tautan Masuk, baik saat bertuliskan "Masuk" maupun "Akun saya".
  * Merek berupa tulisan "Fujisaki" sampai logo resmi diserahkan (OD-06).
  */
-export function BarAtas() {
+export function BarAtas({
+  tautanAkun,
+}: {
+  tautanAkun: keyof typeof TAUTAN_AKUN;
+}) {
+  const { href, tulisan } = TAUTAN_AKUN[tautanAkun];
   return (
     <header className="sticky top-0 z-10 border-b border-garis bg-dasar/96">
       <div className="wadah flex h-15 items-center justify-between gap-4 lg:h-17">
@@ -23,10 +35,10 @@ export function BarAtas() {
         <MenuLebar />
         <div className="flex items-center gap-1">
           <Link
-            href={ALAMAT_MASUK}
+            href={href}
             className="rounded-sudut px-3 py-2.5 font-bold text-jalur no-underline hover:bg-jalur-pucat hover:text-jalur-tua"
           >
-            Masuk
+            {tulisan}
           </Link>
           <MenuHp />
         </div>

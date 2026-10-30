@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChipStatus } from "@/components/chip-status";
 import { KodeStasiun, nomorStasiun } from "@/components/kode-stasiun";
 import { ALAMAT_FORMULIR_PENDAFTARAN } from "@/components/tautan-situs";
 import { TombolUtama } from "@/components/tombol";
@@ -103,8 +104,7 @@ export default async function HalamanAkun() {
 
 /**
  * Pendaftaran pemilik akun yang Ditutup, dari yang paling baru dikirim (PRD §2.3, ▶ Keputusan OD-14): nomor
- * pendaftaran, program, status Ditutup, dan alasan penutupannya, tanpa keterangan penutupan. Status tampil sebagai
- * teks biasa, karena docs/DESIGN.md belum menetapkan chip Ditutup.
+ * pendaftaran, program, chip status Ditutup, dan alasan penutupannya, tanpa keterangan penutupan.
  */
 function DaftarPendaftaranDitutup({
   ditutup,
@@ -136,7 +136,9 @@ function DaftarPendaftaranDitutup({
                 <dt className="text-keterangan font-semibold text-teks-2">
                   Status
                 </dt>
-                <dd className="mt-0.5 font-semibold">{pendaftaran.status}</dd>
+                <dd className="mt-0.5">
+                  <ChipStatus status={pendaftaran.status} />
+                </dd>
               </div>
               <div className="border-b border-garis py-3">
                 <dt className="text-keterangan font-semibold text-teks-2">
@@ -206,9 +208,7 @@ function KartuPendaftaran({
             {pendaftaran.program}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-pil border-2 border-jalur px-2.5 py-1.5 text-label text-jalur before:size-2 before:rounded-bulat before:bg-current">
-          {pendaftaran.status}
-        </span>
+        <ChipStatus status={pendaftaran.status} />
       </div>
       {tahap && (
         <p className="flex flex-wrap items-center gap-2 font-papan text-title-kecil">

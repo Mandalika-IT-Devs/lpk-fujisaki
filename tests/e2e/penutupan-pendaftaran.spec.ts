@@ -3,9 +3,10 @@ import { hashPassword } from "better-auth/crypto";
 import postgres from "postgres";
 import { KODE_LANGKAH } from "../../src/domain/pendaftaran";
 import { ADMIN, masukKePanel, STAF } from "./pegawai-uji";
+import { periksaChip } from "./periksa-chip";
 
 // Penutupan di tahap 1 dan pendaftaran ulang (issue T16, PRD §2.3 dan ▶ Keputusan OD-14, §6.6, §7.5, UAT-F5, UAT-G4
-// bagian tahap 1). Pendaftaran uji diisi langsung ke database test, masing-masing dengan akun pemiliknya yang bisa
+// bagian tahap 1), beserta chip status sesudah pendaftaran ulang (issue T16-b, UAT-F8). Pendaftaran uji diisi langsung ke database test, masing-masing dengan akun pemiliknya yang bisa
 // masuk. Semuanya dikirim pada 2024 dengan nomor FGC-2024-02…, jadi tidak bertabrakan dengan nomor test lain. Setiap
 // test memakai pendaftarannya sendiri. Penolakan Tidak lolos seleksi di tahap 2 (UAT-G4 langkah 1) diuji di modul
 // domain, karena pindah tahap baru ada di M2.
@@ -366,6 +367,14 @@ test("pemilik akun mengirim formulir baru dari isian lama dan mendapat nomor bar
     nomorBaru ?? "",
   );
 
+  // UAT-F8 langkah 1: chip Berjalan untuk pendaftaran baru, chip Ditutup beserta alasannya untuk pendaftaran lama.
+  await periksaChip(berjalan, "Berjalan");
+  const lamaDiAkun = pendaftaranDitutupDiAkun(page)
+    .getByRole("listitem")
+    .filter({ hasText: DIAN.nomor });
+  await periksaChip(lamaDiAkun, "Ditutup");
+  await expect(lamaDiAkun).toContainText("Mundur");
+
   // Pendaftaran lama tetap terlihat di panel pegawai dengan status Ditutup, di samping pendaftaran baru.
   await staf.goto("/panel/pendaftaran");
   await staf
@@ -374,15 +383,18 @@ test("pemilik akun mengirim formulir baru dari isian lama dan mendapat nomor bar
   await staf.getByRole("button", { name: "Terapkan" }).click();
   const tabel = staf.getByRole("table", { name: "Daftar pendaftaran" });
   await expect(tabel.locator("tbody tr")).toHaveCount(2);
-  await expect(
+  // UAT-F8 langkah 2: daftar pendaftaran dan halaman pendaftaran lama memakai chip yang sama.
+  await periksaChip(
     tabel.locator("tbody tr").filter({ hasText: DIAN.nomor }),
-  ).toContainText("Ditutup");
-  await expect(
+    "Ditutup",
+  );
+  await periksaChip(
     tabel.locator("tbody tr").filter({ hasText: nomorBaru ?? "" }),
-  ).toContainText("Berjalan");
+    "Berjalan",
+  );
 
   await staf.goto(alamat(DIAN));
-  await expect(ringkasan(staf)).toContainText("Ditutup");
+  await periksaChip(ringkasan(staf), "Ditutup");
   await expect(ringkasan(staf)).toContainText("Mundur");
   await expect(ringkasan(staf)).toContainText("Mundur karena urusan keluarga.");
 

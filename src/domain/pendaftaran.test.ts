@@ -340,12 +340,14 @@ describe("periksaIsianWajib", () => {
 // Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (issue T15) dengan pemeriksaan yang sama seperti
 // formulir pemilik akun: isian wajib terisi (PRD §6.1), dan tanggal lahir tidak jatuh sesudah hari ini (WIB, §6.3).
 // Usia di luar rentang batas usia program tidak menolak perubahan (§11.2). Hari ini pada contoh: 22-10-2026 pukul
-// 17.30 UTC, yaitu 23-10-2026 pukul 00.30 WIB (contoh terakhir PRD §6.3).
+// 17.30 UTC, yaitu 23-10-2026 pukul 00.30 WIB (contoh terakhir PRD §6.3). Pendaftaran pada contoh ini dikirim saat itu
+// juga, jadi tanggal kirimnya sama dengan hari ini.
 describe("periksaUbahIsian", () => {
   const SEKARANG = new Date("2026-10-22T17:30:00Z");
+  const DIKIRIM_HARI_INI = { sekarang: SEKARANG, dikirimPada: SEKARANG };
 
   it("isian lengkap dengan tanggal lahir sebelum hari ini: sah", () => {
-    expect(periksaUbahIsian(FORMULIR_LENGKAP, SEKARANG)).toEqual({
+    expect(periksaUbahIsian(FORMULIR_LENGKAP, DIKIRIM_HARI_INI)).toEqual({
       sah: true,
       formulir: FORMULIR_LENGKAP,
     });
@@ -355,7 +357,7 @@ describe("periksaUbahIsian", () => {
     expect(
       periksaUbahIsian(
         { ...FORMULIR_LENGKAP, tanggalLahir: "2026-10-23" },
-        SEKARANG,
+        DIKIRIM_HARI_INI,
       ),
     ).toMatchObject({ sah: true });
   });
@@ -363,8 +365,15 @@ describe("periksaUbahIsian", () => {
   it("tanggal lahir sesudah hari ini (WIB): tidak sah, juga bila hari itu baru dimulai di WIB", () => {
     for (const tanggalLahir of ["2026-10-24", "2099-12-31"]) {
       expect(
-        periksaUbahIsian({ ...FORMULIR_LENGKAP, tanggalLahir }, SEKARANG),
-      ).toEqual({ sah: false, belumDiisi: [], tanggalLahirTidakBenar: true });
+        periksaUbahIsian(
+          { ...FORMULIR_LENGKAP, tanggalLahir },
+          DIKIRIM_HARI_INI,
+        ),
+      ).toEqual({
+        sah: false,
+        belumDiisi: [],
+        tanggalLahirDitolak: { alasan: "sesudah-hari-ini" },
+      });
     }
   });
 
@@ -376,22 +385,116 @@ describe("periksaUbahIsian", () => {
           kabupatenKota: null,
           tanggalLahir: "2099-12-31",
         },
-        SEKARANG,
+        DIKIRIM_HARI_INI,
       ),
     ).toEqual({
       sah: false,
       belumDiisi: ["kabupatenKota"],
-      tanggalLahirTidakBenar: true,
+      tanggalLahirDitolak: { alasan: "sesudah-hari-ini" },
     });
   });
 
   it("tanggal lahir yang kosong hanya disebut sebagai isian wajib yang belum diisi", () => {
     expect(
-      periksaUbahIsian({ ...FORMULIR_LENGKAP, tanggalLahir: null }, SEKARANG),
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: null },
+        DIKIRIM_HARI_INI,
+      ),
     ).toEqual({
       sah: false,
       belumDiisi: ["tanggalLahir"],
-      tanggalLahirTidakBenar: false,
+      tanggalLahirDitolak: null,
+    });
+  });
+});
+
+// Tanggal lahir yang jatuh sesudah tanggal kirim pendaftaran ditolak saat pegawai mengubah isian, karena orang itu belum
+// lahir saat pendaftarannya dikirim (issue T15-c, PRD §11.2 ▶ Keputusan 2026-10-30, UAT-K7). Pada contoh, pendaftaran
+// dikirim 20-05-2024 pukul 10.00 WIB (contoh PRD §11.2), dan pegawai mengubahnya pada 23-10-2026 WIB.
+describe("periksaUbahIsian: tanggal lahir sesudah tanggal kirim (issue T15-c)", () => {
+  const WAKTU = {
+    sekarang: new Date("2026-10-22T17:30:00Z"),
+    dikirimPada: new Date("2024-05-20T03:00:00Z"),
+  };
+
+  it("tanggal lahir sehari sesudah tanggal kirim: tidak sah, beserta tanggal kirim WIB-nya (UAT-K7)", () => {
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2024-05-21" },
+        WAKTU,
+      ),
+    ).toEqual({
+      sah: false,
+      belumDiisi: [],
+      tanggalLahirDitolak: {
+        alasan: "sesudah-tanggal-kirim",
+        tanggalKirimWib: "2024-05-20",
+      },
+    });
+  });
+
+  it("tanggal lahir tepat pada tanggal kirim: tidak ditolak karena aturan ini", () => {
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2024-05-20" },
+        WAKTU,
+      ),
+    ).toMatchObject({ sah: true });
+  });
+
+  it("tanggal kirim dihitung dalam WIB: dikirim 19-05-2024 pukul 17.30 UTC, yaitu 20-05-2024 pukul 00.30 WIB", () => {
+    const dikirimTengahMalam = {
+      ...WAKTU,
+      dikirimPada: new Date("2024-05-19T17:30:00Z"),
+    };
+
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2024-05-20" },
+        dikirimTengahMalam,
+      ),
+    ).toMatchObject({ sah: true });
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2024-05-21" },
+        dikirimTengahMalam,
+      ),
+    ).toEqual({
+      sah: false,
+      belumDiisi: [],
+      tanggalLahirDitolak: {
+        alasan: "sesudah-tanggal-kirim",
+        tanggalKirimWib: "2024-05-20",
+      },
+    });
+  });
+
+  it("tanggal lahir sesudah hari ini tetap ditolak sebagai sesudah hari ini", () => {
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, tanggalLahir: "2026-10-24" },
+        WAKTU,
+      ),
+    ).toEqual({
+      sah: false,
+      belumDiisi: [],
+      tanggalLahirDitolak: { alasan: "sesudah-hari-ini" },
+    });
+  });
+
+  it("isian wajib yang kosong dan tanggal lahir sesudah tanggal kirim disebut bersama", () => {
+    expect(
+      periksaUbahIsian(
+        { ...FORMULIR_LENGKAP, provinsi: null, tanggalLahir: "2025-01-01" },
+        WAKTU,
+      ),
+    ).toEqual({
+      sah: false,
+      belumDiisi: ["provinsi"],
+      tanggalLahirDitolak: {
+        alasan: "sesudah-tanggal-kirim",
+        tanggalKirimWib: "2024-05-20",
+      },
     });
   });
 });
@@ -492,21 +595,15 @@ describe("peringatanBatasUsiaUbahIsian", () => {
     ).toBeNull();
   });
 
-  it("tanggal lahir diubah ke tanggal sesudah tanggal kirim: peringatan tanpa usia, beserta tanggal kirim dan rentang 18–30", () => {
-    expect(
+  it("tanggal lahir sesudah tanggal kirim tidak diberi peringatan, karena perubahan itu sudah ditolak periksaUbahIsian (issue T15-c)", () => {
+    expect(() =>
       peringatanBatasUsiaUbahIsian({
         tersimpan: TERSIMPAN,
         diubah: { ...TERSIMPAN, tanggalLahir: "2026-10-24" },
         rentangUsia: PROGRAM_18_30,
         dikirimPada: DIKIRIM_PADA,
       }),
-    ).toEqual({
-      memenuhi: false,
-      alasan: "tanggal-lahir-tidak-benar",
-      tanggalKirimWib: "2026-10-23",
-      usiaMinimal: 18,
-      usiaMaksimal: 30,
-    });
+    ).toThrow(/periksaUbahIsian/);
   });
 
   it("tanggal lahir dan program tidak berubah: tanpa peringatan, juga bila usia yang tersimpan di luar rentang", () => {

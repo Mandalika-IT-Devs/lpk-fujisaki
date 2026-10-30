@@ -5,7 +5,8 @@ import { KODE_LANGKAH } from "../../src/domain/pendaftaran";
 import { ADMIN, masukKePanel, STAF } from "./pegawai-uji";
 
 // Halaman pendaftaran dan ubah isian oleh pegawai (issue T15, PRD §6.5, §11.2 bagian isian formulir, UAT-F6), termasuk
-// peringatan batas usia saat tanggal lahir atau program diubah (issue T15-b, UAT-K6).
+// peringatan batas usia saat tanggal lahir atau program diubah (issue T15-b, UAT-K6), dan penolakan tanggal lahir yang
+// jatuh sesudah tanggal kirim (issue T15-c, UAT-K7).
 // Pendaftaran uji diisi langsung ke database test, masing-masing dengan akun pemiliknya yang bisa masuk. Semuanya
 // dikirim pada 2024, jadi nomornya (FGC-2024-…) tidak bertabrakan dengan nomor test lain. Setiap test memakai
 // pendaftarannya sendiri, karena test bisa berjalan bersamaan.
@@ -49,6 +50,14 @@ const DEWI: PendaftaranUji = {
   kabupatenKota: "Kab. Purworejo",
 };
 
+const SITI: PendaftaranUji = {
+  nomor: "FGC-2024-0105",
+  namaLengkap: "Siti Rahayu",
+  email: "halaman.uji.siti@contoh.test",
+  nomorWhatsApp: "6281200002505",
+  kabupatenKota: "Kab. Kebumen",
+};
+
 /** Status langkah pendaftaran uji yang berbeda dari Belum, supaya ketiga status langkah (PRD §7.2) tampil. */
 const LANGKAH_BUKAN_BELUM: Record<string, string> = {
   "L1.1": "Selesai",
@@ -61,7 +70,7 @@ async function isiPendaftaranUji() {
   try {
     await sql`delete from akun where email like 'halaman.uji.%@contoh.test'`;
     const hash = await hashPassword(KATA_SANDI);
-    for (const uji of [RINA, WATI, YANTI, DEWI]) {
+    for (const uji of [RINA, WATI, YANTI, DEWI, SITI]) {
       const [{ id: akunId }] = await sql<{ id: string }[]>`
         insert into akun (name, email, email_verified, jenis, nomor_whatsapp, waktu_persetujuan)
         values (${uji.namaLengkap}, ${uji.email}, true, 'pemilik_akun', ${uji.nomorWhatsApp}, now())
@@ -326,6 +335,46 @@ test("Staf mengubah tanggal lahir sehingga usia pada tanggal kirim di luar renta
   await page.reload();
   await expect(tanggalLahir).toHaveValue("2006-05-20");
   await expect(kabupatenKota).toHaveValue("Kab. Wonosobo");
+});
+
+test("Staf mengubah tanggal lahir menjadi sehari sesudah tanggal kirim: perubahan ditolak, isian tanggal lahir ditandai salah, dan tanggal lahir tersimpan tidak berubah (UAT-K7)", async ({
+  page,
+}) => {
+  // Pendaftaran uji dikirim 20-05-2024 dengan tanggal lahir 17-05-2004.
+  await masukKePanel(page, STAF);
+  await page.goto(alamat(SITI));
+  const isian = formulirIsian(page);
+  const tanggalLahir = isian.getByLabel("Tanggal lahir");
+
+  await tanggalLahir.fill("2024-05-21");
+  await simpanPerubahan(page);
+
+  await expect(tanggalLahir).toHaveAttribute("aria-invalid", "true");
+  await expect(tanggalLahir).toHaveAccessibleDescription(
+    polaTeks(
+      "Tanggal lahir jatuh sesudah tanggal kirim 20-05-2024. Periksa lagi tanggal lahirnya.",
+    ),
+  );
+  await expect(isian.getByRole("alert")).toHaveText(
+    "Perubahan belum disimpan karena tanggal lahir jatuh sesudah tanggal kirim 20-05-2024, jadi orangnya belum lahir saat pendaftarannya dikirim. Periksa lagi tanggal lahirnya, lalu simpan lagi.",
+  );
+  await expect(isian.getByRole("status")).toHaveCount(0);
+  await expect(tanggalLahir).toHaveValue("2024-05-21");
+
+  await page.reload();
+  await expect(tanggalLahir).toHaveValue("2004-05-17");
+
+  // Tanggal lahir tepat pada tanggal kirim tidak ditolak karena aturan ini; peringatan usia di luar rentang tetap berlaku.
+  await tanggalLahir.fill("2024-05-20");
+  await simpanPerubahan(page);
+
+  await expect(isian.getByRole("status")).toHaveText(
+    `Perubahan isian formulir ${SITI.nomor} sudah disimpan dan terlihat oleh pemilik akunnya.`,
+  );
+  await expect(isian.getByRole("alert")).toHaveText(
+    /usianya 0 tahun pada tanggal kirim 20-05-2024, di luar batas usia Tokutei Ginou \(SSW\), yaitu 18–30 tahun/,
+  );
+  await expect(tanggalLahir).not.toHaveAttribute("aria-invalid", "true");
 });
 
 test("pemilik akun tidak bisa mengubah isian yang sudah dikirim, juga lewat permintaan langsung ke server", async ({

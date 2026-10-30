@@ -24,6 +24,7 @@ import {
   type StatusLangkah,
   type StatusPendaftaran,
   type SyaratKirimGagal,
+  type TanggalLahirDitolak,
 } from "@/domain/pendaftaran";
 import { konfirmasiPenghapusanCocok } from "@/domain/penghapusan";
 import {
@@ -421,35 +422,28 @@ export type HasilUbahIsianPendaftaran =
   | {
       hasil: "ditolak";
       belumDiisi: IsianWajib[];
-      tanggalLahirTidakBenar: boolean;
+      tanggalLahirDitolak: TanggalLahirDitolak | null;
     }
   | { hasil: "tidak-ada" };
 
 /**
  * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5) pada saat `sekarang`. `draf` adalah
  * isian yang bentuknya sudah diperiksa, dengan aturan yang sama seperti formulir pemilik akun. Isian wajib tetap harus
- * terisi (§6.1) dan tanggal lahir tidak boleh jatuh sesudah hari ini (§6.3); bila tidak, tidak ada yang disimpan.
- * Isian diganti seluruhnya, termasuk isian tidak wajib yang dikosongkan.
+ * terisi (§6.1), tanggal lahir tidak boleh jatuh sesudah hari ini (§6.3), dan tanggal lahir tidak boleh jatuh sesudah
+ * tanggal kirim pendaftaran itu (§11.2, ▶ Keputusan 2026-10-30); bila tidak, tidak ada yang disimpan. Isian diganti
+ * seluruhnya, termasuk isian tidak wajib yang dikosongkan.
  *
  * Bila tanggal lahir atau program berubah dan usia pada tanggal kirim pendaftaran itu di luar rentang program sesudah
  * diubah, perubahan tetap disimpan, dan hasilnya membawa peringatan batas usia (§11.2, ▶ Keputusan 2026-10-30). Baris
- * pendaftaran dikunci lebih dulu dalam satu transaksi, jadi dua perubahan bersamaan bergiliran, dan yang kedua
- * dibandingkan dengan isian yang disimpan perubahan pertama.
+ * pendaftaran dikunci lebih dulu dalam satu transaksi, dan isian diperiksa terhadap tanggal kirim yang dibaca di
+ * transaksi itu, jadi dua perubahan bersamaan bergiliran, dan yang kedua dibandingkan dengan isian yang disimpan
+ * perubahan pertama.
  */
 export async function ubahIsianPendaftaran(
   nomor: string,
   draf: DrafFormulirPendaftaran,
   sekarang: Date,
 ): Promise<HasilUbahIsianPendaftaran> {
-  const periksa = periksaUbahIsian(keFormulirDiperiksa(draf), sekarang);
-  if (!periksa.sah) {
-    return {
-      hasil: "ditolak",
-      belumDiisi: periksa.belumDiisi,
-      tanggalLahirTidakBenar: periksa.tanggalLahirTidakBenar,
-    };
-  }
-  const { bidangKerja, ...isian } = periksa.formulir;
   return db.transaction(async (tx) => {
     const [tersimpan] = await tx
       .select({
@@ -462,6 +456,18 @@ export async function ubahIsianPendaftaran(
       .where(eq(pendaftaran.nomor, nomor))
       .for("update");
     if (!tersimpan) return { hasil: "tidak-ada" };
+    const periksa = periksaUbahIsian(keFormulirDiperiksa(draf), {
+      sekarang,
+      dikirimPada: tersimpan.dikirimPada,
+    });
+    if (!periksa.sah) {
+      return {
+        hasil: "ditolak",
+        belumDiisi: periksa.belumDiisi,
+        tanggalLahirDitolak: periksa.tanggalLahirDitolak,
+      };
+    }
+    const { bidangKerja, ...isian } = periksa.formulir;
     const [programDipilih] = await tx
       .select({
         nama: program.nama,

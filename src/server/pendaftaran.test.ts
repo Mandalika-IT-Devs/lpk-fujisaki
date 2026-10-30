@@ -606,7 +606,7 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
     ).toEqual({
       hasil: "ditolak",
       belumDiisi: ["kabupatenKota", "namaKontakDarurat"],
-      tanggalLahirTidakBenar: false,
+      tanggalLahirDitolak: null,
     });
     expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
   });
@@ -623,7 +623,7 @@ describe("ubahIsianPendaftaran oleh pegawai (issue T15, PRD §2.2, §6.5)", () =
     ).toEqual({
       hasil: "ditolak",
       belumDiisi: [],
-      tanggalLahirTidakBenar: true,
+      tanggalLahirDitolak: { alasan: "sesudah-hari-ini" },
     });
     expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
   });
@@ -793,9 +793,56 @@ describe("peringatan batas usia saat pegawai mengubah isian (issue T15-b, PRD §
     ).toEqual({
       hasil: "ditolak",
       belumDiisi: ["kabupatenKota"],
-      tanggalLahirTidakBenar: false,
+      tanggalLahirDitolak: null,
     });
     expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+});
+
+describe("tanggal lahir sesudah tanggal kirim saat pegawai mengubah isian (issue T15-c, PRD §11.2, UAT-K7)", () => {
+  it("tanggal lahir sehari sesudah tanggal kirim ditolak beserta tanggal kirimnya, dan isian tersimpan tidak berubah (UAT-K7)", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    // Dikirim 23-10-2026; pada hari pegawai mengubahnya, 28-10-2026, tanggal 24-10-2026 sudah lewat.
+
+    expect(
+      await ubahIsianPendaftaran(
+        nomor,
+        {
+          ...drafLengkap(),
+          tanggalLahir: "2026-10-24",
+          namaLengkap: "Nama Tidak Tersimpan",
+        },
+        DIUBAH_PADA,
+      ),
+    ).toEqual({
+      hasil: "ditolak",
+      belumDiisi: [],
+      tanggalLahirDitolak: {
+        alasan: "sesudah-tanggal-kirim",
+        tanggalKirimWib: "2026-10-23",
+      },
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(drafLengkap());
+  });
+
+  it("tanggal lahir tepat pada tanggal kirim tidak ditolak: perubahan tersimpan, dengan peringatan usia 0 pada tanggal kirim", async () => {
+    const nomor = await kirimLalu(await buatPemilikAkun());
+    const diubah = { ...drafLengkap(), tanggalLahir: "2026-10-23" };
+
+    expect(await ubahIsianPendaftaran(nomor, diubah, DIUBAH_PADA)).toEqual({
+      hasil: "tersimpan",
+      peringatanBatasUsia: {
+        namaProgram: programUji.nama,
+        memenuhi: false,
+        alasan: "terlalu-muda",
+        tanggalKirimWib: "2026-10-23",
+        usia: 0,
+        usiaMinimal: 18,
+        usiaMaksimal: 30,
+        bolehMendaftarMulai: "2044-10-23",
+      },
+    });
+    expect((await bacaPendaftaran(nomor))?.isian).toEqual(diubah);
   });
 });
 

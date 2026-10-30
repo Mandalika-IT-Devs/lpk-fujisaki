@@ -18,3 +18,9 @@ export function tanggalWib(instan: Date): Tanggal {
     hari: wib.getUTCDate(),
   };
 }
+
+/** Tanggal kalender sebagai YYYY-MM-DD, misalnya tanggal kirim WIB yang dibawa hasil hitung sebagai bahannya. */
+export function tulisTanggal({ tahun, bulan, hari }: Tanggal): string {
+  const dua = (angka: number) => String(angka).padStart(2, "0");
+  return `${String(tahun).padStart(4, "0")}-${dua(bulan)}-${dua(hari)}`;
+}

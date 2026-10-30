@@ -4,7 +4,7 @@
  */
 
 import type { RentangUsia } from "./program-dan-bidang-kerja";
-import { type Tanggal, tanggalWib } from "./waktu-wib";
+import { type Tanggal, tanggalWib, tulisTanggal } from "./waktu-wib";
 
 function kabisat(tahun: number): boolean {
   return (tahun % 4 === 0 && tahun % 100 !== 0) || tahun % 400 === 0;
@@ -23,11 +23,6 @@ function bacaTanggal(teks: string): Tanggal | undefined {
   if (bulan < 1 || bulan > 12) return undefined;
   if (hari < 1 || hari > jumlahHari(tahun, bulan)) return undefined;
   return { tahun, bulan, hari };
-}
-
-function tulisTanggal({ tahun, bulan, hari }: Tanggal): string {
-  const dua = (angka: number) => String(angka).padStart(2, "0");
-  return `${String(tahun).padStart(4, "0")}-${dua(bulan)}-${dua(hari)}`;
 }
 
 function sebelum(a: Tanggal, b: Tanggal): boolean {

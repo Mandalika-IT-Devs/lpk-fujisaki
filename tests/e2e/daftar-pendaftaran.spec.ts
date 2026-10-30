@@ -3,7 +3,7 @@ import { hashPassword } from "better-auth/crypto";
 import postgres from "postgres";
 import { ADMIN, masukKePanel, STAF } from "./pegawai-uji";
 
-// Daftar pendaftaran di panel pegawai (issue T14, PRD §11.1, UAT-K1 tanpa saringan kelas).
+// Daftar pendaftaran di panel pegawai (issue T14 dan T14-b, PRD §11.1, UAT-K1 tanpa saringan kelas, UAT-K5).
 // Pendaftaran uji diisi langsung ke database test, karena pindah tahap belum punya halaman. Semuanya
 // dikirim pada 2025, jadi nomornya (FGC-2025-…) tidak pernah bertabrakan dengan nomor yang diberikan test lain saat
 // mengirim formulir. Test lain bisa menambah pendaftaran kapan saja, jadi pemeriksaan di sini hanya memastikan bahwa
@@ -65,7 +65,16 @@ const BUDI: PendaftaranUji = {
   status: "Selesai",
   dikirimPada: "2025-03-06T02:00:00Z",
 };
-const PENDAFTARAN_UJI = [SITI, DEWI, AGUS, AHMAD, BUDI];
+const RINA: PendaftaranUji = {
+  nomor: "FGC-2025-0906",
+  namaLengkap: "Rina Wulandari",
+  program: "Pemagangan",
+  bidangKerja: null,
+  tahap: 2,
+  status: "Berjalan",
+  dikirimPada: "2025-03-11T02:00:00Z",
+};
+const PENDAFTARAN_UJI = [RINA, SITI, DEWI, AGUS, AHMAD, BUDI];
 
 /**
  * 30 pendaftaran untuk pembagian halaman, dikirim satu jam sekali sejak 01-01-2025, di tahap 3. Bidang kerjanya bukan
@@ -286,11 +295,6 @@ test("saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang ke
   page,
 }) => {
   await masukKePanel(page, STAF);
-  const pilihan = await saringan(page)
-    .getByLabel("Bidang kerja")
-    .locator("option")
-    .allTextContents();
-  expect(pilihan).not.toContain("Belum tahu");
 
   await saringan(page)
     .getByLabel("Bidang kerja")
@@ -298,11 +302,58 @@ test("saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang ke
   await terapkan(page);
   await expect(page).toHaveURL(/bidang-kerja=/);
 
-  // Dewi memilih "Belum tahu", Agus dan Ahmad memilih Perawat lansia (kaigo).
+  // Rina dan Dewi memilih "Belum tahu", Agus dan Ahmad memilih Perawat lansia (kaigo).
   await periksaDaftar(
     page,
     (baris) => baris.bidangKerja === "Pembersihan gedung",
     [SITI, BUDI],
+  );
+});
+
+test('saringan bidang kerja "Belum tahu" hanya menampilkan pendaftaran yang memilih "Belum tahu", bukan yang memilih Pembersihan gedung (UAT-K5)', async ({
+  page,
+}) => {
+  await masukKePanel(page, STAF);
+
+  await saringan(page).getByLabel("Bidang kerja").selectOption("Belum tahu");
+  await terapkan(page);
+  await expect(page).toHaveURL(/bidang-kerja=belum-tahu/);
+
+  // Siti dan Budi memilih Pembersihan gedung.
+  await periksaDaftar(page, (baris) => baris.bidangKerja === "Belum tahu", [
+    RINA,
+    DEWI,
+  ]);
+  await expect(saringan(page).getByLabel("Bidang kerja")).toHaveValue(
+    "belum-tahu",
+  );
+});
+
+test('saringan "Belum tahu" yang digabung dengan saringan status hanya menampilkan pendaftaran yang cocok dengan keduanya', async ({
+  page,
+}) => {
+  await masukKePanel(page, STAF);
+
+  await saringan(page).getByLabel("Bidang kerja").selectOption("Belum tahu");
+  await saringan(page).getByLabel("Status").selectOption("Berjalan");
+  await terapkan(page);
+  await expect(page).toHaveURL(/bidang-kerja=belum-tahu/);
+  await expect(page).toHaveURL(/status=Berjalan/);
+  // Dewi memilih "Belum tahu" tetapi pendaftarannya Ditutup; Siti Berjalan tetapi memilih Pembersihan gedung.
+  await periksaDaftar(
+    page,
+    (baris) =>
+      baris.bidangKerja === "Belum tahu" && baris.status === "Berjalan",
+    [RINA],
+  );
+
+  await saringan(page).getByLabel("Status").selectOption("Ditutup");
+  await terapkan(page);
+  await expect(page).toHaveURL(/status=Ditutup/);
+  await periksaDaftar(
+    page,
+    (baris) => baris.bidangKerja === "Belum tahu" && baris.status === "Ditutup",
+    [DEWI],
   );
 });
 

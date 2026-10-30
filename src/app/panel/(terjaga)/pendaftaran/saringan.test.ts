@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { alamatDaftar, bacaSaringan } from "./saringan";
 
-// Saringan, pencarian, dan halaman daftar pendaftaran dibaca dari alamat halaman (issue T14, PRD §11.1). Alamat bisa
-// diubah siapa pun, jadi isinya diperiksa di sini sebelum dipakai.
+// Saringan, pencarian, dan halaman daftar pendaftaran dibaca dari alamat halaman (issue T14 dan T14-b, PRD §11.1).
+// Alamat bisa diubah siapa pun, jadi isinya diperiksa di sini sebelum dipakai.
 
 describe("bacaSaringan", () => {
   it("alamat tanpa saringan menampilkan halaman 1 dari semua pendaftaran", () => {
@@ -24,10 +24,16 @@ describe("bacaSaringan", () => {
         cari: "siti",
         tahap: 1,
         programId: 2,
-        bidangKerjaId: 3,
+        bidangKerja: 3,
         status: "Ditutup",
       },
       halaman: 2,
+    });
+  });
+
+  it('membaca saringan bidang kerja "Belum tahu" (UAT-K5)', () => {
+    expect(bacaSaringan({ "bidang-kerja": "belum-tahu" }).saringan).toEqual({
+      bidangKerja: "Belum tahu",
     });
   });
 
@@ -69,7 +75,7 @@ describe("alamatDaftar", () => {
         cari: "Siti Aminah",
         tahap: 1,
         programId: 2,
-        bidangKerjaId: 3,
+        bidangKerja: 3,
         status: "Ditutup",
       },
       2,
@@ -78,5 +84,11 @@ describe("alamatDaftar", () => {
     expect(alamat).toBe(
       "/panel/pendaftaran?cari=Siti+Aminah&tahap=1&program=2&bidang-kerja=3&status=Ditutup&halaman=2",
     );
+  });
+
+  it('saringan bidang kerja "Belum tahu" ditulis sebagai belum-tahu, dan tetap bisa digabung dengan saringan status', () => {
+    expect(
+      alamatDaftar({ bidangKerja: "Belum tahu", status: "Berjalan" }, 1),
+    ).toBe("/panel/pendaftaran?bidang-kerja=belum-tahu&status=Berjalan");
   });
 });

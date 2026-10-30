@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { bagiHalaman, saringPendaftaran } from "./daftar-pendaftaran";
 
-// Contoh sintetis untuk daftar pendaftaran di panel pegawai (issue T14, PRD §11.1, UAT-K1). Program 1 adalah
-// Tokutei Ginou (SSW) dan program 2 Pemagangan; bidang kerja null berarti "Belum tahu". Ekspektasinya ditulis
-// sebagai nomor pendaftaran yang cocok, dari yang paling baru dikirim.
+// Contoh sintetis untuk daftar pendaftaran di panel pegawai (issue T14 dan T14-b, PRD §11.1, UAT-K1, UAT-K5). Program
+// 1 adalah Tokutei Ginou (SSW) dan program 2 Pemagangan; bidang kerja 3 adalah Pembersihan gedung, dan bidang kerja
+// null berarti "Belum tahu". Ekspektasinya ditulis sebagai nomor pendaftaran yang cocok, dari yang paling baru dikirim.
 const SITI = {
   nomor: "FGC-2026-0005",
   namaLengkap: "Siti Aminah",
@@ -97,10 +97,51 @@ describe("saringPendaftaran", () => {
   });
 
   it('saringan bidang kerja hanya menampilkan pendaftaran yang memilih bidang kerja itu, bukan yang memilih "Belum tahu"', () => {
-    expect(nomor(saringPendaftaran(SEMUA, { bidangKerjaId: 3 }))).toEqual([
+    expect(nomor(saringPendaftaran(SEMUA, { bidangKerja: 3 }))).toEqual([
       "FGC-2026-0005",
       "FGC-2026-0003",
     ]);
+  });
+
+  it('saringan bidang kerja "Belum tahu" hanya menampilkan pendaftaran yang memilih "Belum tahu", bukan yang memilih Pembersihan gedung (UAT-K5)', () => {
+    expect(
+      saringPendaftaran([SITI, DEWI], { bidangKerja: "Belum tahu" }),
+    ).toEqual([DEWI]);
+    expect(
+      nomor(saringPendaftaran(SEMUA, { bidangKerja: "Belum tahu" })),
+    ).toEqual(["FGC-2026-0004"]);
+  });
+
+  it('saringan "Belum tahu" bisa digabung dengan saringan status: hanya pendaftaran yang cocok dengan keduanya yang tampil', () => {
+    const RINA = {
+      nomor: "FGC-2026-0001",
+      namaLengkap: "Rina Wulandari",
+      programId: 2,
+      bidangKerjaId: null,
+      tahap: 2,
+      status: "Berjalan",
+      dikirimPada: new Date("2026-03-06T02:00:00Z"),
+    } as const;
+    const semua = [...SEMUA, RINA];
+
+    expect(
+      saringPendaftaran(semua, {
+        bidangKerja: "Belum tahu",
+        status: "Berjalan",
+      }),
+    ).toEqual([RINA]);
+    expect(
+      saringPendaftaran(semua, {
+        bidangKerja: "Belum tahu",
+        status: "Ditutup",
+      }),
+    ).toEqual([DEWI]);
+    expect(
+      saringPendaftaran(semua, {
+        bidangKerja: "Belum tahu",
+        status: "Selesai",
+      }),
+    ).toEqual([]);
   });
 
   it('pencarian "siti" menemukan "Siti Aminah", tanpa membedakan huruf besar dan kecil (UAT-K1 langkah 2)', () => {

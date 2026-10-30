@@ -5,6 +5,7 @@ import { IkonPanahBawah } from "@/components/ikon";
 import { nomorStasiun } from "@/components/kode-stasiun";
 import { TombolKirimKedua } from "@/components/tombol";
 import type { SaringanPendaftaran } from "@/domain/daftar-pendaftaran";
+import { BIDANG_KERJA_BELUM_TAHU } from "@/domain/formulir-pendaftaran";
 import { STATUS_PENDAFTARAN } from "@/domain/pendaftaran";
 import { TAHAP } from "@/domain/tahap";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ import {
   ALAMAT_DAFTAR_PENDAFTARAN,
   alamatDaftar,
   isianSaringan,
+  NILAI_BELUM_TAHU,
 } from "./saringan";
 
 // Select memakai panah SVG navy di kanan (docs/DESIGN.md, Inputs / Fields).
@@ -136,6 +138,9 @@ export function FormulirSaringan({
               {namaPilihan(pilihan)}
             </option>
           ))}
+          {/* Pendaftaran yang belum memilih bidang kerja (PRD §11.1, ▶ Keputusan 2026-10-30), di urutan yang sama
+              seperti di formulir pendaftaran. */}
+          <option value={NILAI_BELUM_TAHU}>{BIDANG_KERJA_BELUM_TAHU}</option>
         </PilihanSaringan>
         <PilihanSaringan
           nama="status"

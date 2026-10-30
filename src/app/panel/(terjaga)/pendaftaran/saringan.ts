@@ -1,11 +1,15 @@
 import { z } from "zod";
 import type { SaringanPendaftaran } from "@/domain/daftar-pendaftaran";
+import { BIDANG_KERJA_BELUM_TAHU } from "@/domain/formulir-pendaftaran";
 import { STATUS_PENDAFTARAN } from "@/domain/pendaftaran";
 import { TAHAP } from "@/domain/tahap";
 import { bacaId } from "@/lib/baca-id";
 
 // Saringan, pencarian, dan nomor halaman daftar pendaftaran disimpan di alamat halaman (formulir GET), misalnya
 // /panel/pendaftaran?tahap=1&status=Ditutup&halaman=2, supaya bisa dibuka ulang dan dibagikan antarpegawai.
+
+/** Nilai saringan bidang kerja di alamat halaman untuk "Belum tahu" (PRD §11.1, ▶ Keputusan 2026-10-30). */
+export const NILAI_BELUM_TAHU = "belum-tahu";
 
 /** Parameter alamat halaman seperti yang diberikan Next.js: satu teks, beberapa teks, atau tidak ada. */
 type ParameterAlamat = Record<string, string | string[] | undefined>;
@@ -27,7 +31,16 @@ const SKEMA = z.object({
     z.enum(TAHAP.map(({ nomor }) => String(nomor))).transform(Number),
   ),
   program: parameter(id),
-  "bidang-kerja": parameter(id),
+  "bidang-kerja": parameter(
+    z.union([
+      z
+        .literal(NILAI_BELUM_TAHU)
+        .transform(
+          (): typeof BIDANG_KERJA_BELUM_TAHU => BIDANG_KERJA_BELUM_TAHU,
+        ),
+      id,
+    ]),
+  ),
   status: parameter(z.enum(STATUS_PENDAFTARAN)),
   halaman: parameter(id),
 });
@@ -43,7 +56,7 @@ export function bacaSaringan(parameterAlamat: ParameterAlamat): {
       cari: dibaca.cari,
       tahap: dibaca.tahap,
       programId: dibaca.program,
-      bidangKerjaId: dibaca["bidang-kerja"],
+      bidangKerja: dibaca["bidang-kerja"],
       status: dibaca.status,
     },
     halaman: dibaca.halaman ?? 1,
@@ -60,7 +73,10 @@ export function isianSaringan(saringan: SaringanPendaftaran) {
     cari: saringan.cari ?? "",
     tahap: teks(saringan.tahap),
     program: teks(saringan.programId),
-    "bidang-kerja": teks(saringan.bidangKerjaId),
+    "bidang-kerja":
+      saringan.bidangKerja === BIDANG_KERJA_BELUM_TAHU
+        ? NILAI_BELUM_TAHU
+        : teks(saringan.bidangKerja),
     status: saringan.status ?? "",
   };
 }

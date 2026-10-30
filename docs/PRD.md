@@ -78,6 +78,10 @@ Satu orang memakai satu akun sepanjang perjalanannya. Sebutannya berubah mengiku
 
 ▶ Keputusan 2026-10-30: Pemilik akun yang membuka alamat panel pegawai melihat halaman Masuk pegawai dengan pesan bahwa panel itu khusus pegawai, beserta tautan ke halaman akunnya.
 
+▶ Keputusan 2026-10-30: Pesan itu berbunyi "Panel ini khusus pegawai lembaga, jadi akunmu tidak bisa membukanya. Buka akunmu untuk mengisi formulir pendaftaran dan memantau pendaftaranmu.", dengan "Buka akunmu" sebagai tautan ke halaman akun.
+
+▶ Keputusan 2026-10-30: Pemilik akun yang mengisi formulir Masuk pegawai dengan email dan kata sandinya sendiri masuk sebagai pemilik akun, lalu melihat pesan di atas beserta tautan ke akunnya.
+
 ### 2.3 Yang dilihat pemilik akun
 
 Pemilik akun melihat:
@@ -341,6 +345,8 @@ Formulir pendaftaran hanya bisa dikirim bila:
 ▶ Keputusan 2026-10-30: Bila ada isian yang bentuknya salah, misalnya nomor HP kontak darurat `081234567`, draf belum disimpan sampai isian itu diperbaiki atau dikosongkan. Semua yang sudah diketik tetap di layar, dan isian yang salah ditandai. Isian yang masih kosong tetap boleh.
 
 ▶ Keputusan 2026-10-30: Bila pengiriman ditolak dan semua isian yang terisi bentuknya sah, misalnya karena email belum diverifikasi atau usia di luar rentang, isian itu otomatis disimpan sebagai draf. Bila ada isian yang bentuknya salah, berlaku keputusan di atas: draf belum disimpan.
+
+▶ Keputusan 2026-10-30: Sesudah isian disimpan otomatis karena pengiriman ditolak, calon peserta melihat kabar "Isianmu tetap tersimpan sebagai draf, jadi kamu bisa melanjutkannya kapan saja dari halaman akunmu." sesudah pesan penolakan.
 
 ### 6.3 Batas usia
 
@@ -631,6 +637,12 @@ Halaman satu pendaftaran menampilkan:
 Dari halaman ini pegawai mengubah status langkah, menambah percobaan, memindahkan tahap, dan menutup pendaftaran.
 
 ▶ Keputusan 2026-10-30: Saat pegawai mengubah tanggal lahir atau program, batas usia program (§6.3) diperiksa terhadap tanggal kirim pendaftaran itu. Bila usia di luar rentang, pegawai melihat peringatan yang menyebut usia dan rentangnya, tetapi perubahan tetap bisa disimpan.
+
+▶ Keputusan 2026-10-30: Peringatan itu berbunyi seperti contoh berikut: "Perubahan tetap disimpan, tetapi usianya 17 tahun pada tanggal kirim 20-05-2024, di luar batas usia Tokutei Ginou (SSW), yaitu 18–30 tahun. Periksa lagi tanggal lahir dan programnya; bila keduanya sudah benar, perubahan ini boleh dibiarkan." Usia, tanggal kirim, nama program, dan rentangnya mengikuti pendaftaran itu.
+
+▶ Keputusan 2026-10-30: Saat pegawai mengubah isian, tanggal lahir yang jatuh sesudah tanggal kirim pendaftaran ditolak, karena orang itu belum lahir saat pendaftarannya dikirim. Perubahan tidak disimpan, dan isian tanggal lahir ditandai salah.
+
+▶ Keputusan 2026-10-30: Bila perubahan ditolak karena isian lain, misalnya isian wajib kosong, peringatan usia belum tampil. Peringatan itu muncul saat perubahan berhasil disimpan.
 
 ### 11.3 Catatan
 

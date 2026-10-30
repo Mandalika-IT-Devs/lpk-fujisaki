@@ -318,6 +318,11 @@ Hasil: hanya pendaftaran "Belum tahu" yang tampil.
 
 Hasil: pegawai melihat peringatan berisi usia 17 dan rentang 18–30, dan perubahan tetap tersimpan.
 
+**UAT-K7 – Tanggal lahir sesudah tanggal kirim** (§11.2)
+1. Sebagai Staf, ubah tanggal lahir sebuah pendaftaran menjadi sehari sesudah tanggal kirimnya, lalu simpan.
+
+Hasil: perubahan ditolak, isian tanggal lahir ditandai salah, dan tanggal lahir yang tersimpan tidak berubah.
+
 ## L. Data pribadi (§12)
 
 **UAT-L1 – Tidak ada isian data terlarang** (§12.2)

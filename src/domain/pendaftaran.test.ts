@@ -6,6 +6,7 @@ import {
   periksaIsianWajib,
   periksaSyaratKirim,
   periksaUbahIsian,
+  peringatanBatasUsiaUbahIsian,
 } from "./pendaftaran";
 
 // Ekspektasi dari PRD §6.5 dan tabel §7.1.
@@ -338,8 +339,8 @@ describe("periksaIsianWajib", () => {
 
 // Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (issue T15) dengan pemeriksaan yang sama seperti
 // formulir pemilik akun: isian wajib terisi (PRD §6.1), dan tanggal lahir tidak jatuh sesudah hari ini (WIB, §6.3).
-// Rentang batas usia program tidak diperiksa ulang. Hari ini pada contoh: 22-10-2026 pukul 17.30 UTC, yaitu
-// 23-10-2026 pukul 00.30 WIB (contoh terakhir PRD §6.3).
+// Usia di luar rentang batas usia program tidak menolak perubahan (§11.2). Hari ini pada contoh: 22-10-2026 pukul
+// 17.30 UTC, yaitu 23-10-2026 pukul 00.30 WIB (contoh terakhir PRD §6.3).
 describe("periksaUbahIsian", () => {
   const SEKARANG = new Date("2026-10-22T17:30:00Z");
 
@@ -350,7 +351,7 @@ describe("periksaUbahIsian", () => {
     });
   });
 
-  it("lahir tepat hari ini (WIB): tanggal lahir benar, dan usia di luar rentang program tidak diperiksa ulang", () => {
+  it("lahir tepat hari ini (WIB): tanggal lahir benar, dan usia di luar rentang program tidak menolak perubahan", () => {
     expect(
       periksaUbahIsian(
         { ...FORMULIR_LENGKAP, tanggalLahir: "2026-10-23" },
@@ -392,6 +393,133 @@ describe("periksaUbahIsian", () => {
       belumDiisi: ["tanggalLahir"],
       tanggalLahirTidakBenar: false,
     });
+  });
+});
+
+// Peringatan batas usia saat pegawai mengubah isian (issue T15-b, PRD §11.2 ▶ Keputusan 2026-10-30, UAT-K6). Ekspektasi
+// dari contoh PRD §6.3 untuk program 18–30, dikirim 23-10-2026 pukul 10.00 WIB.
+describe("peringatanBatasUsiaUbahIsian", () => {
+  const DIKIRIM_PADA = new Date("2026-10-23T03:00:00Z");
+  const PROGRAM_18_30 = { usiaMinimal: 18, usiaMaksimal: 30 };
+  /** Tanggal lahir dan program yang tersimpan: usia 22 pada tanggal kirim, di dalam rentang. */
+  const TERSIMPAN = { tanggalLahir: "2004-02-29", programId: 1 };
+
+  it("tanggal lahir diubah sehingga usia pada tanggal kirim 17: peringatan menyebut usia 17 dan rentang 18–30 (UAT-K6)", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, tanggalLahir: "2008-10-24" },
+        rentangUsia: PROGRAM_18_30,
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toMatchObject({
+      alasan: "terlalu-muda",
+      tanggalKirimWib: "2026-10-23",
+      usia: 17,
+      usiaMinimal: 18,
+      usiaMaksimal: 30,
+    });
+  });
+
+  it("tanggal lahir diubah sehingga usia pada tanggal kirim 31: peringatan menyebut usia 31 dan rentang 18–30", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, tanggalLahir: "1995-10-23" },
+        rentangUsia: PROGRAM_18_30,
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toEqual({
+      memenuhi: false,
+      alasan: "terlalu-tua",
+      tanggalKirimWib: "2026-10-23",
+      usia: 31,
+      usiaMinimal: 18,
+      usiaMaksimal: 30,
+    });
+  });
+
+  it("tanggal lahir diubah tetapi usia pada tanggal kirim tetap dalam rentang: tanpa peringatan, kedua batas termasuk", () => {
+    for (const tanggalLahir of ["2008-10-23", "1995-10-24"]) {
+      expect(
+        peringatanBatasUsiaUbahIsian({
+          tersimpan: TERSIMPAN,
+          diubah: { ...TERSIMPAN, tanggalLahir },
+          rentangUsia: PROGRAM_18_30,
+          dikirimPada: DIKIRIM_PADA,
+        }),
+      ).toBeNull();
+    }
+  });
+
+  it("usia dihitung pada tanggal kirim WIB, bukan tanggal UTC: dikirim 22-10-2026 pukul 17.30 UTC, lahir 23-10-2008, usia 18", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, tanggalLahir: "2008-10-23" },
+        rentangUsia: PROGRAM_18_30,
+        dikirimPada: new Date("2026-10-22T17:30:00Z"),
+      }),
+    ).toBeNull();
+  });
+
+  it("program diubah ke program yang rentangnya tidak mencakup usia pada tanggal kirim: peringatan dengan rentang program baru", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, programId: 2 },
+        rentangUsia: { usiaMinimal: 18, usiaMaksimal: 21 },
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toEqual({
+      memenuhi: false,
+      alasan: "terlalu-tua",
+      tanggalKirimWib: "2026-10-23",
+      usia: 22,
+      usiaMinimal: 18,
+      usiaMaksimal: 21,
+    });
+  });
+
+  it("program diubah ke program yang rentangnya mencakup usia pada tanggal kirim: tanpa peringatan", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, programId: 2 },
+        rentangUsia: { usiaMinimal: 18, usiaMaksimal: 22 },
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toBeNull();
+  });
+
+  it("tanggal lahir diubah ke tanggal sesudah tanggal kirim: peringatan tanpa usia, beserta tanggal kirim dan rentang 18–30", () => {
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: TERSIMPAN,
+        diubah: { ...TERSIMPAN, tanggalLahir: "2026-10-24" },
+        rentangUsia: PROGRAM_18_30,
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toEqual({
+      memenuhi: false,
+      alasan: "tanggal-lahir-tidak-benar",
+      tanggalKirimWib: "2026-10-23",
+      usiaMinimal: 18,
+      usiaMaksimal: 30,
+    });
+  });
+
+  it("tanggal lahir dan program tidak berubah: tanpa peringatan, juga bila usia yang tersimpan di luar rentang", () => {
+    const diLuarRentang = { tanggalLahir: "2008-10-24", programId: 1 };
+
+    expect(
+      peringatanBatasUsiaUbahIsian({
+        tersimpan: diLuarRentang,
+        diubah: { ...diLuarRentang },
+        rentangUsia: PROGRAM_18_30,
+        dikirimPada: DIKIRIM_PADA,
+      }),
+    ).toBeNull();
   });
 });
 

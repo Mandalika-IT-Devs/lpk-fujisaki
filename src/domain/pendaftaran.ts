@@ -91,8 +91,9 @@ export type HasilPeriksaUbahIsian<F> =
 /**
  * Pegawai mengubah isian formulir pendaftaran yang sudah dikirim (PRD §2.2, §6.5) dengan pemeriksaan yang sama seperti
  * formulir pemilik akun: semua isian wajib terisi (§6.1), dan tanggal lahir tidak jatuh sesudah hari ini (WIB), sama
- * seperti tanggal lahir yang tidak benar saat formulir dikirim (§6.3). Rentang batas usia program tidak diperiksa ulang.
- * Bila ditolak, hasilnya menyebut isian wajib yang belum diisi dan apakah tanggal lahirnya tidak benar.
+ * seperti tanggal lahir yang tidak benar saat formulir dikirim (§6.3). Usia di luar rentang batas usia program tidak
+ * menolak perubahan; pegawai hanya diberi peringatan (peringatanBatasUsiaUbahIsian, §11.2). Bila ditolak, hasilnya
+ * menyebut isian wajib yang belum diisi dan apakah tanggal lahirnya tidak benar.
  */
 export function periksaUbahIsian<F extends FormulirDiperiksa>(
   formulir: F,
@@ -110,6 +111,45 @@ export function periksaUbahIsian<F extends FormulirDiperiksa>(
     belumDiisi: isianWajib.lengkap ? [] : isianWajib.belumDiisi,
     tanggalLahirTidakBenar,
   };
+}
+
+/** Tanggal lahir dan program pada isian formulir sebuah pendaftaran. */
+type IsianBatasUsia = { tanggalLahir: string; programId: number };
+
+/** Peringatan batas usia untuk pegawai: hasil batas usia yang tidak memenuhi, beserta rentang usia programnya. */
+export type PeringatanBatasUsia = RentangUsia & BatasUsiaTidakMemenuhi;
+
+/**
+ * Saat pegawai mengubah tanggal lahir atau program sebuah pendaftaran, batas usia program sesudah diubah (§6.3)
+ * diperiksa terhadap tanggal kirim pendaftaran itu (PRD §11.2, ▶ Keputusan 2026-10-30). Bila usia di luar rentang,
+ * hasilnya peringatan beserta usia dan rentangnya; perubahan tetap boleh disimpan. Tanggal lahir yang jatuh sesudah
+ * tanggal kirim juga diperingatkan, tanpa usia. Tanpa peringatan bila usia di dalam rentang, atau bila tanggal lahir dan
+ * program tidak berubah.
+ */
+export function peringatanBatasUsiaUbahIsian(keadaan: {
+  /** Tanggal lahir dan program yang tersimpan sebelum diubah. */
+  tersimpan: IsianBatasUsia;
+  /** Tanggal lahir dan program sesudah diubah. */
+  diubah: IsianBatasUsia;
+  /** Batas usia program sesudah diubah. */
+  rentangUsia: RentangUsia;
+  /** Saat formulir pendaftaran itu dikirim. */
+  dikirimPada: Date;
+}): PeringatanBatasUsia | null {
+  const { tersimpan, diubah } = keadaan;
+  if (
+    diubah.tanggalLahir === tersimpan.tanggalLahir &&
+    diubah.programId === tersimpan.programId
+  ) {
+    return null;
+  }
+  const batasUsia = periksaBatasUsia({
+    tanggalLahir: diubah.tanggalLahir,
+    dikirimPada: keadaan.dikirimPada,
+    ...keadaan.rentangUsia,
+  });
+  if (batasUsia.memenuhi) return null;
+  return { ...keadaan.rentangUsia, ...batasUsia };
 }
 
 export type HasilPeriksaSyaratKirim<F> =

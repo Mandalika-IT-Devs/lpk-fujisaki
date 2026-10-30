@@ -17,8 +17,10 @@ import {
   drafDisimpanSaatDitolak,
   KODE_LANGKAH,
   pendaftaranBaru,
+  type PeringatanBatasUsia,
   periksaSyaratKirim,
   periksaUbahIsian,
+  peringatanBatasUsiaUbahIsian,
   type StatusLangkah,
   type StatusPendaftaran,
   type SyaratKirimGagal,
@@ -410,7 +412,12 @@ export async function bacaLangkahPendaftaran(
 }
 
 export type HasilUbahIsianPendaftaran =
-  | { hasil: "tersimpan" }
+  | {
+      hasil: "tersimpan";
+      /** Peringatan batas usia beserta nama program sesudah diubah, atau null bila tidak ada (§11.2). */
+      peringatanBatasUsia:
+        (PeringatanBatasUsia & { namaProgram: string }) | null;
+    }
   | {
       hasil: "ditolak";
       belumDiisi: IsianWajib[];
@@ -423,6 +430,11 @@ export type HasilUbahIsianPendaftaran =
  * isian yang bentuknya sudah diperiksa, dengan aturan yang sama seperti formulir pemilik akun. Isian wajib tetap harus
  * terisi (§6.1) dan tanggal lahir tidak boleh jatuh sesudah hari ini (§6.3); bila tidak, tidak ada yang disimpan.
  * Isian diganti seluruhnya, termasuk isian tidak wajib yang dikosongkan.
+ *
+ * Bila tanggal lahir atau program berubah dan usia pada tanggal kirim pendaftaran itu di luar rentang program sesudah
+ * diubah, perubahan tetap disimpan, dan hasilnya membawa peringatan batas usia (§11.2, ▶ Keputusan 2026-10-30). Baris
+ * pendaftaran dikunci lebih dulu dalam satu transaksi, jadi dua perubahan bersamaan bergiliran, dan yang kedua
+ * dibandingkan dengan isian yang disimpan perubahan pertama.
  */
 export async function ubahIsianPendaftaran(
   nomor: string,
@@ -438,15 +450,51 @@ export async function ubahIsianPendaftaran(
     };
   }
   const { bidangKerja, ...isian } = periksa.formulir;
-  const [diubah] = await db
-    .update(pendaftaran)
-    .set({
-      ...isian,
-      bidangKerjaBelumTahu: bidangKerja === BIDANG_KERJA_BELUM_TAHU,
-    })
-    .where(eq(pendaftaran.nomor, nomor))
-    .returning({ nomor: pendaftaran.nomor });
-  return diubah ? { hasil: "tersimpan" } : { hasil: "tidak-ada" };
+  return db.transaction(async (tx) => {
+    const [tersimpan] = await tx
+      .select({
+        id: pendaftaran.id,
+        dikirimPada: pendaftaran.dikirimPada,
+        tanggalLahir: pendaftaran.tanggalLahir,
+        programId: pendaftaran.programId,
+      })
+      .from(pendaftaran)
+      .where(eq(pendaftaran.nomor, nomor))
+      .for("update");
+    if (!tersimpan) return { hasil: "tidak-ada" };
+    const [programDipilih] = await tx
+      .select({
+        nama: program.nama,
+        usiaMinimal: program.usiaMinimal,
+        usiaMaksimal: program.usiaMaksimal,
+      })
+      .from(program)
+      .where(eq(program.id, isian.programId));
+    if (!programDipilih) {
+      throw new Error(
+        `Program dengan id ${isian.programId} tidak ada. Pilihan program harus diperiksa terhadap daftar program sebelum isian diubah.`,
+      );
+    }
+
+    await tx
+      .update(pendaftaran)
+      .set({
+        ...isian,
+        bidangKerjaBelumTahu: bidangKerja === BIDANG_KERJA_BELUM_TAHU,
+      })
+      .where(eq(pendaftaran.id, tersimpan.id));
+    const { nama, ...rentangUsia } = programDipilih;
+    const peringatan = peringatanBatasUsiaUbahIsian({
+      tersimpan,
+      diubah: isian,
+      rentangUsia,
+      dikirimPada: tersimpan.dikirimPada,
+    });
+    return {
+      hasil: "tersimpan",
+      peringatanBatasUsia: peringatan && { ...peringatan, namaProgram: nama },
+    };
+  });
 }
 
 export type HasilTutupPendaftaran =

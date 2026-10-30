@@ -642,6 +642,10 @@ Dari halaman ini pegawai mengubah status langkah, menambah percobaan, memindahka
 
 ▶ Keputusan 2026-10-30: Saat pegawai mengubah isian, tanggal lahir yang jatuh sesudah tanggal kirim pendaftaran ditolak, karena orang itu belum lahir saat pendaftarannya dikirim. Perubahan tidak disimpan, dan isian tanggal lahir ditandai salah.
 
+▶ Keputusan 2026-10-30: Pesannya berbunyi seperti contoh berikut. Tanggal kirim mengikuti pendaftaran itu.
+- Di isian tanggal lahir: "Tanggal lahir jatuh sesudah tanggal kirim 20-05-2024. Periksa lagi tanggal lahirnya."
+- Di atas formulir: "Perubahan belum disimpan karena tanggal lahir jatuh sesudah tanggal kirim 20-05-2024, jadi orangnya belum lahir saat pendaftarannya dikirim. Periksa lagi tanggal lahirnya, lalu simpan lagi."
+
 ▶ Keputusan 2026-10-30: Bila perubahan ditolak karena isian lain, misalnya isian wajib kosong, peringatan usia belum tampil. Peringatan itu muncul saat perubahan berhasil disimpan.
 
 ### 11.3 Catatan
